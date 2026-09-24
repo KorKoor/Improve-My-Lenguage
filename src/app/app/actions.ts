@@ -1,0 +1,250 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { getLanguage, getVocab, TOPICS } from "@/lib/content";
+import { CEFR_LEVELS, type CefrLevel } from "@/lib/content/types";
+import * as repo from "@/lib/db/repositories";
+import { AiUnavailableError } from "@/lib/ai/provider";
+import { answerAssessment, startOrResumeAssessment, type AssessmentStep } from "@/lib/services/assessment";
+import { deleteAccount } from "@/lib/services/account";
+import { finishSession, RateLimitedError, startSession, submitAnswer, type AnswerFeedback, type BuiltSession, type SessionFocus, type SessionSummary } from "@/lib/services/learning";
+import { AiQuotaError, endConversation, sendTutorMessage, startConversation } from "@/lib/services/tutor";
+import type { ConversationFeedback } from "@/lib/ai/prompts";
+import { requireLearner, requireViewer } from "@/lib/services/viewer";
+import { createSupabaseServer } from "@/lib/supabase/server";
+
+/**
+ * Server Actions: la única superficie de escritura de la app.
+ * Todas validan la entrada en el servidor, requieren sesión y devuelven
+ * resultados tipados (nunca errores 500 crudos al usuario).
+ */
+export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
+
+async function run<T>(name: string, fn: () => Promise<T>): Promise<ActionResult<T>> {
+  try {
+    return { ok: true, data: await fn() };
+  } catch (err) {
+    // redirect()/notFound() lanzan errores de control que deben propagarse.
+    if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
+    if (err instanceof RateLimitedError) return { ok: false, error: "Vas muy rápido. Espera unos segundos." };
+    if (err instanceof AiUnavailableError || err instanceof AiQuotaError) return { ok: false, error: err.message };
+    console.error(`[action:${name}]`, err);
+    return { ok: false, error: "Algo salió mal. Tu progreso está a salvo; inténtalo de nuevo." };
+  }
+}
+
+const str = (v: unknown, max = 200): string => (typeof v === "string" ? v.trim().slice(0, max) : "");
+const int = (v: unknown, min: number, max: number, def: number): number => {
+  const n = typeof v === "number" ? v : Number(v);
+  return Number.isFinite(n) ? Math.max(min, Math.min(max, Math.round(n))) : def;
+};
+const oneOf = <T extends string>(v: unknown, opts: readonly T[], def: T): T => (opts.includes(v as T) ? (v as T) : def);
+const isLevel = (v: unknown): v is CefrLevel => CEFR_LEVELS.includes(v as CefrLevel);
+
+// ── Onboarding ─────────────────────────────────────────────────────────────
+export interface OnboardingInput {
+  displayName: string;
+  nativeLanguage: string;
+  language: string;
+  selfLevel: CefrLevel | "unknown";
+  targetLevel: CefrLevel;
+  months: number;
+  reason: string;
+  dailyMinutes: number;
+  interests: string[];
+  explanationDepth: "brief" | "balanced" | "detailed";
+  preferredDifficulty: "easy" | "balanced" | "challenging";
+  competitive: boolean;
+  interactionPrefs: string[];
+  aiConsent: boolean;
+  privacyAccepted: boolean;
+  timezone: string;
+}
+
+export async function saveOnboarding(input: OnboardingInput): Promise<ActionResult<{ next: string }>> {
+  return run("onboarding", async () => {
+    const viewer = await requireViewer();
+    const lang = getLanguage(str(input.language, 8));
+    if (!lang || lang.status === "planned") throw new Error("Idioma no disponible");
+    if (!input.privacyAccepted) throw new Error("Falta aceptar el aviso de privacidad");
+    const topics = new Set(TOPICS.map((t) => t.id));
+    let tz = str(input.timezone, 64) || "America/Mexico_City";
+    try {
+      new Intl.DateTimeFormat("en", { timeZone: tz });
+    } catch {
+      tz = "America/Mexico_City";
+    }
+    const ul = await repo.upsertUserLanguage(viewer.userId, lang.code, isLevel(input.selfLevel) ? input.selfLevel : null);
+    const months = int(input.months, 1, 36, 6);
+    const deadline = new Date();
+    deadline.setMonth(deadline.getMonth() + months);
+    const minutes = int(input.dailyMinutes, 5, 120, 15);
+    await repo.setGoal(ul.id, {
+      targetLevel: isLevel(input.targetLevel) ? input.targetLevel : "B2",
+      deadline: deadline.toISOString().slice(0, 10),
+      minutesPerDay: minutes,
+      reason: str(input.reason, 200) || null,
+    });
+    await repo.updateProfile(viewer.userId, {
+      displayName: str(input.displayName, 60) || viewer.profile.displayName,
+      nativeLanguage: getLanguage(str(input.nativeLanguage, 8)) ? str(input.nativeLanguage, 8) : "es",
+      activeLanguage: lang.code,
+      timezone: tz,
+      dailyMinutes: minutes,
+      interests: (Array.isArray(input.interests) ? input.interests : []).filter((t) => topics.has(t)).slice(0, 8),
+      explanationDepth: oneOf(input.explanationDepth, ["brief", "balanced", "detailed"] as const, "balanced"),
+      preferredDifficulty: oneOf(input.preferredDifficulty, ["easy", "balanced", "challenging"] as const, "balanced"),
+      competitive: Boolean(input.competitive),
+      interactionPrefs: (Array.isArray(input.interactionPrefs) ? input.interactionPrefs : []).map((p) => str(p, 30)).filter(Boolean).slice(0, 8),
+      motivation: str(input.reason, 200) || null,
+      aiConsent: Boolean(input.aiConsent),
+      consentAt: new Date(),
+      onboardedAt: viewer.profile.onboardedAt ?? new Date(),
+    });
+    await repo.track(viewer.userId, "onboarding_completed", { language: lang.code });
+    return { next: "/app/assessment" };
+  });
+}
+
+// ── Diagnóstico ────────────────────────────────────────────────────────────
+export async function startAssessmentAction(restart = false): Promise<ActionResult<AssessmentStep>> {
+  return run("assessment.start", async () => startOrResumeAssessment(await requireLearner(), Boolean(restart)));
+}
+
+export async function answerAssessmentAction(assessmentId: string, itemId: string, choice: string, timeMs: number): Promise<ActionResult<AssessmentStep>> {
+  return run("assessment.answer", async () => {
+    const learner = await requireLearner();
+    const step = await answerAssessment(learner, str(assessmentId, 64), str(itemId, 100), str(choice, 300), int(timeMs, 0, 600_000, 0));
+    if (step.done) revalidatePath("/app");
+    return step;
+  });
+}
+
+// ── Sesiones ───────────────────────────────────────────────────────────────
+export async function startSessionAction(opts: { minutes?: number; focus?: string | null; surprise?: boolean }): Promise<ActionResult<BuiltSession>> {
+  return run("session.start", async () => {
+    const learner = await requireLearner();
+    const f = str(opts.focus, 80);
+    const focus: SessionFocus =
+      f === "new_words" || f === "listening" || f === "review" ? f : f.startsWith("grammar:") ? (f as `grammar:${string}`) : null;
+    return startSession(learner, int(opts.minutes, 5, 60, learner.profile.dailyMinutes), { focus, surprise: Boolean(opts.surprise) });
+  });
+}
+
+export async function submitAnswerAction(input: {
+  sessionId: string | null;
+  key: string;
+  response: string;
+  pairs?: Record<string, string>;
+  timeMs: number;
+  attempts: number;
+  confidence?: number;
+}): Promise<ActionResult<AnswerFeedback>> {
+  return run("session.answer", async () => {
+    const learner = await requireLearner();
+    const pairs: Record<string, string> = {};
+    if (input.pairs && typeof input.pairs === "object") {
+      for (const [k, v] of Object.entries(input.pairs).slice(0, 10)) pairs[str(k, 100)] = str(v, 100);
+    }
+    return submitAnswer(learner, {
+      sessionId: input.sessionId ? str(input.sessionId, 64) : null,
+      key: str(input.key, 400),
+      response: str(input.response, 500),
+      pairs,
+      timeMs: int(input.timeMs, 0, 600_000, 0),
+      attempts: int(input.attempts, 1, 5, 1),
+      confidence: input.confidence === undefined ? undefined : Math.max(0, Math.min(1, Number(input.confidence) || 0)),
+    });
+  });
+}
+
+export async function finishSessionAction(sessionId: string, durationSeconds: number): Promise<ActionResult<SessionSummary | null>> {
+  return run("session.finish", async () => {
+    const summary = await finishSession(await requireLearner(), str(sessionId, 64), int(durationSeconds, 0, 14_400, 0));
+    revalidatePath("/app");
+    return summary;
+  });
+}
+
+// ── Vocabulario ────────────────────────────────────────────────────────────
+export async function setWordStatusAction(itemId: string, status: "known" | "difficult" | "saved" | "learning"): Promise<ActionResult<null>> {
+  return run("vocab.status", async () => {
+    const learner = await requireLearner();
+    const item = getVocab(str(itemId, 100));
+    if (!item || item.language !== learner.language.code) throw new Error("Palabra desconocida");
+    await repo.setKnowledgeStatus(learner.ul.id, item.id, "vocab", oneOf(status, ["known", "difficult", "saved", "learning"] as const, "saved"));
+    revalidatePath("/app/vocabulary");
+    return null;
+  });
+}
+
+// ── Tutor ──────────────────────────────────────────────────────────────────
+export async function startConversationAction(topic: string | null): Promise<ActionResult<{ conversationId: string; message: string }>> {
+  return run("tutor.start", async () => startConversation(await requireLearner(), topic ? str(topic, 200) : null));
+}
+
+export async function sendTutorMessageAction(conversationId: string, text: string): Promise<ActionResult<{ message: string }>> {
+  return run("tutor.send", async () => sendTutorMessage(await requireLearner(), str(conversationId, 64), str(text, 1000)));
+}
+
+export async function endConversationAction(conversationId: string): Promise<ActionResult<ConversationFeedback>> {
+  return run("tutor.end", async () => {
+    const fb = await endConversation(await requireLearner(), str(conversationId, 64));
+    revalidatePath("/app");
+    return fb;
+  });
+}
+
+// ── Configuración ──────────────────────────────────────────────────────────
+export async function updateSettingsAction(input: {
+  displayName?: string;
+  dailyMinutes?: number;
+  theme?: string;
+  explanationDepth?: string;
+  preferredDifficulty?: string;
+  interests?: string[];
+  aiConsent?: boolean;
+  nativeLanguage?: string;
+}): Promise<ActionResult<null>> {
+  return run("settings.update", async () => {
+    const viewer = await requireViewer();
+    const topics = new Set(TOPICS.map((t) => t.id));
+    await repo.updateProfile(viewer.userId, {
+      displayName: input.displayName !== undefined ? str(input.displayName, 60) || null : undefined,
+      dailyMinutes: input.dailyMinutes !== undefined ? int(input.dailyMinutes, 5, 120, 15) : undefined,
+      theme: input.theme !== undefined ? oneOf(input.theme, ["light", "dark", "system"] as const, "system") : undefined,
+      explanationDepth: input.explanationDepth !== undefined ? oneOf(input.explanationDepth, ["brief", "balanced", "detailed"] as const, "balanced") : undefined,
+      preferredDifficulty: input.preferredDifficulty !== undefined ? oneOf(input.preferredDifficulty, ["easy", "balanced", "challenging"] as const, "balanced") : undefined,
+      interests: input.interests !== undefined ? input.interests.filter((t) => topics.has(t)).slice(0, 8) : undefined,
+      aiConsent: input.aiConsent !== undefined ? Boolean(input.aiConsent) : undefined,
+      nativeLanguage: input.nativeLanguage !== undefined && getLanguage(str(input.nativeLanguage, 8)) ? str(input.nativeLanguage, 8) : undefined,
+    });
+    revalidatePath("/app", "layout");
+    return null;
+  });
+}
+
+export async function setActiveLanguageAction(code: string): Promise<ActionResult<null>> {
+  return run("settings.language", async () => {
+    const viewer = await requireViewer();
+    const ul = await repo.getUserLanguage(viewer.userId, str(code, 8));
+    if (!ul) throw new Error("No estudias ese idioma todavía");
+    await repo.updateProfile(viewer.userId, { activeLanguage: ul.languageCode });
+    revalidatePath("/app", "layout");
+    return null;
+  });
+}
+
+export async function deleteAccountAction(confirmation: string): Promise<ActionResult<null>> {
+  const res = await run("account.delete", async () => {
+    if (str(confirmation, 20).toUpperCase() !== "ELIMINAR") throw new Error("Confirmación incorrecta");
+    const viewer = await requireViewer();
+    await deleteAccount(viewer.userId);
+    const supabase = await createSupabaseServer();
+    await supabase.auth.signOut();
+    return null;
+  });
+  if (res.ok) redirect("/?deleted=1");
+  return res;
+}

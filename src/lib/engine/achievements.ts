@@ -1,0 +1,38 @@
+/**
+ * Logros: pocos, ligados a hábitos que sí predicen aprendizaje
+ * (constancia, volumen de práctica, uso real). Sin gamificación vacía.
+ */
+export interface AchievementStats {
+  sessionsCompleted: number;
+  wordsLearned: number;
+  currentStreak: number;
+  exercisesCompleted: number;
+  conversations: number;
+  minutesStudied: number;
+  assessmentsCompleted: number;
+  languagesStarted: number;
+}
+
+export interface AchievementRule {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  unlocked: (s: AchievementStats) => boolean;
+}
+
+export const ACHIEVEMENT_RULES: AchievementRule[] = [
+  { id: "first-assessment", title: "Punto de partida", description: "Completaste tu primer diagnóstico.", icon: "🧭", unlocked: (s) => s.assessmentsCompleted >= 1 },
+  { id: "first-session", title: "Primera sesión", description: "Completaste tu primera sesión de estudio.", icon: "🌱", unlocked: (s) => s.sessionsCompleted >= 1 },
+  { id: "streak-7", title: "Una semana seguida", description: "7 días consecutivos estudiando.", icon: "🔥", unlocked: (s) => s.currentStreak >= 7 },
+  { id: "streak-30", title: "Hábito formado", description: "30 días consecutivos estudiando.", icon: "🏔️", unlocked: (s) => s.currentStreak >= 30 },
+  { id: "words-100", title: "100 palabras", description: "100 palabras aprendidas (con repasos exitosos).", icon: "📚", unlocked: (s) => s.wordsLearned >= 100 },
+  { id: "exercises-100", title: "100 ejercicios", description: "Completaste 100 ejercicios.", icon: "✍️", unlocked: (s) => s.exercisesCompleted >= 100 },
+  { id: "first-conversation", title: "Primera conversación", description: "Hablaste con tu tutor por primera vez.", icon: "💬", unlocked: (s) => s.conversations >= 1 },
+  { id: "hours-30", title: "30 horas", description: "30 horas de estudio acumuladas.", icon: "⏳", unlocked: (s) => s.minutesStudied >= 1800 },
+  { id: "polyglot", title: "Políglota en progreso", description: "Empezaste a estudiar un segundo idioma.", icon: "🌍", unlocked: (s) => s.languagesStarted >= 2 },
+];
+
+export function newlyUnlocked(stats: AchievementStats, already: Set<string>): AchievementRule[] {
+  return ACHIEVEMENT_RULES.filter((r) => !already.has(r.id) && r.unlocked(stats));
+}

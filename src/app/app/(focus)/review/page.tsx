@@ -1,0 +1,23 @@
+import type { Metadata } from "next";
+import { SessionRunner } from "@/components/session/runner";
+import { countDue } from "@/lib/db/repositories";
+import { requireLearner } from "@/lib/services/viewer";
+
+export const metadata: Metadata = { title: "Repaso" };
+
+export default async function ReviewPage() {
+  const learner = await requireLearner();
+  const due = await countDue(learner.ul.id, new Date());
+  const minutes = Math.max(5, Math.min(30, Math.ceil(due * 0.3)));
+  return (
+    <SessionRunner
+      minutes={minutes}
+      focus="review"
+      surprise={false}
+      locale={learner.language.speechLocale}
+      language={learner.language.code}
+      rtl={learner.language.rtl}
+      title="Repaso"
+    />
+  );
+}

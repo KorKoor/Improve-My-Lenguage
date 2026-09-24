@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* Modo oscuro por clase en <html> (preferencia guardada: light | dark | system). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ── Tokens (mismos nombres que las variables de Figma) ─────────────────── */
+:root {
+  --bg: #fbf8f4;
+  --surface: #ffffff;
+  --surface-muted: #f6f3fb;
+  --border: #ece7f3;
+  --text: #1f1b2e;
+  --text-muted: #6b6680;
+  --primary: #5b5fd6;
+  --primary-hover: #4b4fc4;
+  --primary-soft: #eeeefd;
+  --on-primary: #ffffff;
+  --success: #2f9e6e;
+  --success-soft: #e6f6ee;
+  --warning: #b8700f;
+  --warning-soft: #fdf3e1;
+  --danger: #c8433e;
+  --danger-soft: #fcebea;
+  --skill-vocabulary: #7c80ee;
+  --skill-grammar: #4bae88;
+  --skill-listening: #e9a73b;
+  --skill-reading: #6c8eea;
+  --skill-speaking: #4fb3d9;
+  --skill-writing: #e07aa5;
+  --skill-pronunciation: #a283e6;
+  --shadow: 0 6px 20px rgb(64 51 115 / 0.05);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #14121c;
+  --surface: #1c1a27;
+  --surface-muted: #242134;
+  --border: #2e2a40;
+  --text: #f2f0fa;
+  --text-muted: #a7a2bc;
+  --primary: #8e93f5;
+  --primary-hover: #a3a7f8;
+  --primary-soft: #2a2a4a;
+  --on-primary: #14121c;
+  --success: #4cc792;
+  --success-soft: #173327;
+  --warning: #f2b84b;
+  --warning-soft: #3a2e17;
+  --danger: #f07a75;
+  --danger-soft: #3a1c1c;
+  --skill-vocabulary: #9a9df6;
+  --skill-grammar: #6ccba5;
+  --skill-listening: #f2bf66;
+  --skill-reading: #8da8f2;
+  --skill-speaking: #78c9e8;
+  --skill-writing: #ef9cc0;
+  --skill-pronunciation: #b9a0f0;
+  --shadow: 0 6px 20px rgb(0 0 0 / 0.25);
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-soft: var(--primary-soft);
+  --color-on-primary: var(--on-primary);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-skill-vocabulary: var(--skill-vocabulary);
+  --color-skill-grammar: var(--skill-grammar);
+  --color-skill-listening: var(--skill-listening);
+  --color-skill-reading: var(--skill-reading);
+  --color-skill-speaking: var(--skill-speaking);
+  --color-skill-writing: var(--skill-writing);
+  --color-skill-pronunciation: var(--skill-pronunciation);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-nunito), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --shadow-card: var(--shadow);
+  --radius-card: 22px;
+}
+
+@layer base {
+  html {
+    background: var(--bg);
+    color: var(--text);
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--primary-soft);
+  }
+}
+
+@layer components {
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow);
+  }
+}
+
+/* Animaciones sutiles, desactivadas si el usuario prefiere menos movimiento. */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop {
+  0% { transform: scale(0.96); }
+  60% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+.animate-rise { animation: rise 0.35s ease-out both; }
+.animate-pop { animation: pop 0.3s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

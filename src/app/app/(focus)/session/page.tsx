@@ -1,0 +1,22 @@
+import type { Metadata } from "next";
+import { SessionRunner } from "@/components/session/runner";
+import { requireLearner } from "@/lib/services/viewer";
+
+export const metadata: Metadata = { title: "Sesión" };
+
+export default async function SessionPage({ searchParams }: { searchParams: Promise<{ minutes?: string; focus?: string; surprise?: string }> }) {
+  const learner = await requireLearner();
+  const sp = await searchParams;
+  const minutes = Math.max(5, Math.min(60, Number(sp.minutes) || learner.profile.dailyMinutes));
+  return (
+    <SessionRunner
+      minutes={minutes}
+      focus={sp.focus ?? null}
+      surprise={sp.surprise === "1"}
+      locale={learner.language.speechLocale}
+      language={learner.language.code}
+      rtl={learner.language.rtl}
+      title="Sesión de estudio"
+    />
+  );
+}
