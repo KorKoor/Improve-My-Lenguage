@@ -31,6 +31,7 @@ const PRIVATE = [
   "/app/profile/test",
   "/app/settings",
   "/app/group",
+  "/app/novedades",
 ];
 // Textos de las pantallas de error de la app (error.tsx / not-found).
 const ERROR_MARKERS = ["Algo salió mal", "Esta página no existe", "Application error"];

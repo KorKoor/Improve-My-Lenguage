@@ -19,6 +19,8 @@ import { localDay } from "@/lib/engine/progress";
 import { getDashboard } from "@/lib/services/insights";
 import { getXp, questBoard } from "@/lib/services/quests";
 import { takeCheers } from "@/lib/services/group";
+import { WhatsNew } from "@/components/dashboard/whats-new";
+import { CHANGELOG, CHANGELOG_VERSION } from "@/lib/content/changelog";
 import { QuestBoard } from "@/components/dashboard/quests";
 import { requireLearner } from "@/lib/services/viewer";
 
@@ -122,6 +124,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       </header>
 
       {cheerBanner}
+      <WhatsNew version={CHANGELOG_VERSION} count={CHANGELOG.length} />
 
       {d.freezeUsed.length > 0 && (
         <p className="rounded-2xl bg-warning-soft px-4 py-3 text-sm font-semibold text-warning animate-pop-in" role="status">
