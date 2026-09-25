@@ -1,70 +1,55 @@
-# Despliegue: GitHub → Vercel → dominio propio (costo $0)
+# Despliegue
 
-Tiempo estimado: unos 30 minutos la primera vez.
+GitHub → Vercel → dominio propio. Firebase (Auth + Firestore + Cloud Messaging) cubre identidad, datos y notificaciones; para uso personal cabe en el plan gratuito Spark.
 
-## 1. Base de datos y autenticación (Supabase Free)
+## 1. Firebase
 
-1. Crea un proyecto en [supabase.com](https://supabase.com). Elige la región más cercana a tus usuarios y guarda la contraseña de la base de datos.
-2. **SQL Editor → New query:** pega el contenido de `supabase/migrations/0001_init.sql` y ejecútalo.
-3. **Project Settings → API:** copia `Project URL` y la clave `anon` / `publishable`.
-4. **Connect → Connection string → Transaction pooler** (puerto **6543**): cópiala y sustituye `[YOUR-PASSWORD]`. Esa será `DATABASE_URL`.
-5. **Authentication → URL Configuration:**
-   - *Site URL:* `https://tu-dominio.com`
-   - *Redirect URLs:* `https://tu-dominio.com/auth/callback`, `http://localhost:3000/auth/callback` y `https://*.vercel.app/auth/callback` (para las previews)
-6. **Login con Google (opcional, gratis):**
-   1. En [Google Cloud Console](https://console.cloud.google.com), ve a *APIs & Services → Credentials → Create OAuth client ID (Web)*.
-   2. Añade como *Authorized redirect URI* `https://<tu-proyecto>.supabase.co/auth/v1/callback`.
-   3. En Supabase, ve a *Authentication → Providers → Google* y pega el Client ID y el Secret.
-7. **Correo:** el SMTP integrado de Supabase tiene un límite bajo de envíos por hora. Para uso personal es suficiente. Si abres el registro al público, configura un SMTP propio (hay proveedores con capa gratuita) en *Authentication → Emails → SMTP*.
+Proyecto: `improve-my-lenguages` (ya creado, con la app web registrada y Firestore en modo nativo).
 
-> **Pausa por inactividad:** Supabase Free pausa el proyecto tras 7 días sin actividad. `vercel.json` incluye un *cron* diario (permitido en Vercel Hobby) que llama a `/api/health` y ejecuta un `select 1`, lo que la mantiene activa.
+1. **Authentication → Método de acceso:** activa **Correo electrónico/contraseña** y **Google**.
+2. **Authentication → Configuración → Dominios autorizados:** añade `localhost`, tu dominio (`tu-dominio.com`) y, si usas previews, el dominio `*.vercel.app` concreto del proyecto.
+3. **Reglas e índices de Firestore** (desde la raíz del repo, con Firebase CLI):
+   ```bash
+   firebase deploy --only firestore --project improve-my-lenguages
+   ```
+   Despliega `firestore.rules` (deniega todo acceso de clientes) y los índices compuestos. Los índices tardan unos minutos en construirse.
+4. **Cuenta de servicio (sólo servidor):** *Configuración del proyecto → Cuentas de servicio → Generar nueva clave privada*. Guarda el archivo **fuera del repositorio**, conviértelo a una sola línea y ponlo en `FIREBASE_SERVICE_ACCOUNT`. Da acceso total al proyecto: nunca lo subas al repo ni lo pongas en una variable `NEXT_PUBLIC_*`.
+   ```bash
+   node -e "process.stdout.write(JSON.stringify(require(process.argv[1])))" ./ruta/fuera-del-repo/clave.json
+   ```
+   En local también puedes usar `GOOGLE_APPLICATION_CREDENTIALS=<ruta al JSON>` en `.env.local`.
+5. **Notificaciones (opcional):** *Cloud Messaging → Configuración web → Certificados push web* → copia la clave pública a `NEXT_PUBLIC_FIREBASE_VAPID_KEY`.
+6. **Plantillas de correo (opcional):** *Authentication → Plantillas* para personalizar los correos de verificación y de restablecimiento de contraseña.
 
-## 2. IA gratuita (opcional)
+## 2. Vercel
 
-- **Gemini:** en [Google AI Studio](https://aistudio.google.com), crea una clave con *Get API key* y guárdala en `GEMINI_API_KEY`. Consulta las cuotas vigentes en AI Studio: la capa gratuita cambia con el tiempo, y Google puede usar los datos de esa capa para mejorar sus productos (por eso la app pide consentimiento).
-- **Alternativa:** usa `AI_PROVIDER=openai-compatible` con `OPENAI_COMPAT_BASE_URL` y `OPENAI_COMPAT_API_KEY` (por ejemplo, Groq u OpenRouter con modelos gratuitos).
-- Ajusta los modelos con `AI_MODEL_FAST` y `AI_MODEL_SMART` si los que vienen por defecto dejan de estar disponibles.
-- `AI_DAILY_LIMIT_PER_USER` (por defecto 60) protege tu cuota.
+1. Importa el repositorio de GitHub (framework: Next.js; sin cambios en build/output).
+2. **Settings → Environment Variables** (Production y Preview) — ver `.env.example`:
+   - `NEXT_PUBLIC_SITE_URL` = `https://tu-dominio.com`
+   - `NEXT_PUBLIC_FIREBASE_*` (API key, auth domain, project id, storage bucket, sender id, app id, VAPID key)
+   - `FIREBASE_SERVICE_ACCOUNT` (**sólo servidor**)
+   - `CRON_SECRET` (cadena aleatoria larga; Vercel la envía a los cron jobs)
+   - Opcional: `AI_PROVIDER`, `GEMINI_API_KEY`, `AI_DAILY_LIMIT_PER_USER`
+3. Despliega. `vercel.json` programa dos crons diarios (permitidos en Hobby): `/api/health` y `/api/cron/reminders` (01:00 UTC ≈ 19:00 en Ciudad de México).
 
-## 3. Código en GitHub
+## 3. Dominio propio
 
-```bash
-git init && git add . && git commit -m "Improve My Languages — MVP"
-git branch -M main
-git remote add origin https://github.com/<usuario>/improve-my-languages.git
-git push -u origin main
-```
+1. Vercel → *Settings → Domains* → añade `tu-dominio.com` y sigue las instrucciones DNS (registro A o CNAME).
+2. Añade el dominio a los **dominios autorizados** de Firebase Auth.
+3. Actualiza `NEXT_PUBLIC_SITE_URL` y vuelve a desplegar.
 
-`.env.local` está en `.gitignore`: **nunca** subas secretos.
+## Comprobaciones tras el despliegue
 
-## 4. Vercel (plan Hobby)
+- `GET /api/health` → `{"status":"ok","database":"ok"}`.
+- Registro con correo → onboarding → diagnóstico → sesión.
+- *Configuración → Descargar mis datos* devuelve JSON.
 
-1. En [vercel.com](https://vercel.com), ve a *Add New → Project* e importa el repositorio. El framework se detecta solo (Next.js).
-2. **Environment Variables:** añade todas las de `.env.example` que uses (Production y Preview). Recuerda:
-   - `NEXT_PUBLIC_SITE_URL=https://tu-dominio.com`
-   - `DATABASE_URL`, `GEMINI_API_KEY` y `SUPABASE_SERVICE_ROLE_KEY` son **sólo servidor**: no les pongas el prefijo `NEXT_PUBLIC_`.
-3. Pulsa *Deploy*.
+## Problemas comunes
 
-> El plan Hobby es gratuito para **uso personal y no comercial**. Si en el futuro cobras por el servicio, tendrás que pasar a Pro.
-
-## 5. Dominio personalizado
-
-1. En Vercel, ve a *Project → Settings → Domains → Add* y escribe tu dominio.
-2. En tu registrador, crea los registros DNS que Vercel te indique (normalmente un `A` para el dominio raíz y un `CNAME` para `www`). El certificado HTTPS se emite solo.
-3. Actualiza `NEXT_PUBLIC_SITE_URL` y la *Site URL* y *Redirect URLs* de Supabase con el dominio definitivo, y vuelve a desplegar.
-
-## 6. Verificación
-
-- `https://tu-dominio.com/api/health` debe responder `{"status":"ok","database":"ok",...}`.
-- Crea una cuenta, completa el onboarding y el diagnóstico, y haz una sesión.
-- En *Configuración*, prueba **Descargar mis datos**.
-
-## Solución de problemas
-
-| Síntoma | Causa probable |
+| Síntoma | Causa |
 |---|---|
-| `/app` redirige a `/setup` | Faltan `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` o `DATABASE_URL` |
-| Error "prepared statement … does not exist" | Estás usando el puerto 5432 del pooler en modo sesión: usa el **6543** (el código ya desactiva `prepare`) |
-| Google vuelve a `/login?error=callback` | La URL de callback no está en *Redirect URLs* de Supabase |
-| El tutor dice "no está configurado" | Falta `GEMINI_API_KEY` o el `AI_PROVIDER` no es correcto |
-| Primera carga lenta tras días sin uso | El proyecto de Supabase estaba pausado: reactívalo en el panel |
+| `/app` redirige a `/setup` | Faltan `NEXT_PUBLIC_FIREBASE_*` o `FIREBASE_SERVICE_ACCOUNT` (o el JSON no es válido: revisa los logs de Vercel) |
+| "Este dominio no está autorizado en Firebase Auth" | Añade el dominio en *Authentication → Configuración → Dominios autorizados* |
+| "Este método de inicio de sesión no está activado" | Activa el proveedor en *Authentication → Método de acceso* |
+| Error `FAILED_PRECONDITION … requires an index` en los logs | No se desplegaron los índices: `firebase deploy --only firestore` |
+| Las notificaciones no llegan | Falta `NEXT_PUBLIC_FIREBASE_VAPID_KEY` o `CRON_SECRET`, o el navegador bloqueó el permiso |

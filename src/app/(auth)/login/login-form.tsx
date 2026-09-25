@@ -1,16 +1,49 @@
 "use client";
+import { FirebaseError } from "firebase/app";
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
+  type UserCredential,
+} from "firebase/auth";
 import { Loader2, Mail } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { createSupabaseBrowser } from "@/lib/supabase/client";
+import { clientAuth } from "@/lib/firebase/client";
 
 type Mode = "login" | "signup" | "reset";
 
 const ERRORS: Record<string, string> = {
-  "Invalid login credentials": "Correo o contraseña incorrectos.",
-  "Email not confirmed": "Confirma tu correo antes de entrar (revisa tu bandeja de entrada).",
-  "User already registered": "Ya existe una cuenta con ese correo. Inicia sesión.",
+  "auth/invalid-credential": "Correo o contraseña incorrectos.",
+  "auth/wrong-password": "Correo o contraseña incorrectos.",
+  "auth/user-not-found": "Correo o contraseña incorrectos.",
+  "auth/invalid-email": "Ese correo no parece válido.",
+  "auth/email-already-in-use": "Ya existe una cuenta con ese correo. Inicia sesión.",
+  "auth/weak-password": "La contraseña es demasiado débil (mínimo 8 caracteres).",
+  "auth/too-many-requests": "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+  "auth/popup-closed-by-user": "Cerraste la ventana de Google antes de terminar.",
+  "auth/popup-blocked": "Tu navegador bloqueó la ventana de Google. Permite las ventanas emergentes.",
+  "auth/network-request-failed": "Sin conexión. Revisa tu red e inténtalo de nuevo.",
+  "auth/operation-not-allowed": "Este método de inicio de sesión no está activado.",
+  "auth/unauthorized-domain": "Este dominio no está autorizado en Firebase Auth.",
 };
+
+/** Canjea el ID token por la cookie de sesión del servidor. */
+async function startServerSession(cred: UserCredential) {
+  const idToken = await cred.user.getIdToken();
+  const res = await fetch("/api/auth/session", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ idToken }),
+  });
+  // La sesión vive en la cookie httpOnly; el SDK del navegador ya no la necesita.
+  await signOut(await clientAuth());
+  if (!res.ok) throw new Error("session");
+}
 
 export function LoginForm({ next, initialMode, error }: { next: string; initialMode: "login" | "signup"; error?: string }) {
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -21,36 +54,37 @@ export function LoginForm({ next, initialMode, error }: { next: string; initialM
     error ? { tone: "error", text: "No pudimos completar el inicio de sesión. Inténtalo de nuevo." } : null,
   );
 
-  const callback = (path: string) => `${window.location.origin}/auth/callback?next=${encodeURIComponent(path)}`;
+  function fail(err: unknown) {
+    const code = err instanceof FirebaseError ? err.code : "";
+    setMessage({ tone: "error", text: ERRORS[code] ?? "Algo salió mal. Revisa los datos e inténtalo de nuevo." });
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setMessage(null);
-    const supabase = createSupabaseBrowser();
     try {
+      const auth = await clientAuth();
       if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        await startServerSession(await signInWithEmailAndPassword(auth, email, password));
         window.location.assign(next);
         return;
       }
       if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: callback("/app/onboarding") } });
-        if (error) throw error;
-        if (data.session) {
-          window.location.assign("/app/onboarding");
-          return;
-        }
-        setMessage({ tone: "ok", text: "Te enviamos un correo para confirmar tu cuenta. Ábrelo desde este dispositivo." });
-      } else {
-        const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: callback("/reset-password") });
-        if (error) throw error;
-        setMessage({ tone: "ok", text: "Si existe una cuenta con ese correo, recibirás un enlace para cambiar la contraseña." });
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        // La verificación no bloquea el acceso; sirve para recuperar la cuenta.
+        await sendEmailVerification(cred.user).catch(() => undefined);
+        await startServerSession(cred);
+        window.location.assign("/app/onboarding");
+        return;
       }
+      await sendPasswordResetEmail(auth, email).catch((err: unknown) => {
+        // No revelamos si el correo existe.
+        if (!(err instanceof FirebaseError && err.code === "auth/user-not-found")) throw err;
+      });
+      setMessage({ tone: "ok", text: "Si existe una cuenta con ese correo, recibirás un enlace para cambiar la contraseña." });
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "";
-      setMessage({ tone: "error", text: ERRORS[msg] ?? "Algo salió mal. Revisa los datos e inténtalo de nuevo." });
+      fail(err);
     } finally {
       setBusy(false);
     }
@@ -58,11 +92,15 @@ export function LoginForm({ next, initialMode, error }: { next: string; initialM
 
   async function google() {
     setBusy(true);
-    const supabase = createSupabaseBrowser();
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: callback(next) } });
-    if (error) {
+    setMessage(null);
+    try {
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
+      await startServerSession(await signInWithPopup(await clientAuth(), provider));
+      window.location.assign(next);
+    } catch (err) {
+      fail(err);
       setBusy(false);
-      setMessage({ tone: "error", text: "No se pudo iniciar sesión con Google." });
     }
   }
 

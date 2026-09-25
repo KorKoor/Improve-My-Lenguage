@@ -7,6 +7,8 @@ import { listUserLanguages } from "@/lib/db/repositories";
 import { aiAvailable } from "@/lib/ai/provider";
 import { requireLearner } from "@/lib/services/viewer";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
+import { NotificationSettings } from "@/components/settings/notifications";
+import { isAdminConfigured } from "@/lib/firebase/admin";
 
 export const metadata: Metadata = { title: "Configuración" };
 
@@ -46,6 +48,11 @@ export default async function SettingsPage() {
           })}
         />
         <a href="/app/assessment?restart=1" className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">Repetir el diagnóstico de {learner.language.name.toLowerCase()}</a>
+      </Card>
+
+      <Card>
+        <CardHeader title="Notificaciones" />
+        <NotificationSettings serverReady={isAdminConfigured()} />
       </Card>
 
       <Card>

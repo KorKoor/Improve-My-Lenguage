@@ -1,6 +1,6 @@
-# Improve My Lenguage
+# Improve My Languages
 
-Improve My Lenguage is an adaptive language learning platform designed to turn study time into measurable progress. Instead of forcing learners through static lessons, the system models skills, errors, memory retention, and session efficiency to build a personalized learning path that evolves with each interaction.
+Improve My Languages is an adaptive language learning platform designed to turn study time into measurable progress. Instead of forcing learners through static lessons, the system models skills, errors, memory retention, and session efficiency to build a personalized learning path that evolves with each interaction.
 
 This repository contains the full Next.js application, including the adaptive engine, content model, AI-powered tutor flow, assessment logic, onboarding, and deployment-ready configuration for Vercel.
 
@@ -8,7 +8,7 @@ This repository contains the full Next.js application, including the adaptive en
 
 Most language learning products focus on content volume, not learning quality. The real challenge is not “how much content is available,” but “what the learner is ready to learn, what they are forgetting, and how to structure a session that maximizes retention and confidence.”
 
-Improve My Lenguage addresses this by combining:
+Improve My Languages addresses this by combining:
 
 - adaptive diagnostics
 - skill-level estimation
@@ -98,16 +98,16 @@ This project is built with a modern, low-friction stack designed for fast iterat
 - React 19
 - TypeScript strict mode
 - Tailwind CSS
-- PostgreSQL via Supabase
-- Supabase Auth
-- Firebase (web + push notifications support)
+- Firebase Auth (email/password + Google) with httpOnly session cookies
+- Cloud Firestore (server-only access via Admin SDK)
+- Firebase Cloud Messaging (daily reminders)
 - AI provider support via Gemini or OpenAI-compatible endpoints
 - Server actions and route handlers for backend logic
 
 ### Why this stack
 
 - Next.js gives a production-ready frontend and server runtime in one app
-- PostgreSQL + SQL-first architecture keeps the data model transparent and portable
+- Firebase gives identity, data and notifications in one managed provider; all data access is isolated in `src/lib/db/repositories.ts`, so the provider can be swapped
 - TypeScript reduces common logic bugs in a learning engine
 - Vercel makes production deployment simple and cost-efficient
 - clear separation between app logic, engine logic, and content logic makes the system easier to evolve
@@ -146,8 +146,11 @@ This is intentional: the adaptive systems are built to be testable and mostly is
 │   ├── components/
 │   ├── lib/
 │   └── proxy.ts
-├── supabase/
-│   └── migrations/
+├── scripts/
+│   └── dev-emulated.mjs
+├── firebase.json
+├── firestore.rules
+├── firestore.indexes.json
 ├── tests/
 ├── .env.example
 ├── .gitignore
@@ -168,7 +171,8 @@ This is intentional: the adaptive systems are built to be testable and mostly is
 
 - Node.js 20+
 - npm
-- a Supabase project
+- a Firebase project (Auth + Firestore)
+- Java 11+ (only for the local emulators)
 - optional API keys for AI providers
 - optional Firebase keys for push/web notifications
 
@@ -188,8 +192,8 @@ cp .env.example .env.local
 
 Then configure the required secrets and public variables for:
 
-- Supabase URL and anon key
-- database connection string
+- Firebase web config (`NEXT_PUBLIC_FIREBASE_*`)
+- Firebase Admin service account (`FIREBASE_SERVICE_ACCOUNT`, server only)
 - optional AI providers
 - Firebase web and admin configuration if using notifications
 
@@ -215,20 +219,25 @@ npm run build
 
 ## Database and auth setup
 
-The project is designed to work with Supabase for:
+Firebase provides authentication (email/password + Google), Cloud Firestore and Cloud Messaging.
 
-- authentication
-- user identity management
-- database persistence
-- storage and operational configuration
+- The browser only signs in and exchanges the ID token for an httpOnly session cookie (`/api/auth/session`).
+- Firestore is accessed **only from the server** (Admin SDK). `firestore.rules` denies all client access.
+- Deploy rules, composite indexes and TTL policies with:
 
-The SQL schema is under:
-
-```text
-supabase/migrations/
+```bash
+firebase deploy --only firestore
 ```
 
-It is recommended to run the migration scripts in Supabase SQL Editor before using the app in a fresh environment.
+### Fully local development (no credentials needed)
+
+```bash
+npm run dev:emulated
+```
+
+Starts the Firebase Auth + Firestore emulators (demo project, requires Java 11+) and `next dev` wired to them.
+
+See [docs/DATABASE.md](docs/DATABASE.md) for the data model.
 
 ---
 
@@ -248,7 +257,7 @@ This project is ready for deployment to Vercel.
 
 - keep secrets as environment variables, never in code
 - use Vercel Environment Variables for production and preview
-- store service-account JSON only in secret server-side variables
+- store the Firebase service-account JSON only in the server-side `FIREBASE_SERVICE_ACCOUNT` variable
 - ensure HTTPS is enabled for web push features
 
 ---
@@ -258,7 +267,7 @@ This project is ready for deployment to Vercel.
 This project is tuned for a responsible production setup. The most important rules are:
 
 - never commit `.env.local` or secret values
-- keep `FIREBASE_SERVICE_ACCOUNT` and database credentials server-side only
+- keep `FIREBASE_SERVICE_ACCOUNT` and `CRON_SECRET` server-side only
 - prefer server actions and route handlers for sensitive operations
 - validate user input before writing or exposing data
 
@@ -337,4 +346,4 @@ The long-term goal is to build a serious language learning system that is adapti
 
 ---
 
-Improve My Lenguage is not just another flashcard app. It is a learning system designed to adapt to the learner, not the other way around.
+Improve My Languages is not just another flashcard app. It is a learning system designed to adapt to the learner, not the other way around.

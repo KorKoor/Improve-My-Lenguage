@@ -20,7 +20,7 @@ Hay timeout de 25 s y un reintento ante 429/5xx/timeout. Los errores se traducen
 
 ## Control de costos
 
-- Límite por usuario: 10 llamadas/min y `AI_DAILY_LIMIT_PER_USER` al día (rate limit en Postgres).
+- Límite por usuario: 10 llamadas/min y `AI_DAILY_LIMIT_PER_USER` al día (rate limit en Firestore).
 - Al tutor sólo se envían los **últimos 12 turnos**, con respuestas de ≤ 220 tokens.
 - El contexto del alumno es un bloque compacto (nivel, debilidades, 6 errores recientes, 25 palabras).
 - Hay una caché genérica (`ai_cache`, `cacheGet`/`cacheSet`) disponible para tareas repetibles (p. ej. analizar un artículo en la fase 3).

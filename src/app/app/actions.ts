@@ -12,7 +12,6 @@ import { finishSession, RateLimitedError, startSession, submitAnswer, type Answe
 import { AiQuotaError, endConversation, sendTutorMessage, startConversation } from "@/lib/services/tutor";
 import type { ConversationFeedback } from "@/lib/ai/prompts";
 import { requireLearner, requireViewer } from "@/lib/services/viewer";
-import { createSupabaseServer } from "@/lib/supabase/server";
 
 /**
  * Server Actions: la única superficie de escritura de la app.
@@ -241,8 +240,6 @@ export async function deleteAccountAction(confirmation: string): Promise<ActionR
     if (str(confirmation, 20).toUpperCase() !== "ELIMINAR") throw new Error("Confirmación incorrecta");
     const viewer = await requireViewer();
     await deleteAccount(viewer.userId);
-    const supabase = await createSupabaseServer();
-    await supabase.auth.signOut();
     return null;
   });
   if (res.ok) redirect("/?deleted=1");

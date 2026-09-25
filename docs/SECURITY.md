@@ -2,22 +2,24 @@
 
 ## Autenticación y autorización
 
-- **Supabase Auth** (email/contraseña con confirmación, Google OAuth con PKCE). Las contraseñas nunca pasan por nuestra base de datos.
+- **Firebase Auth** (correo/contraseña y Google). Las contraseñas nunca pasan por nuestro servidor ni nuestra base de datos.
+- **Sesión en cookie httpOnly:** el navegador inicia sesión con el SDK de Firebase (persistencia *en memoria*: nada en `localStorage`), obtiene un ID token y lo canjea en `POST /api/auth/session` por una *session cookie* de Firebase (`__session`, `httpOnly`, `secure`, `SameSite=Lax`, 14 días). El servidor exige que el ID token sea de un inicio de sesión de hace menos de 5 minutos.
 - **Doble barrera:**
-  1. `src/proxy.ts` refresca la sesión y bloquea `/app/*` sin usuario.
-  2. Cada Server Component y cada Server Action vuelve a validar el usuario con `supabase.auth.getUser()`, que verifica el JWT contra Supabase, mediante `requireViewer()` y `requireLearner()`.
-- **Autorización por fila en la app:** toda consulta filtra por el `userId` o `user_language_id` del usuario autenticado. Los IDs que llegan del cliente (sesión, conversación, diagnóstico) se comprueban contra ese usuario.
+  1. `src/proxy.ts` bloquea `/app/*` si no hay cookie (barato, sin red).
+  2. Cada Server Component, Server Action y Route Handler valida la cookie con `verifySessionCookie(…, checkRevoked = true)` mediante `requireViewer()` / `requireLearner()` / `getViewer()`.
+- **Cerrar sesión** revoca los refresh tokens del usuario (cierra la sesión en todos los dispositivos) y borra la cookie.
+- **Autorización estructural:** los datos viven bajo `users/{uid}` y el `uid` sale siempre de la cookie verificada; los IDs del cliente se buscan dentro de ese árbol.
 - **Anti open-redirect:** `next` sólo acepta rutas internas (`/…`, nunca `//…`).
+- **CSRF:** las Server Actions comprueban el origen (Next.js); los Route Handlers que mutan (`/api/auth/session`, `/api/notifications/*`, `/auth/signout`) exigen `Origin` del propio sitio (`src/lib/http.ts`). La cookie es `SameSite=Lax`.
 
 ## Validación de entradas
 
 - Las Server Actions (`src/app/app/actions.ts`) sanean cada campo: longitudes máximas, enteros acotados, enumeraciones cerradas, zona horaria válida y temas de una lista blanca.
 - **La evaluación ocurre en el servidor:** el cliente envía la `key` del ejercicio y el servidor obtiene la respuesta correcta del catálogo. Un cliente manipulado no puede marcar una respuesta como correcta ni tocar ítems de otro idioma.
 - El diagnóstico sólo acepta respuesta al ítem que el servidor entregó.
-- SQL siempre parametrizado (plantillas de `postgres.js`); no hay concatenación.
 - React escapa todo el texto; no se usa `dangerouslySetInnerHTML` salvo en el script estático del tema.
 
-## Rate limiting (Postgres, sin servicios externos)
+## Rate limiting (Firestore, sin servicios externos)
 
 | Clave | Límite |
 |---|---|
@@ -25,16 +27,26 @@
 | `ai-min:<user>` | 10 / min |
 | `ai-day:<user>` | `AI_DAILY_LIMIT_PER_USER` / día |
 | `export:<user>` | 5 / hora |
+| `login:<user>` | 30 / hora |
+| `push-register:<user>` · `push-test:<user>` | 20 / hora · 5 / hora |
+
+Firebase Auth aplica además su propia protección contra fuerza bruta (`auth/too-many-requests`).
+
+## Notificaciones push
+
+- Los tokens de dispositivo sólo se registran con sesión válida y se guardan asociados al usuario.
+- No existe ningún endpoint que envíe a un token arbitrario: la prueba sólo envía a los dispositivos del propio usuario y los recordatorios (`/api/cron/reminders`) exigen `Authorization: Bearer $CRON_SECRET`.
+- Los tokens caducados se eliminan automáticamente tras cada envío.
 
 ## Secretos
 
-- Sólo son públicas `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (bloqueada por RLS) y `NEXT_PUBLIC_SITE_URL`.
-- `DATABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y las claves de IA sólo existen en el servidor. `src/lib/env.ts` importa `server-only`, así que el build falla si un componente cliente intenta usarlas.
-- `.env*` está en `.gitignore` y `.env.example` documenta cada variable.
+- Públicas por diseño: `NEXT_PUBLIC_FIREBASE_*` (identifican el proyecto; la seguridad la dan las reglas de Firestore y el servidor) y `NEXT_PUBLIC_SITE_URL`.
+- `FIREBASE_SERVICE_ACCOUNT`, `CRON_SECRET` y las claves de IA sólo existen en el servidor. `src/lib/env.ts` y `src/lib/firebase/admin.ts` importan `server-only`, así que el build falla si un componente cliente intenta usarlos.
+- `.env*` y los JSON de cuentas de servicio están en `.gitignore`; `.env.example` documenta cada variable.
 
 ## Base de datos
 
-RLS activado sin políticas y permisos revocados a `anon` y `authenticated`: la API REST pública de Supabase no expone datos. Hay CHECK constraints en longitudes y enumeraciones.
+`firestore.rules` deniega cualquier lectura/escritura desde clientes. Sólo el servidor accede (Admin SDK). Ver DATABASE.md.
 
 ## Cabeceras HTTP (`next.config.ts`)
 
@@ -42,19 +54,18 @@ RLS activado sin políticas y permisos revocados a `anon` y `authenticated`: la 
 
 ## Logging
 
-Los errores se registran en el servidor con un prefijo (`[action:…]`, `[account]`) sin datos personales ni secretos. El usuario ve mensajes útiles ("Algo salió mal… tu progreso está a salvo"), nunca trazas.
+Los errores se registran en el servidor con un prefijo (`[action:…]`, `[auth]`, `[push]`) sin datos personales ni secretos. El usuario ve mensajes útiles ("Algo salió mal… tu progreso está a salvo"), nunca trazas.
 
 ## Privacidad (México / RGPD)
 
-- Consentimiento explícito del aviso de privacidad (`consent_at`) y consentimiento **separado** para la IA (`ai_consent`).
+- Consentimiento explícito del aviso de privacidad (`consentAt`) y consentimiento **separado** para la IA (`aiConsent`).
 - Minimización de datos: ver DATABASE.md → "Datos que NO guardamos".
 - **Acceso y portabilidad:** `/api/export` devuelve todos los datos en JSON.
-- **Cancelación:** en *Configuración → Eliminar cuenta* se borran los datos de la app y la identidad (Admin API o SQL).
+- **Cancelación:** en *Configuración → Eliminar cuenta* se borran todos los datos (`recursiveDelete`) y la identidad en Firebase Auth.
 - El aviso de privacidad (`/privacy`) es un **borrador** que debe revisar una persona profesional del derecho. Este proyecto no afirma cumplimiento legal automático.
 
 ## Pendiente antes de abrir al público
 
-- Protección contra bots en el registro (CAPTCHA de Supabase Auth, con Turnstile gratuito).
-- SMTP propio para los correos de autenticación.
+- Firebase App Check (reCAPTCHA Enterprise) para frenar bots en el registro.
 - Una Content-Security-Policy estricta con nonces.
 - Revisión jurídica del aviso de privacidad.

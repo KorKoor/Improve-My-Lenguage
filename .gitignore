@@ -74,3 +74,8 @@ temp/
 *.tgz
 *.bak
 *.orig
+
+# Credenciales de Firebase / Google Cloud (nunca al repositorio)
+*-firebase-adminsdk-*.json
+service-account*.json
+.firebase/

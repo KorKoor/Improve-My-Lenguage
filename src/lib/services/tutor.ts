@@ -68,7 +68,7 @@ export async function startConversation(learner: Learner, topic: string | null) 
     messages: [{ role: "user", content: openingPrompt(ctx, topic) }],
     maxTokens: 200,
   });
-  await repo.addMessage(conv.id, "assistant", opening.trim());
+  await repo.addMessage(learner.ul.id, conv.id, "assistant", opening.trim());
   await repo.track(learner.userId, "conversation_started", { topic: topic ?? null });
   return { conversationId: conv.id, message: opening.trim() };
 }
@@ -79,14 +79,14 @@ export async function sendTutorMessage(learner: Learner, conversationId: string,
   const clean = text.trim().slice(0, 1000);
   if (!clean) throw new Error("Mensaje vacío");
   await guardAi(learner);
-  await repo.addMessage(conv.id, "user", clean);
-  const history = await repo.getMessages(conv.id);
+  await repo.addMessage(learner.ul.id, conv.id, "user", clean);
+  const history = await repo.getMessages(learner.ul.id, conv.id);
   const ctx = await buildLearnerContext(learner);
   // Sólo los últimos 12 turnos: controla coste y latencia.
   const recent = history.slice(-12).map((m) => ({ role: m.role, content: m.content }));
   if (recent[0]?.role === "assistant") recent.unshift({ role: "user", content: "(conversation start)" });
   const reply = await generate({ tier: "smart", system: tutorSystemPrompt(ctx, conv.topic), messages: recent, maxTokens: 220 });
-  await repo.addMessage(conv.id, "assistant", reply.trim());
+  await repo.addMessage(learner.ul.id, conv.id, "assistant", reply.trim());
   return { message: reply.trim() };
 }
 
@@ -94,11 +94,11 @@ export async function endConversation(learner: Learner, conversationId: string):
   const conv = await repo.getConversation(learner.ul.id, conversationId);
   if (!conv) throw new Error("Conversación no encontrada");
   if (conv.endedAt && conv.feedback) return conv.feedback as ConversationFeedback;
-  const history = await repo.getMessages(conv.id);
+  const history = await repo.getMessages(learner.ul.id, conv.id);
   const learnerTexts = history.filter((m) => m.role === "user").map((m) => m.content);
   if (learnerTexts.length === 0) {
     const empty: ConversationFeedback = { summary: "No hubo mensajes que analizar.", strengths: [], mistakes: [], suggestedFocus: null };
-    await repo.endConversation(conv.id, empty);
+    await repo.endConversation(learner.ul.id, conv.id, empty);
     return empty;
   }
   await guardAi(learner);
@@ -132,7 +132,7 @@ export async function endConversation(learner: Learner, conversationId: string):
       explanation: m.explanation,
     })),
   );
-  await repo.endConversation(conv.id, feedback);
+  await repo.endConversation(learner.ul.id, conv.id, feedback);
   // Hablar con el tutor cuenta como práctica oral (evidencia débil de speaking).
   const skills = await getSkills(learner.ul.id);
   const sp = skills.get("speaking")!;

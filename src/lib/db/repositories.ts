@@ -1,35 +1,121 @@
 import "server-only";
+import { createHash } from "node:crypto";
+import {
+  AggregateField,
+  FieldValue,
+  Timestamp,
+  type CollectionReference,
+  type DocumentData,
+  type DocumentReference,
+  type DocumentSnapshot,
+} from "firebase-admin/firestore";
 import type { CefrLevel, Skill } from "../content/types";
 import type { SkillEstimate } from "../engine/levels";
-import { db } from "./client";
+import { localDay, weekStart } from "../engine/progress";
+import { firestore } from "../firebase/admin";
 import type {
   ActivityRow,
   GoalRow,
   KnowledgeDbRow,
   ProfileRow,
   SessionRow,
-  SkillEstimateRow,
   UserLanguageRow,
 } from "./types";
 
 /**
- * Repositorios: única capa que escribe SQL. Toda función recibe el userId (o
- * un userLanguageId ya verificado como propiedad del usuario) y filtra por él:
- * la autorización se aplica aquí, no sólo en la UI.
+ * Repositorios: única capa que habla con la base de datos (Firestore).
+ *
+ * Modelo (ver docs/DATABASE.md):
+ *   users/{uid}                                   perfil y preferencias
+ *   users/{uid}/languages/{code}                  idioma + vector de habilidades + objetivo
+ *   users/{uid}/languages/{code}/knowledge/{item} memoria FSRS por ítem
+ *   users/{uid}/languages/{code}/attempts|mistakes|sessions|assessments|conversations
+ *   users/{uid}/activity/{day}__{code}            agregado diario (heatmap, racha)
+ *   users/{uid}/achievements|events
+ *   pushTokens/{sha256(token)}                    dispositivos para notificaciones
+ *
+ * Todo cuelga de users/{uid}: la propiedad está codificada en la ruta, así que
+ * la autorización es estructural (no se puede leer un documento de otro
+ * usuario con un uid propio) y borrar/exportar una cuenta es recorrer un árbol.
+ * Un "userLanguageId" es `${uid}:${code}`.
  */
 
+const db = () => firestore();
+const users = () => db().collection("users");
+const userRef = (uid: string) => users().doc(uid);
+
+export function userLanguageId(uid: string, code: string): string {
+  return `${uid}:${code}`;
+}
+
+function ulRef(ulId: string): DocumentReference {
+  const i = ulId.lastIndexOf(":");
+  const uid = ulId.slice(0, i);
+  const code = ulId.slice(i + 1);
+  if (i <= 0 || !/^[a-z]{2,3}(-[A-Za-z]{2,4})?$/.test(code) || uid.includes("/")) {
+    throw new Error("userLanguageId no válido");
+  }
+  return userRef(uid).collection("languages").doc(code);
+}
+
+const knowledgeId = (itemId: string) => encodeURIComponent(itemId);
+
+// ── Conversión de tipos ───────────────────────────────────────────────────
+function date(v: unknown): Date | null {
+  if (v instanceof Timestamp) return v.toDate();
+  if (v instanceof Date) return v;
+  return null;
+}
+const num = (v: unknown, d = 0) => (typeof v === "number" && Number.isFinite(v) ? v : d);
+const str = (v: unknown): string | null => (typeof v === "string" ? v : null);
+function json(v: unknown): unknown {
+  if (typeof v !== "string") return null;
+  try {
+    return JSON.parse(v);
+  } catch {
+    return null;
+  }
+}
+// Estados/planes se guardan serializados: Firestore no admite arrays anidados.
+const toJson = (v: unknown) => (v === undefined || v === null ? null : JSON.stringify(v));
+
 // ── Perfil ────────────────────────────────────────────────────────────────
+function toProfile(snap: DocumentSnapshot): ProfileRow {
+  const d = snap.data() ?? {};
+  return {
+    id: snap.id,
+    displayName: str(d.displayName),
+    nativeLanguage: str(d.nativeLanguage) ?? "es",
+    activeLanguage: str(d.activeLanguage),
+    timezone: str(d.timezone) ?? "America/Mexico_City",
+    theme: (d.theme as ProfileRow["theme"]) ?? "system",
+    dailyMinutes: num(d.dailyMinutes, 15),
+    explanationDepth: (d.explanationDepth as ProfileRow["explanationDepth"]) ?? "balanced",
+    preferredDifficulty: (d.preferredDifficulty as ProfileRow["preferredDifficulty"]) ?? "balanced",
+    competitive: Boolean(d.competitive),
+    motivation: str(d.motivation),
+    interests: Array.isArray(d.interests) ? (d.interests as string[]) : [],
+    interactionPrefs: Array.isArray(d.interactionPrefs) ? (d.interactionPrefs as string[]) : [],
+    onboardedAt: date(d.onboardedAt),
+    consentAt: date(d.consentAt),
+    aiConsent: Boolean(d.aiConsent),
+    createdAt: date(d.createdAt) ?? new Date(0),
+  };
+}
+
 export async function getProfile(userId: string): Promise<ProfileRow | null> {
-  const rows = await db()<ProfileRow[]>`select * from profiles where id = ${userId}`;
-  return rows[0] ?? null;
+  const snap = await userRef(userId).get();
+  return snap.exists ? toProfile(snap) : null;
 }
 
 export async function ensureProfile(userId: string, displayName: string | null): Promise<ProfileRow> {
-  const rows = await db()<ProfileRow[]>`
-    insert into profiles (id, display_name) values (${userId}, ${displayName})
-    on conflict (id) do update set id = excluded.id
-    returning *`;
-  return rows[0]!;
+  const ref = userRef(userId);
+  try {
+    await ref.create({ displayName: displayName?.slice(0, 60) ?? null, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+  } catch (err) {
+    if ((err as { code?: number }).code !== 6) throw err; // 6 = ALREADY_EXISTS
+  }
+  return toProfile(await ref.get());
 }
 
 export type ProfileUpdate = Partial<
@@ -56,21 +142,31 @@ export type ProfileUpdate = Partial<
 export async function updateProfile(userId: string, patch: ProfileUpdate): Promise<void> {
   const entries = Object.entries(patch).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return;
-  const data = Object.fromEntries(entries);
-  const sql = db();
-  await sql`update profiles set ${sql(data)}, updated_at = now() where id = ${userId}`;
+  await userRef(userId).set({ ...Object.fromEntries(entries), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
 }
 
 // ── Idiomas del usuario ───────────────────────────────────────────────────
+function toUserLanguage(uid: string, snap: DocumentSnapshot): UserLanguageRow {
+  const d = snap.data() ?? {};
+  return {
+    id: userLanguageId(uid, snap.id),
+    userId: uid,
+    languageCode: snap.id,
+    selfReportedLevel: (str(d.selfReportedLevel) as CefrLevel | null) ?? null,
+    assessedAt: date(d.assessedAt),
+    createdAt: date(d.createdAt) ?? new Date(0),
+  };
+}
+
 export async function listUserLanguages(userId: string): Promise<UserLanguageRow[]> {
-  return db()<UserLanguageRow[]>`
-    select * from user_languages where user_id = ${userId} order by created_at`;
+  const snap = await userRef(userId).collection("languages").orderBy("createdAt").get();
+  return snap.docs.map((d) => toUserLanguage(userId, d));
 }
 
 export async function getUserLanguage(userId: string, code: string): Promise<UserLanguageRow | null> {
-  const rows = await db()<UserLanguageRow[]>`
-    select * from user_languages where user_id = ${userId} and language_code = ${code}`;
-  return rows[0] ?? null;
+  if (!/^[a-z]{2,3}(-[A-Za-z]{2,4})?$/.test(code)) return null;
+  const snap = await userRef(userId).collection("languages").doc(code).get();
+  return snap.exists ? toUserLanguage(userId, snap) : null;
 }
 
 export async function upsertUserLanguage(
@@ -78,135 +174,136 @@ export async function upsertUserLanguage(
   code: string,
   selfReportedLevel: CefrLevel | null,
 ): Promise<UserLanguageRow> {
-  const rows = await db()<UserLanguageRow[]>`
-    insert into user_languages (user_id, language_code, self_reported_level)
-    values (${userId}, ${code}, ${selfReportedLevel})
-    on conflict (user_id, language_code)
-      do update set self_reported_level = coalesce(excluded.self_reported_level, user_languages.self_reported_level)
-    returning *`;
-  return rows[0]!;
+  const ref = ulRef(userLanguageId(userId, code));
+  await db().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) {
+      tx.set(ref, { selfReportedLevel, assessedAt: null, createdAt: FieldValue.serverTimestamp() });
+    } else if (selfReportedLevel) {
+      tx.update(ref, { selfReportedLevel });
+    }
+  });
+  return toUserLanguage(userId, await ref.get());
 }
 
-export async function markAssessed(userLanguageId: string): Promise<void> {
-  await db()`update user_languages set assessed_at = now() where id = ${userLanguageId}`;
+export async function markAssessed(ulId: string): Promise<void> {
+  await ulRef(ulId).update({ assessedAt: FieldValue.serverTimestamp() });
 }
 
-// ── Vector de habilidades ─────────────────────────────────────────────────
-export async function getSkillEstimates(userLanguageId: string): Promise<SkillEstimate[]> {
-  const rows = await db()<SkillEstimateRow[]>`
-    select skill, theta, se, evidence from skill_estimates where user_language_id = ${userLanguageId}`;
-  return rows.map((r) => ({ skill: r.skill, theta: r.theta, se: r.se, evidence: r.evidence }));
+// ── Vector de habilidades (embebido en el documento del idioma) ───────────
+export async function getSkillEstimates(ulId: string): Promise<SkillEstimate[]> {
+  const snap = await ulRef(ulId).get();
+  const skills = (snap.get("skills") ?? {}) as Record<string, { theta: number; se: number; evidence: number }>;
+  return Object.entries(skills).map(([skill, e]) => ({ skill: skill as Skill, theta: num(e.theta), se: num(e.se, 1), evidence: num(e.evidence) }));
 }
 
-export async function upsertSkillEstimates(userLanguageId: string, estimates: SkillEstimate[]): Promise<void> {
+export async function upsertSkillEstimates(ulId: string, estimates: SkillEstimate[]): Promise<void> {
   if (estimates.length === 0) return;
-  const sql = db();
-  const rows = estimates.map((e) => ({
-    userLanguageId,
-    skill: e.skill,
-    theta: e.theta,
-    se: e.se,
-    evidence: e.evidence,
-  }));
-  await sql`
-    insert into skill_estimates ${sql(rows, "userLanguageId", "skill", "theta", "se", "evidence")}
-    on conflict (user_language_id, skill) do update
-      set theta = excluded.theta, se = excluded.se, evidence = excluded.evidence, updated_at = now()`;
+  const skills: Record<string, DocumentData> = {};
+  for (const e of estimates) skills[e.skill] = { theta: e.theta, se: e.se, evidence: e.evidence, updatedAt: FieldValue.serverTimestamp() };
+  await ulRef(ulId).set({ skills }, { merge: true });
 }
 
-// ── Objetivos ─────────────────────────────────────────────────────────────
-export async function getActiveGoal(userLanguageId: string): Promise<GoalRow | null> {
-  const rows = await db()<GoalRow[]>`
-    select id, user_language_id, target_level, deadline::text as deadline, minutes_per_day, reason, created_at
-    from learning_goals where user_language_id = ${userLanguageId} and achieved_at is null`;
-  return rows[0] ?? null;
+// ── Objetivos (el activo, embebido en el idioma) ──────────────────────────
+export async function getActiveGoal(ulId: string): Promise<GoalRow | null> {
+  const g = (await ulRef(ulId).get()).get("goal") as DocumentData | undefined;
+  if (!g) return null;
+  return {
+    id: String(g.id),
+    userLanguageId: ulId,
+    targetLevel: g.targetLevel as CefrLevel,
+    deadline: str(g.deadline),
+    minutesPerDay: num(g.minutesPerDay, 15),
+    reason: str(g.reason),
+    createdAt: date(g.createdAt) ?? new Date(0),
+  };
 }
 
 export async function setGoal(
-  userLanguageId: string,
+  ulId: string,
   goal: { targetLevel: CefrLevel; deadline: string | null; minutesPerDay: number; reason: string | null },
 ): Promise<void> {
-  const sql = db();
-  await sql.begin(async (tx) => {
-    await tx`delete from learning_goals where user_language_id = ${userLanguageId} and achieved_at is null`;
-    await tx`
-      insert into learning_goals (user_language_id, target_level, deadline, minutes_per_day, reason)
-      values (${userLanguageId}, ${goal.targetLevel}, ${goal.deadline}, ${goal.minutesPerDay}, ${goal.reason})`;
-  });
+  await ulRef(ulId).update({ goal: { id: db().collection("_").doc().id, ...goal, createdAt: Timestamp.now() } });
 }
 
 // ── Conocimiento (FSRS) ───────────────────────────────────────────────────
-export async function getKnowledge(userLanguageId: string, itemIds: string[]): Promise<KnowledgeDbRow[]> {
+function toKnowledge(ulId: string, snap: DocumentSnapshot): KnowledgeDbRow {
+  const d = snap.data() ?? {};
+  return {
+    userLanguageId: ulId,
+    itemId: String(d.itemId),
+    itemType: d.itemType as KnowledgeDbRow["itemType"],
+    status: (d.status as KnowledgeDbRow["status"]) ?? "learning",
+    stability: num(d.stability),
+    difficulty: num(d.difficulty),
+    reps: num(d.reps),
+    lapses: num(d.lapses),
+    state: (d.state as KnowledgeDbRow["state"]) ?? "new",
+    dueAt: date(d.dueAt) ?? new Date(),
+    lastReviewAt: date(d.lastReviewAt),
+    exposureCount: num(d.exposureCount),
+    correctCount: num(d.correctCount),
+    incorrectCount: num(d.incorrectCount),
+    avgResponseMs: typeof d.avgResponseMs === "number" ? d.avgResponseMs : null,
+  };
+}
+
+/** Un ítem entra en la cola de repaso si ya se estudió y no está marcado como sabido. */
+const reviewable = (reps: number, status: KnowledgeDbRow["status"]) => reps > 0 && status !== "known";
+
+export async function getKnowledge(ulId: string, itemIds: string[]): Promise<KnowledgeDbRow[]> {
   if (itemIds.length === 0) return [];
-  return db()<KnowledgeDbRow[]>`
-    select * from user_knowledge where user_language_id = ${userLanguageId} and item_id = any(${itemIds}::text[])`;
+  const col = ulRef(ulId).collection("knowledge");
+  const snaps = await db().getAll(...itemIds.map((id) => col.doc(knowledgeId(id))));
+  return snaps.filter((s) => s.exists).map((s) => toKnowledge(ulId, s));
 }
 
-export async function getAllKnowledge(userLanguageId: string): Promise<KnowledgeDbRow[]> {
-  return db()<KnowledgeDbRow[]>`select * from user_knowledge where user_language_id = ${userLanguageId}`;
+export async function getAllKnowledge(ulId: string): Promise<KnowledgeDbRow[]> {
+  const snap = await ulRef(ulId).collection("knowledge").get();
+  return snap.docs.map((d) => toKnowledge(ulId, d));
 }
 
-export async function getDueKnowledge(userLanguageId: string, now: Date, limit: number): Promise<KnowledgeDbRow[]> {
-  return db()<KnowledgeDbRow[]>`
-    select * from user_knowledge
-    where user_language_id = ${userLanguageId} and reps > 0 and due_at <= ${now} and status <> 'known'
-    order by due_at asc
-    limit ${limit}`;
+function dueQuery(ulId: string, now: Date) {
+  return ulRef(ulId).collection("knowledge").where("reviewable", "==", true).where("dueAt", "<=", Timestamp.fromDate(now));
 }
 
-export async function countDue(userLanguageId: string, now: Date): Promise<number> {
-  const rows = await db()<{ n: number }[]>`
-    select count(*)::int as n from user_knowledge
-    where user_language_id = ${userLanguageId} and reps > 0 and due_at <= ${now} and status <> 'known'`;
-  return rows[0]?.n ?? 0;
+export async function getDueKnowledge(ulId: string, now: Date, limit: number): Promise<KnowledgeDbRow[]> {
+  const snap = await dueQuery(ulId, now).orderBy("dueAt").limit(limit).get();
+  return snap.docs.map((d) => toKnowledge(ulId, d));
+}
+
+export async function countDue(ulId: string, now: Date): Promise<number> {
+  const agg = await dueQuery(ulId, now).count().get();
+  return agg.data().count;
 }
 
 export async function saveKnowledge(row: KnowledgeDbRow): Promise<void> {
-  const sql = db();
-  await sql`
-    insert into user_knowledge ${sql(
-      row,
-      "userLanguageId",
-      "itemId",
-      "itemType",
-      "status",
-      "stability",
-      "difficulty",
-      "reps",
-      "lapses",
-      "state",
-      "dueAt",
-      "lastReviewAt",
-      "exposureCount",
-      "correctCount",
-      "incorrectCount",
-      "avgResponseMs",
-    )}
-    on conflict (user_language_id, item_id) do update set
-      status = excluded.status,
-      stability = excluded.stability,
-      difficulty = excluded.difficulty,
-      reps = excluded.reps,
-      lapses = excluded.lapses,
-      state = excluded.state,
-      due_at = excluded.due_at,
-      last_review_at = excluded.last_review_at,
-      exposure_count = excluded.exposure_count,
-      correct_count = excluded.correct_count,
-      incorrect_count = excluded.incorrect_count,
-      avg_response_ms = excluded.avg_response_ms`;
+  const { userLanguageId: ulId, ...data } = row;
+  await ulRef(ulId)
+    .collection("knowledge")
+    .doc(knowledgeId(row.itemId))
+    .set({ ...data, reviewable: reviewable(row.reps, row.status) }, { merge: true });
 }
 
 export async function setKnowledgeStatus(
-  userLanguageId: string,
+  ulId: string,
   itemId: string,
   itemType: "vocab" | "grammar",
   status: KnowledgeDbRow["status"],
 ): Promise<void> {
-  await db()`
-    insert into user_knowledge (user_language_id, item_id, item_type, status)
-    values (${userLanguageId}, ${itemId}, ${itemType}, ${status})
-    on conflict (user_language_id, item_id) do update set status = excluded.status`;
+  const ref = ulRef(ulId).collection("knowledge").doc(knowledgeId(itemId));
+  await db().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (snap.exists) {
+      tx.update(ref, { status, reviewable: reviewable(num(snap.get("reps")), status) });
+    } else {
+      tx.set(ref, {
+        itemId, itemType, status, stability: 0, difficulty: 0, reps: 0, lapses: 0, state: "new",
+        dueAt: Timestamp.now(), lastReviewAt: null, exposureCount: 0, correctCount: 0, incorrectCount: 0,
+        avgResponseMs: null, reviewable: false, createdAt: FieldValue.serverTimestamp(),
+      });
+    }
+  });
 }
 
 // ── Intentos y errores ────────────────────────────────────────────────────
@@ -226,33 +323,16 @@ export interface AttemptInsert {
   difficulty: number;
 }
 
-export async function insertAttempt(a: AttemptInsert): Promise<number> {
-  const sql = db();
-  const rows = await sql<{ id: number }[]>`
-    insert into exercise_attempts ${sql(
-      a,
-      "userLanguageId",
-      "sessionId",
-      "exerciseKey",
-      "exerciseType",
-      "skill",
-      "errorCategory",
-      "correct",
-      "nearMiss",
-      "response",
-      "timeMs",
-      "attempts",
-      "confidence",
-      "difficulty",
-    )}
-    returning id`;
-  return Number(rows[0]!.id);
+export async function insertAttempt(a: AttemptInsert): Promise<string> {
+  const { userLanguageId: ulId, ...data } = a;
+  const ref = await ulRef(ulId).collection("attempts").add({ ...data, response: data.response.slice(0, 500), createdAt: Timestamp.now() });
+  return ref.id;
 }
 
 export interface MistakeInsert {
   userLanguageId: string;
   sessionId: string | null;
-  attemptId: number | null;
+  attemptId: string | null;
   source: "exercise" | "tutor" | "writing" | "assessment";
   category: string;
   subcategory: string | null;
@@ -263,122 +343,163 @@ export interface MistakeInsert {
 
 export async function insertMistakes(rows: MistakeInsert[]): Promise<void> {
   if (rows.length === 0) return;
-  const sql = db();
-  await sql`
-    insert into mistakes ${sql(
-      rows,
-      "userLanguageId",
-      "sessionId",
-      "attemptId",
-      "source",
-      "category",
-      "subcategory",
-      "userText",
-      "correctedText",
-      "explanation",
-    )}`;
+  const batch = db().batch();
+  const now = Timestamp.now();
+  for (const { userLanguageId: ulId, ...m } of rows) {
+    batch.set(ulRef(ulId).collection("mistakes").doc(), {
+      ...m,
+      userText: m.userText?.slice(0, 1000) ?? null,
+      correctedText: m.correctedText?.slice(0, 1000) ?? null,
+      explanation: m.explanation?.slice(0, 2000) ?? null,
+      createdAt: now,
+    });
+  }
+  await batch.commit();
 }
 
-export async function recentMistakes(userLanguageId: string, since: Date) {
-  return db()<{ category: string; createdAt: Date; sessionId: string | null }[]>`
-    select category, created_at, session_id from mistakes
-    where user_language_id = ${userLanguageId} and created_at >= ${since}
-    order by created_at desc limit 500`;
+export async function recentMistakes(ulId: string, since: Date) {
+  const snap = await ulRef(ulId).collection("mistakes")
+    .where("createdAt", ">=", Timestamp.fromDate(since)).orderBy("createdAt", "desc").limit(500)
+    .select("category", "createdAt", "sessionId").get();
+  return snap.docs.map((d) => ({ category: String(d.get("category")), createdAt: date(d.get("createdAt"))!, sessionId: str(d.get("sessionId")) }));
 }
 
-export async function recentMistakeExamples(userLanguageId: string, limit: number) {
-  return db()<{ category: string; userText: string | null; correctedText: string | null; createdAt: Date }[]>`
-    select category, user_text, corrected_text, created_at from mistakes
-    where user_language_id = ${userLanguageId}
-    order by created_at desc limit ${limit}`;
+export async function recentMistakeExamples(ulId: string, limit: number) {
+  const snap = await ulRef(ulId).collection("mistakes").orderBy("createdAt", "desc").limit(limit)
+    .select("category", "userText", "correctedText", "createdAt").get();
+  return snap.docs.map((d) => ({
+    category: String(d.get("category")),
+    userText: str(d.get("userText")),
+    correctedText: str(d.get("correctedText")),
+    createdAt: date(d.get("createdAt"))!,
+  }));
 }
 
-export async function attemptStatsByCategory(userLanguageId: string, since: Date) {
-  return db()<{ category: string; total: number; correct: number }[]>`
-    select error_category as category, count(*)::int as total, count(*) filter (where correct)::int as correct
-    from exercise_attempts
-    where user_language_id = ${userLanguageId} and created_at >= ${since} and error_category is not null
-    group by error_category`;
+/** Intentos desde una fecha (sólo los campos pedidos). Ventanas acotadas: ≤ 12 semanas. */
+async function attemptsSince(ulId: string, since: Date, ...fields: string[]) {
+  const snap = await ulRef(ulId).collection("attempts").where("createdAt", ">=", Timestamp.fromDate(since)).select(...fields).get();
+  return snap.docs.map((d) => d.data());
 }
 
-export async function attemptTotals(userLanguageId: string, since: Date | null) {
-  const rows = await db()<{ total: number; correct: number }[]>`
-    select count(*)::int as total, count(*) filter (where correct)::int as correct
-    from exercise_attempts
-    where user_language_id = ${userLanguageId} and (${since}::timestamptz is null or created_at >= ${since})`;
-  return rows[0] ?? { total: 0, correct: 0 };
+function tally<K extends string>(rows: DocumentData[], keyOf: (r: DocumentData) => K | null) {
+  const acc = new Map<K, { total: number; correct: number }>();
+  for (const r of rows) {
+    const k = keyOf(r);
+    if (k === null) continue;
+    const t = acc.get(k) ?? { total: 0, correct: 0 };
+    t.total += 1;
+    if (r.correct === true) t.correct += 1;
+    acc.set(k, t);
+  }
+  return acc;
 }
 
-export async function weeklyAccuracy(userLanguageId: string, weeks: number) {
-  return db()<{ week: string; total: number; correct: number }[]>`
-    select to_char(date_trunc('week', created_at), 'YYYY-MM-DD') as week,
-           count(*)::int as total, count(*) filter (where correct)::int as correct
-    from exercise_attempts
-    where user_language_id = ${userLanguageId} and created_at >= now() - make_interval(weeks => ${weeks})
-    group by 1 order by 1`;
+export async function attemptStatsByCategory(ulId: string, since: Date) {
+  const rows = await attemptsSince(ulId, since, "errorCategory", "correct");
+  return [...tally(rows, (r) => str(r.errorCategory))].map(([category, t]) => ({ category, ...t }));
 }
 
-export async function skillAccuracy(userLanguageId: string, since: Date) {
-  return db()<{ skill: Skill; total: number; correct: number }[]>`
-    select skill, count(*)::int as total, count(*) filter (where correct)::int as correct
-    from exercise_attempts
-    where user_language_id = ${userLanguageId} and created_at >= ${since}
-    group by skill`;
+export async function attemptTotals(ulId: string, since: Date | null) {
+  if (since) {
+    const rows = await attemptsSince(ulId, since, "correct");
+    return { total: rows.length, correct: rows.filter((r) => r.correct === true).length };
+  }
+  const col = ulRef(ulId).collection("attempts");
+  const [all, ok] = await Promise.all([col.count().get(), col.where("correct", "==", true).count().get()]);
+  return { total: all.data().count, correct: ok.data().count };
+}
+
+export async function weeklyAccuracy(ulId: string, weeks: number) {
+  const rows = await attemptsSince(ulId, new Date(Date.now() - weeks * 7 * 86_400_000), "createdAt", "correct");
+  return [...tally(rows, (r) => weekStart(date(r.createdAt) ?? new Date()))]
+    .map(([week, t]) => ({ week, ...t }))
+    .sort((a, b) => a.week.localeCompare(b.week));
+}
+
+export async function skillAccuracy(ulId: string, since: Date) {
+  const rows = await attemptsSince(ulId, since, "skill", "correct");
+  return [...tally(rows, (r) => str(r.skill) as Skill | null)].map(([skill, t]) => ({ skill, ...t }));
 }
 
 // ── Sesiones ──────────────────────────────────────────────────────────────
-export async function createSession(
-  userLanguageId: string,
-  kind: SessionRow["kind"],
-  plannedMinutes: number,
-  plan: unknown,
-): Promise<SessionRow> {
-  const sql = db();
-  const rows = await sql<SessionRow[]>`
-    insert into learning_sessions (user_language_id, kind, planned_minutes, plan)
-    values (${userLanguageId}, ${kind}, ${plannedMinutes}, ${sql.json(plan as never)})
-    returning *`;
-  return rows[0]!;
+function toSession(ulId: string, snap: DocumentSnapshot): SessionRow {
+  const d = snap.data() ?? {};
+  return {
+    id: snap.id,
+    userLanguageId: ulId,
+    kind: d.kind as SessionRow["kind"],
+    plannedMinutes: num(d.plannedMinutes),
+    plan: json(d.planJson),
+    startedAt: date(d.startedAt) ?? new Date(0),
+    completedAt: date(d.completedAt),
+    durationSeconds: num(d.durationSeconds),
+    exercisesCount: num(d.exercisesCount),
+    correctCount: num(d.correctCount),
+  };
 }
 
-export async function getSession(userLanguageId: string, sessionId: string): Promise<SessionRow | null> {
-  const rows = await db()<SessionRow[]>`
-    select * from learning_sessions where id = ${sessionId} and user_language_id = ${userLanguageId}`;
-  return rows[0] ?? null;
+const sessionsOf = (ulId: string) => ulRef(ulId).collection("sessions");
+
+export async function createSession(ulId: string, kind: SessionRow["kind"], plannedMinutes: number, plan: unknown): Promise<SessionRow> {
+  const ref = sessionsOf(ulId).doc();
+  await ref.set({
+    kind, plannedMinutes, planJson: toJson(plan), startedAt: Timestamp.now(), completedAt: null,
+    completed: false, durationSeconds: 0, exercisesCount: 0, correctCount: 0, active: false,
+  });
+  return toSession(ulId, await ref.get());
 }
 
-export async function bumpSession(sessionId: string, correct: boolean): Promise<void> {
-  await db()`
-    update learning_sessions
-    set exercises_count = exercises_count + 1, correct_count = correct_count + ${correct ? 1 : 0}
-    where id = ${sessionId}`;
+export async function getSession(ulId: string, sessionId: string): Promise<SessionRow | null> {
+  if (!/^[A-Za-z0-9]{10,40}$/.test(sessionId)) return null;
+  const snap = await sessionsOf(ulId).doc(sessionId).get();
+  return snap.exists ? toSession(ulId, snap) : null;
 }
 
-export async function completeSession(userLanguageId: string, sessionId: string, durationSeconds: number) {
-  const rows = await db()<SessionRow[]>`
-    update learning_sessions
-    set completed_at = coalesce(completed_at, now()),
-        duration_seconds = greatest(duration_seconds, ${durationSeconds})
-    where id = ${sessionId} and user_language_id = ${userLanguageId}
-    returning *`;
-  return rows[0] ?? null;
+export async function bumpSession(ulId: string, sessionId: string, correct: boolean): Promise<void> {
+  await sessionsOf(ulId).doc(sessionId).update({
+    exercisesCount: FieldValue.increment(1),
+    correctCount: FieldValue.increment(correct ? 1 : 0),
+    active: true,
+  });
 }
 
-export async function recentSessionIds(userLanguageId: string, n: number): Promise<string[]> {
-  const rows = await db()<{ id: string }[]>`
-    select id from learning_sessions
-    where user_language_id = ${userLanguageId} and exercises_count > 0
-    order by started_at desc limit ${n}`;
-  return rows.map((r) => r.id);
+export async function completeSession(ulId: string, sessionId: string, durationSeconds: number): Promise<SessionRow | null> {
+  if (!/^[A-Za-z0-9]{10,40}$/.test(sessionId)) return null;
+  const ref = sessionsOf(ulId).doc(sessionId);
+  const ok = await db().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) return false;
+    tx.update(ref, {
+      completedAt: snap.get("completedAt") ?? Timestamp.now(),
+      completed: true,
+      durationSeconds: Math.max(num(snap.get("durationSeconds")), durationSeconds),
+    });
+    return true;
+  });
+  return ok ? toSession(ulId, await ref.get()) : null;
+}
+
+export async function recentSessionIds(ulId: string, n: number): Promise<string[]> {
+  const snap = await sessionsOf(ulId).where("active", "==", true).orderBy("startedAt", "desc").limit(n).select().get();
+  return snap.docs.map((d) => d.id);
 }
 
 export async function sessionCounts(userId: string) {
-  const rows = await db()<{ completed: number; minutes: number }[]>`
-    select count(*) filter (where s.completed_at is not null)::int as completed,
-           coalesce(sum(s.duration_seconds), 0)::int / 60 as minutes
-    from learning_sessions s join user_languages ul on ul.id = s.user_language_id
-    where ul.user_id = ${userId}`;
-  return rows[0] ?? { completed: 0, minutes: 0 };
+  const langs = await listUserLanguages(userId);
+  let completed = 0;
+  let seconds = 0;
+  await Promise.all(
+    langs.map(async (ul) => {
+      const col = sessionsOf(ul.id);
+      const [done, total] = await Promise.all([
+        col.where("completed", "==", true).count().get(),
+        col.aggregate({ secs: AggregateField.sum("durationSeconds") }).get(),
+      ]);
+      completed += done.data().count;
+      seconds += total.data().secs ?? 0;
+    }),
+  );
+  return { completed, minutes: Math.floor(seconds / 60) };
 }
 
 // ── Diagnóstico ───────────────────────────────────────────────────────────
@@ -394,101 +515,140 @@ export interface AssessmentRow {
   finishedAt: Date | null;
 }
 
-export async function getOpenAssessment(userLanguageId: string): Promise<AssessmentRow | null> {
-  const rows = await db()<AssessmentRow[]>`
-    select * from assessments
-    where user_language_id = ${userLanguageId} and status = 'in_progress'
-      and started_at > now() - interval '1 day'
-    order by started_at desc limit 1`;
-  return rows[0] ?? null;
+function toAssessment(ulId: string, snap: DocumentSnapshot): AssessmentRow {
+  const d = snap.data() ?? {};
+  return {
+    id: snap.id,
+    userLanguageId: ulId,
+    status: d.status as AssessmentRow["status"],
+    state: json(d.stateJson),
+    currentItemId: str(d.currentItemId),
+    currentItemSentAt: date(d.currentItemSentAt),
+    result: json(d.resultJson),
+    startedAt: date(d.startedAt) ?? new Date(0),
+    finishedAt: date(d.finishedAt),
+  };
 }
 
-export async function createAssessmentRow(userLanguageId: string, state: unknown): Promise<AssessmentRow> {
-  const sql = db();
-  await sql`update assessments set status = 'abandoned'
-            where user_language_id = ${userLanguageId} and status = 'in_progress'`;
-  const rows = await sql<AssessmentRow[]>`
-    insert into assessments (user_language_id, state) values (${userLanguageId}, ${sql.json(state as never)})
-    returning *`;
-  return rows[0]!;
+const assessmentsOf = (ulId: string) => ulRef(ulId).collection("assessments");
+
+/** El diagnóstico abierto se referencia desde el idioma (sin índices compuestos). Caduca a las 24 h. */
+export async function getOpenAssessment(ulId: string): Promise<AssessmentRow | null> {
+  const openId = str((await ulRef(ulId).get()).get("openAssessmentId"));
+  if (!openId) return null;
+  const snap = await assessmentsOf(ulId).doc(openId).get();
+  if (!snap.exists) return null;
+  const row = toAssessment(ulId, snap);
+  const fresh = row.startedAt.getTime() > Date.now() - 86_400_000;
+  return row.status === "in_progress" && fresh ? row : null;
+}
+
+export async function createAssessmentRow(ulId: string, state: unknown): Promise<AssessmentRow> {
+  const lang = ulRef(ulId);
+  const ref = assessmentsOf(ulId).doc();
+  await db().runTransaction(async (tx) => {
+    const prev = str((await tx.get(lang)).get("openAssessmentId"));
+    if (prev) tx.set(assessmentsOf(ulId).doc(prev), { status: "abandoned" }, { merge: true });
+    tx.set(ref, {
+      status: "in_progress", stateJson: toJson(state), currentItemId: null, currentItemSentAt: null,
+      resultJson: null, startedAt: Timestamp.now(), finishedAt: null,
+    });
+    tx.update(lang, { openAssessmentId: ref.id });
+  });
+  return toAssessment(ulId, await ref.get());
 }
 
 export async function updateAssessmentRow(
   id: string,
-  userLanguageId: string,
+  ulId: string,
   patch: { state: unknown; currentItemId: string | null; status?: AssessmentRow["status"]; result?: unknown },
 ): Promise<void> {
-  const sql = db();
-  await sql`
-    update assessments set
-      state = ${sql.json(patch.state as never)},
-      current_item_id = ${patch.currentItemId},
-      current_item_sent_at = ${patch.currentItemId ? new Date() : null},
-      status = ${patch.status ?? "in_progress"},
-      result = ${patch.result === undefined ? null : sql.json(patch.result as never)},
-      finished_at = ${patch.status === "completed" ? new Date() : null}
-    where id = ${id} and user_language_id = ${userLanguageId}`;
+  const status = patch.status ?? "in_progress";
+  const batch = db().batch();
+  batch.update(assessmentsOf(ulId).doc(id), {
+    stateJson: toJson(patch.state),
+    currentItemId: patch.currentItemId,
+    currentItemSentAt: patch.currentItemId ? Timestamp.now() : null,
+    status,
+    resultJson: toJson(patch.result),
+    finishedAt: status === "completed" ? Timestamp.now() : null,
+  });
+  if (status !== "in_progress") batch.update(ulRef(ulId), { openAssessmentId: null });
+  await batch.commit();
 }
 
 export async function countCompletedAssessments(userId: string): Promise<number> {
-  const rows = await db()<{ n: number }[]>`
-    select count(*)::int as n from assessments a join user_languages ul on ul.id = a.user_language_id
-    where ul.user_id = ${userId} and a.status = 'completed'`;
-  return rows[0]?.n ?? 0;
+  const langs = await listUserLanguages(userId);
+  const counts = await Promise.all(langs.map((ul) => assessmentsOf(ul.id).where("status", "==", "completed").count().get()));
+  return counts.reduce((n, c) => n + c.data().count, 0);
 }
 
 // ── Actividad diaria ──────────────────────────────────────────────────────
+const activityOf = (userId: string) => userRef(userId).collection("activity");
+
 export async function bumpActivity(
   userId: string,
   languageCode: string,
   day: string,
   delta: { seconds?: number; exercises?: number; correct?: number; wordsReviewed?: number; sessions?: number },
 ): Promise<void> {
-  await db()`
-    insert into daily_activity (user_id, language_code, day, seconds, exercises, correct, words_reviewed, sessions)
-    values (${userId}, ${languageCode}, ${day}, ${delta.seconds ?? 0}, ${delta.exercises ?? 0},
-            ${delta.correct ?? 0}, ${delta.wordsReviewed ?? 0}, ${delta.sessions ?? 0})
-    on conflict (user_id, language_code, day) do update set
-      seconds = daily_activity.seconds + excluded.seconds,
-      exercises = daily_activity.exercises + excluded.exercises,
-      correct = daily_activity.correct + excluded.correct,
-      words_reviewed = daily_activity.words_reviewed + excluded.words_reviewed,
-      sessions = daily_activity.sessions + excluded.sessions`;
+  const inc = (n?: number) => FieldValue.increment(n ?? 0);
+  await activityOf(userId).doc(`${day}__${languageCode}`).set(
+    {
+      day,
+      languageCode,
+      seconds: inc(delta.seconds),
+      exercises: inc(delta.exercises),
+      correct: inc(delta.correct),
+      wordsReviewed: inc(delta.wordsReviewed),
+      sessions: inc(delta.sessions),
+    },
+    { merge: true },
+  );
 }
 
 export async function getActivity(userId: string, sinceDay: string, languageCode?: string): Promise<ActivityRow[]> {
-  return db()<ActivityRow[]>`
-    select day::text as day, sum(seconds)::int as seconds, sum(exercises)::int as exercises,
-           sum(correct)::int as correct, sum(words_reviewed)::int as words_reviewed, sum(sessions)::int as sessions
-    from daily_activity
-    where user_id = ${userId} and day >= ${sinceDay}
-      and (${languageCode ?? null}::text is null or language_code = ${languageCode ?? null})
-    group by day order by day`;
+  const snap = await activityOf(userId).where("day", ">=", sinceDay).get();
+  const byDay = new Map<string, ActivityRow>();
+  for (const doc of snap.docs) {
+    const d = doc.data();
+    if (languageCode && d.languageCode !== languageCode) continue;
+    const row = byDay.get(d.day) ?? { day: d.day, seconds: 0, exercises: 0, correct: 0, wordsReviewed: 0, sessions: 0 };
+    row.seconds += num(d.seconds);
+    row.exercises += num(d.exercises);
+    row.correct += num(d.correct);
+    row.wordsReviewed += num(d.wordsReviewed);
+    row.sessions += num(d.sessions);
+    byDay.set(d.day, row);
+  }
+  return [...byDay.values()].sort((a, b) => a.day.localeCompare(b.day));
 }
 
 export async function allActiveDays(userId: string): Promise<string[]> {
-  const rows = await db()<{ day: string }[]>`
-    select distinct day::text as day from daily_activity where user_id = ${userId} and exercises > 0 order by day`;
-  return rows.map((r) => r.day);
+  const snap = await activityOf(userId).where("exercises", ">", 0).select("day").get();
+  return [...new Set(snap.docs.map((d) => String(d.get("day"))))].sort();
 }
 
 export async function totalExercises(userId: string): Promise<number> {
-  const rows = await db()<{ n: number }[]>`
-    select coalesce(sum(exercises), 0)::int as n from daily_activity where user_id = ${userId}`;
-  return rows[0]?.n ?? 0;
+  const agg = await activityOf(userId).aggregate({ n: AggregateField.sum("exercises") }).get();
+  return agg.data().n ?? 0;
 }
 
 // ── Logros ────────────────────────────────────────────────────────────────
 export async function getUnlockedAchievements(userId: string) {
-  return db()<{ achievementId: string; unlockedAt: Date }[]>`
-    select achievement_id, unlocked_at from user_achievements where user_id = ${userId} order by unlocked_at`;
+  const snap = await userRef(userId).collection("achievements").orderBy("unlockedAt").get();
+  return snap.docs.map((d) => ({ achievementId: d.id, unlockedAt: date(d.get("unlockedAt")) ?? new Date(0) }));
 }
 
 export async function unlockAchievements(userId: string, ids: string[]): Promise<void> {
-  if (ids.length === 0) return;
-  const sql = db();
-  const rows = ids.map((achievementId) => ({ userId, achievementId }));
-  await sql`insert into user_achievements ${sql(rows, "userId", "achievementId")} on conflict do nothing`;
+  const col = userRef(userId).collection("achievements");
+  await Promise.all(
+    ids.map((id) =>
+      col.doc(id).create({ unlockedAt: FieldValue.serverTimestamp() }).catch((err: { code?: number }) => {
+        if (err.code !== 6) throw err; // ya desbloqueado
+      }),
+    ),
+  );
 }
 
 // ── Tutor ─────────────────────────────────────────────────────────────────
@@ -501,109 +661,188 @@ export interface ConversationRow {
   endedAt: Date | null;
 }
 
-export async function createConversation(userLanguageId: string, topic: string | null): Promise<ConversationRow> {
-  const rows = await db()<ConversationRow[]>`
-    insert into conversations (user_language_id, topic) values (${userLanguageId}, ${topic}) returning *`;
-  return rows[0]!;
+function toConversation(ulId: string, snap: DocumentSnapshot): ConversationRow {
+  const d = snap.data() ?? {};
+  return { id: snap.id, userLanguageId: ulId, topic: str(d.topic), feedback: json(d.feedbackJson), createdAt: date(d.createdAt) ?? new Date(0), endedAt: date(d.endedAt) };
 }
 
-export async function getConversation(userLanguageId: string, id: string): Promise<ConversationRow | null> {
-  const rows = await db()<ConversationRow[]>`
-    select * from conversations where id = ${id} and user_language_id = ${userLanguageId}`;
-  return rows[0] ?? null;
+const conversationsOf = (ulId: string) => ulRef(ulId).collection("conversations");
+
+export async function createConversation(ulId: string, topic: string | null): Promise<ConversationRow> {
+  const ref = conversationsOf(ulId).doc();
+  await ref.set({ topic, feedbackJson: null, createdAt: Timestamp.now(), endedAt: null });
+  return toConversation(ulId, await ref.get());
 }
 
-export async function listConversations(userLanguageId: string, limit = 10): Promise<ConversationRow[]> {
-  return db()<ConversationRow[]>`
-    select * from conversations where user_language_id = ${userLanguageId}
-    order by created_at desc limit ${limit}`;
+export async function getConversation(ulId: string, id: string): Promise<ConversationRow | null> {
+  if (!/^[A-Za-z0-9]{10,40}$/.test(id)) return null;
+  const snap = await conversationsOf(ulId).doc(id).get();
+  return snap.exists ? toConversation(ulId, snap) : null;
 }
 
-export async function getMessages(conversationId: string) {
-  return db()<{ id: number; role: "user" | "assistant"; content: string; createdAt: Date }[]>`
-    select id, role, content, created_at from conversation_messages
-    where conversation_id = ${conversationId} order by id`;
+export async function listConversations(ulId: string, limit = 10): Promise<ConversationRow[]> {
+  const snap = await conversationsOf(ulId).orderBy("createdAt", "desc").limit(limit).get();
+  return snap.docs.map((d) => toConversation(ulId, d));
 }
 
-export async function addMessage(conversationId: string, role: "user" | "assistant", content: string) {
-  await db()`insert into conversation_messages (conversation_id, role, content)
-             values (${conversationId}, ${role}, ${content.slice(0, 4000)})`;
+export async function getMessages(ulId: string, conversationId: string) {
+  const snap = await conversationsOf(ulId).doc(conversationId).collection("messages").orderBy("createdAt").get();
+  return snap.docs.map((d) => ({
+    id: d.id,
+    role: d.get("role") as "user" | "assistant",
+    content: String(d.get("content")),
+    createdAt: date(d.get("createdAt")) ?? new Date(0),
+  }));
 }
 
-export async function endConversation(id: string, feedback: unknown): Promise<void> {
-  const sql = db();
-  await sql`update conversations set ended_at = now(), feedback = ${sql.json(feedback as never)} where id = ${id}`;
+export async function addMessage(ulId: string, conversationId: string, role: "user" | "assistant", content: string) {
+  await conversationsOf(ulId).doc(conversationId).collection("messages").add({ role, content: content.slice(0, 4000), createdAt: Timestamp.now() });
+}
+
+export async function endConversation(ulId: string, id: string, feedback: unknown): Promise<void> {
+  await conversationsOf(ulId).doc(id).update({ endedAt: Timestamp.now(), feedbackJson: toJson(feedback) });
 }
 
 export async function countConversations(userId: string): Promise<number> {
-  const rows = await db()<{ n: number }[]>`
-    select count(*)::int as n from conversations c join user_languages ul on ul.id = c.user_language_id
-    where ul.user_id = ${userId}`;
-  return rows[0]?.n ?? 0;
+  const langs = await listUserLanguages(userId);
+  const counts = await Promise.all(langs.map((ul) => conversationsOf(ul.id).count().get()));
+  return counts.reduce((n, c) => n + c.data().count, 0);
 }
 
 // ── Analítica ─────────────────────────────────────────────────────────────
 export async function track(userId: string, name: string, props: Record<string, unknown> = {}): Promise<void> {
   try {
-    const sql = db();
-    await sql`insert into analytics_events (user_id, name, props) values (${userId}, ${name}, ${sql.json(props as never)})`;
+    await userRef(userId).collection("events").add({ name: name.slice(0, 60), propsJson: toJson(props), createdAt: Timestamp.now() });
   } catch (err) {
     // La analítica nunca debe romper una acción del usuario.
     console.error("[analytics] fallo al registrar evento", name, err);
   }
 }
 
-// ── Cuenta: exportación y borrado ─────────────────────────────────────────
-export async function exportUserData(userId: string) {
-  const sql = db();
-  const [profile] = await sql`select * from profiles where id = ${userId}`;
-  const languages = await sql`select * from user_languages where user_id = ${userId}`;
-  const ids = languages.map((l) => l.id as string);
-  const q = <T>(p: Promise<T>) => p;
-  return {
-    exportedAt: new Date().toISOString(),
-    profile,
-    languages,
-    skillEstimates: await q(sql`select * from skill_estimates where user_language_id = any(${ids}::uuid[])`),
-    goals: await q(sql`select * from learning_goals where user_language_id = any(${ids}::uuid[])`),
-    assessments: await q(sql`select id, user_language_id, status, result, started_at, finished_at from assessments where user_language_id = any(${ids}::uuid[])`),
-    sessions: await q(sql`select * from learning_sessions where user_language_id = any(${ids}::uuid[])`),
-    knowledge: await q(sql`select * from user_knowledge where user_language_id = any(${ids}::uuid[])`),
-    attempts: await q(sql`select * from exercise_attempts where user_language_id = any(${ids}::uuid[])`),
-    mistakes: await q(sql`select * from mistakes where user_language_id = any(${ids}::uuid[])`),
-    conversations: await q(sql`
-      select c.*, coalesce(json_agg(m order by m.id) filter (where m.id is not null), '[]') as messages
-      from conversations c left join conversation_messages m on m.conversation_id = c.id
-      where c.user_language_id = any(${ids}::uuid[]) group by c.id`),
-    dailyActivity: await q(sql`select * from daily_activity where user_id = ${userId}`),
-    achievements: await q(sql`select * from user_achievements where user_id = ${userId}`),
-  };
+// ── Notificaciones push ───────────────────────────────────────────────────
+const pushTokens = () => db().collection("pushTokens");
+const tokenDoc = (token: string) => pushTokens().doc(createHash("sha256").update(token).digest("hex"));
+
+export async function savePushToken(userId: string, token: string, userAgent: string | null): Promise<void> {
+  // Un token identifica un navegador: si otra cuenta inicia sesión en él, se reasigna.
+  await tokenDoc(token).set(
+    { token, userId, userAgent, lastSeenAt: FieldValue.serverTimestamp(), createdAt: FieldValue.serverTimestamp() },
+    { merge: true },
+  );
 }
 
-/** Borra TODOS los datos de aplicación del usuario (cascada desde las raíces). */
-export async function deleteUserData(userId: string): Promise<void> {
-  const sql = db();
-  await sql.begin(async (tx) => {
-    await tx`delete from user_languages where user_id = ${userId}`;
-    await tx`delete from daily_activity where user_id = ${userId}`;
-    await tx`delete from user_achievements where user_id = ${userId}`;
-    await tx`delete from analytics_events where user_id = ${userId}`;
-    await tx`delete from rate_limits where key like ${"%:" + userId}`;
-    await tx`delete from profiles where id = ${userId}`;
+export async function deletePushToken(userId: string, token: string): Promise<void> {
+  const ref = tokenDoc(token);
+  await db().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (snap.exists && snap.get("userId") === userId) tx.delete(ref);
   });
 }
 
+export async function listPushTokens(userId: string): Promise<string[]> {
+  const snap = await pushTokens().where("userId", "==", userId).get();
+  return snap.docs.map((d) => String(d.get("token")));
+}
+
+export async function prunePushTokens(tokens: string[]): Promise<void> {
+  if (tokens.length === 0) return;
+  const batch = db().batch();
+  for (const t of tokens) batch.delete(tokenDoc(t));
+  await batch.commit();
+}
+
+export interface ReminderCandidate {
+  userId: string;
+  displayName: string | null;
+  languageCode: string;
+  due: number;
+  streakYesterday: boolean;
+  tokens: string[];
+}
+
 /**
- * Intenta borrar la identidad en auth.users vía SQL (funciona si el rol de la
- * conexión tiene permiso sobre el esquema auth). Si no, el servicio usa la
- * Admin API de Supabase con la service role key.
+ * Usuarios con algún dispositivo registrado que aún no han estudiado hoy (en
+ * su zona horaria), con los repasos pendientes de su idioma activo.
  */
-export async function deleteAuthUserViaSql(userId: string): Promise<boolean> {
-  try {
-    await db()`delete from auth.users where id = ${userId}`;
-    return true;
-  } catch (err) {
-    console.error("[account] no se pudo borrar auth.users vía SQL", err);
-    return false;
+export async function reminderCandidates(limit: number, now = new Date()): Promise<ReminderCandidate[]> {
+  const snap = await pushTokens().limit(5000).get();
+  const byUser = new Map<string, string[]>();
+  for (const d of snap.docs) {
+    const uid = String(d.get("userId"));
+    byUser.set(uid, [...(byUser.get(uid) ?? []), String(d.get("token"))]);
   }
+  const out: ReminderCandidate[] = [];
+  for (const [uid, tokens] of byUser) {
+    if (out.length >= limit) break;
+    const profile = await getProfile(uid);
+    if (!profile?.activeLanguage) continue;
+    const today = localDay(now, profile.timezone);
+    const yesterday = localDay(new Date(now.getTime() - 86_400_000), profile.timezone);
+    const recent = await getActivity(uid, yesterday);
+    if (recent.some((a) => a.day === today)) continue;
+    out.push({
+      userId: uid,
+      displayName: profile.displayName,
+      languageCode: profile.activeLanguage,
+      due: await countDue(userLanguageId(uid, profile.activeLanguage), now),
+      streakYesterday: recent.some((a) => a.day === yesterday && a.exercises > 0),
+      tokens,
+    });
+  }
+  return out;
+}
+
+// ── Cuenta: exportación y borrado ─────────────────────────────────────────
+/** Documento → objeto JSON plano (Timestamps a ISO, blobs JSON deserializados). */
+function plain(snap: DocumentSnapshot): Record<string, unknown> {
+  const out: Record<string, unknown> = { id: snap.id };
+  for (const [k, v] of Object.entries(snap.data() ?? {})) {
+    if (v instanceof Timestamp) out[k] = v.toDate().toISOString();
+    else if (k.endsWith("Json")) out[k.slice(0, -4)] = json(v);
+    else out[k] = v;
+  }
+  return out;
+}
+
+export async function exportUserData(userId: string) {
+  const root = userRef(userId);
+  const all = async (col: CollectionReference) => (await col.get()).docs.map(plain);
+  const languages = await root.collection("languages").get();
+  return {
+    exportedAt: new Date().toISOString(),
+    profile: plain(await root.get()),
+    languages: await Promise.all(
+      languages.docs.map(async (l) => {
+        const ref = l.ref;
+        const conversations = await ref.collection("conversations").get();
+        return {
+          ...plain(l),
+          knowledge: await all(ref.collection("knowledge")),
+          sessions: await all(ref.collection("sessions")),
+          assessments: await all(ref.collection("assessments")),
+          attempts: await all(ref.collection("attempts")),
+          mistakes: await all(ref.collection("mistakes")),
+          conversations: await Promise.all(
+            conversations.docs.map(async (c) => ({ ...plain(c), messages: await all(c.ref.collection("messages")) })),
+          ),
+        };
+      }),
+    ),
+    dailyActivity: await all(root.collection("activity")),
+    achievements: await all(root.collection("achievements")),
+    events: await all(root.collection("events")),
+    pushDevices: (await pushTokens().where("userId", "==", userId).get()).docs.map((d) => ({
+      userAgent: d.get("userAgent") ?? null,
+      lastSeenAt: date(d.get("lastSeenAt"))?.toISOString() ?? null,
+    })),
+  };
+}
+
+/** Borra TODOS los datos de aplicación del usuario (el árbol users/{uid} y sus dispositivos). */
+export async function deleteUserData(userId: string): Promise<void> {
+  await db().recursiveDelete(userRef(userId));
+  const tokens = await pushTokens().where("userId", "==", userId).get();
+  const batch = db().batch();
+  for (const d of tokens.docs) batch.delete(d.ref);
+  await batch.commit();
 }

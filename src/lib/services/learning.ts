@@ -260,7 +260,7 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
   }
 
   // 4. Contadores
-  if (sessionId) await repo.bumpSession(sessionId, result.correct);
+  if (sessionId) await repo.bumpSession(ulId, sessionId, result.correct);
   await repo.bumpActivity(learner.userId, lang, localDay(now, learner.profile.timezone), {
     seconds: Math.min(Math.round(timeMs / 1000), 120),
     exercises: 1,

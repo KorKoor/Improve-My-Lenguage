@@ -5,8 +5,8 @@
 1. **El motor es puro.** Todo lo que decide qué, cuándo y cuánto se enseña vive en `src/lib/engine/` como funciones deterministas, sin I/O y con tests. Es barato (no llama a la IA), reproducible (usa semillas) y explicable.
 2. **La IA va sólo donde aporta** (conversación y análisis de texto libre), siempre con salidas acotadas y validadas. La app funciona completa sin ella.
 3. **El contenido es código.** Vocabulario, gramática y bancos de diagnóstico están en `src/lib/content/` como datos tipados y versionados en git, y se referencian por ID estable (`en:w:although`, `en:g:articles`). La base de datos guarda **sólo el estado del usuario**.
-4. **La autorización se aplica en el servidor.** Server Actions y repositorios filtran siempre por el `userId` validado contra Supabase. RLS bloquea la API pública.
-5. **Portabilidad.** Usamos SQL estándar con `postgres.js` en lugar de un SDK propietario. Cambiar Supabase por Neon, RDS o un Postgres propio es cambiar `DATABASE_URL` (y el proveedor de auth, que está aislado en `lib/supabase/`).
+4. **La autorización se aplica en el servidor.** Server Actions y repositorios usan siempre el `uid` de la cookie de sesión verificada por Firebase Admin; los datos viven bajo `users/{uid}`. Las reglas de Firestore bloquean cualquier acceso desde clientes.
+5. **Portabilidad.** Todo el acceso a datos está en `db/repositories.ts` (y `db/limits.ts`) y toda la autenticación en `auth/session.ts` más el formulario de login. Cambiar Firestore por Postgres u otro proveedor es reescribir esos módulos: servicios, motor y UI no cambian.
 
 ## Capas
 
@@ -25,7 +25,9 @@ services/        orquestación: auth → carga estado → motor → persiste
 engine/ (puro)   fsrs · assessment (IRT) · levels · planner · session-builder ·
                  exercises · evaluate · weakness · recommender · progress · achievements
 content/ (datos) languages · topics · error-categories · en/ fr/ ja/
-db/              client (postgres.js) · repositories (todo el SQL) · limits (rate limit + caché IA)
+db/              repositories (todo el acceso a Firestore) · limits (rate limit + caché IA)
+auth/            session (cookie de sesión de Firebase: crear, verificar, revocar)
+firebase/        admin (Admin SDK: Auth, Firestore, FCM) · client (Auth en el navegador) · config
 ai/              provider (Gemini / OpenAI-compatible) · prompts (perfil estructurado + validación)
 ```
 
@@ -42,17 +44,20 @@ ai/              provider (Gemini / OpenAI-compatible) · prompts (perfil estruc
 | Ruta | Tipo | Notas |
 |---|---|---|
 | `/`, `/features`, `/languages[/code]`, `/about`, `/privacy` | Públicas y estáticas | SEO, sitemap, Open Graph |
-| `/login`, `/reset-password`, `/auth/callback`, `/auth/signout` | Auth | PKCE; protección contra open redirect |
+| `/login`, `/auth/signout`, `/api/auth/session` | Auth | Firebase Auth → cookie de sesión httpOnly; protección contra open redirect |
 | `/app/onboarding` | Privada | 7 pasos (4 al añadir un idioma) |
 | `/app` y resto de `(main)` | Privadas con shell | Sidebar en escritorio, barra inferior en móvil |
 | `/app/session`, `/app/review`, `/app/assessment` | Privadas en modo enfoque | Sin navegación |
 | `/api/export`, `/api/health` | API | Exportación JSON y health check |
+| `/api/notifications/register`, `/api/notifications/test` | API | Dispositivos para push (sólo el propio usuario) |
+| `/api/cron/reminders` | Cron | Recordatorio diario, protegido con `CRON_SECRET` |
+| `/firebase-messaging-sw.js` | Service worker | Generado desde las variables de entorno |
 
-`src/proxy.ts` (antes "middleware" en Next < 16) refresca la sesión y redirige `/app/*` a `/login` si no hay usuario. La segunda barrera es `requireViewer()`/`requireLearner()` en el servidor.
+`src/proxy.ts` (antes "middleware" en Next < 16) redirige `/app/*` a `/login` si no hay cookie de sesión. La segunda barrera es `requireViewer()`/`requireLearner()` en el servidor.
 
 ## Decisiones y alternativas descartadas
 
-- **Sin ORM:** Drizzle/Prisma obligarían a mantener dos fuentes de verdad (esquema TS y migraciones). El SQL de `repositories.ts` está validado contra Postgres (cada consulta se prepara con `PREPARE`).
-- **Contenido en el repo y no en la BD:** el plan Free de Supabase tiene 500 MB. Además, el contenido versionado se revisa en PRs, se cachea en el bundle y no cuesta consultas. La migración a BD/CMS sólo cambia `content/index.ts`.
-- **Sin Redis:** el rate limiting y la caché de IA usan tablas de Postgres. Es suficiente para esta escala y cuesta $0.
+- **Firebase (Auth + Firestore) en lugar de Postgres:** un solo proveedor para identidad, datos y notificaciones, sin servidor que mantener ni pausas por inactividad. El modelo de documentos encaja con el estado por usuario (árbol `users/{uid}`); los agregados se resuelven con `count()`/`sum()` o sobre ventanas acotadas. Ver DATABASE.md.
+- **Contenido en el repo y no en la BD:** cada lectura de Firestore cuenta para la cuota. Además, el contenido versionado se revisa en PRs, se cachea en el bundle y no cuesta consultas. La migración a BD/CMS sólo cambia `content/index.ts`.
+- **Sin Redis:** el rate limiting y la caché de IA usan colecciones de Firestore con TTL. Es suficiente para esta escala y cuesta $0.
 - **Voz en el navegador:** la síntesis y el reconocimiento son gratis y no envían audio a servidores propios. Donde no están disponibles, los dictados se saltan sin penalización.

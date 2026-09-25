@@ -1,12 +1,13 @@
 import "server-only";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { cache } from "react";
 import { getLanguage } from "../content";
 import type { Language } from "../content/types";
 import { ensureProfile, getProfile, getUserLanguage } from "../db/repositories";
 import type { ProfileRow, UserLanguageRow } from "../db/types";
-import { isAuthConfigured } from "../env";
-import { createSupabaseServer } from "../supabase/server";
+import { verifySession } from "../auth/session";
+import { isBackendConfigured } from "../env";
 
 export interface Viewer {
   userId: string;
@@ -20,24 +21,22 @@ export interface Learner extends Viewer {
   native: string;
 }
 
-/** Usuario autenticado actual (validado contra Supabase) o null. Cacheado por request. */
+/** Usuario autenticado actual (cookie de sesión verificada por Firebase Admin) o null. Cacheado por request. */
 export const getViewer = cache(async (): Promise<Viewer | null> => {
-  if (!isAuthConfigured()) return null;
-  const supabase = await createSupabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Siempre dinámico: nunca prerenderizar una página privada en el build,
+  // aunque en ese momento falten las variables de entorno.
+  await connection();
+  if (!isBackendConfigured()) return null;
+  const user = await verifySession();
   if (!user) return null;
-  const name =
-    (user.user_metadata?.full_name as string | undefined) ??
-    (user.user_metadata?.name as string | undefined) ??
-    null;
-  const profile = (await getProfile(user.id)) ?? (await ensureProfile(user.id, name ? name.split(" ")[0]! : null));
-  return { userId: user.id, email: user.email ?? null, profile };
+  const name = typeof user.name === "string" ? user.name : null;
+  const profile = (await getProfile(user.uid)) ?? (await ensureProfile(user.uid, name ? name.split(" ")[0]! : null));
+  return { userId: user.uid, email: user.email ?? null, profile };
 });
 
 export async function requireViewer(): Promise<Viewer> {
-  if (!isAuthConfigured()) redirect("/setup");
+  await connection();
+  if (!isBackendConfigured()) redirect("/setup");
   const viewer = await getViewer();
   if (!viewer) redirect("/login");
   return viewer;

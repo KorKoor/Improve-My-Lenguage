@@ -1,16 +1,16 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db/client";
 import { aiAvailable } from "@/lib/ai/provider";
-import { isAuthConfigured } from "@/lib/env";
+import { isBackendConfigured } from "@/lib/env";
+import { firestore } from "@/lib/firebase/admin";
 
 export const dynamic = "force-dynamic";
 
-/** Salud del servicio. Útil también para evitar que Supabase Free pause la BD (ver DEPLOYMENT.md). */
+/** Salud del servicio: comprueba que Firestore responde. */
 export async function GET() {
   let database: "ok" | "unconfigured" | "error" = "unconfigured";
-  if (isAuthConfigured()) {
+  if (isBackendConfigured()) {
     try {
-      await db()`select 1`;
+      await firestore().collection("users").limit(1).select().get();
       database = "ok";
     } catch {
       database = "error";

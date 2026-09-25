@@ -69,6 +69,13 @@ export function localDay(date: Date, timeZone: string): string {
   return parts; // en-CA ya formatea como YYYY-MM-DD
 }
 
+/** Lunes (UTC) de la semana de una fecha, YYYY-MM-DD (agrupación semanal de precisión). */
+export function weekStart(d: Date): string {
+  const x = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+  x.setUTCDate(x.getUTCDate() - ((x.getUTCDay() + 6) % 7));
+  return x.toISOString().slice(0, 10);
+}
+
 function addDays(day: string, delta: number): string {
   const d = new Date(`${day}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + delta);

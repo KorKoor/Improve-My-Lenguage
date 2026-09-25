@@ -1,6 +1,7 @@
 import "server-only";
+import { destroySession } from "../auth/session";
 import * as repo from "../db/repositories";
-import { env } from "../env";
+import { adminAuth } from "../firebase/admin";
 
 export async function exportData(userId: string) {
   await repo.track(userId, "data_exported");
@@ -9,18 +10,17 @@ export async function exportData(userId: string) {
 
 /**
  * Elimina la cuenta: primero todos los datos de la app (garantizado), luego la
- * identidad en Supabase Auth (Admin API si hay service role key; si no, SQL).
+ * identidad en Firebase Auth y por último la cookie de sesión.
  */
 export async function deleteAccount(userId: string): Promise<{ authDeleted: boolean }> {
   await repo.deleteUserData(userId);
-  if (env.supabaseUrl && env.supabaseServiceRoleKey) {
-    const res = await fetch(`${env.supabaseUrl}/auth/v1/admin/users/${encodeURIComponent(userId)}`, {
-      method: "DELETE",
-      headers: { apikey: env.supabaseServiceRoleKey, authorization: `Bearer ${env.supabaseServiceRoleKey}` },
-      signal: AbortSignal.timeout(10_000),
-    });
-    if (res.ok) return { authDeleted: true };
-    console.error("[account] Admin API delete falló", res.status);
+  let authDeleted = false;
+  try {
+    await adminAuth().deleteUser(userId);
+    authDeleted = true;
+  } catch (err) {
+    console.error("[account] no se pudo borrar la identidad en Firebase Auth", err);
   }
-  return { authDeleted: await repo.deleteAuthUserViaSql(userId) };
+  await destroySession(authDeleted ? null : userId);
+  return { authDeleted };
 }
