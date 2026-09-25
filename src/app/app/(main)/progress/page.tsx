@@ -26,7 +26,7 @@ export default async function ProgressPage() {
     <div className="space-y-6">
       <header>
         <h1 className="font-display text-3xl font-extrabold">Tu progreso</h1>
-        <p className="mt-1 text-muted">Cada número tiene una definición clara (<Link href="#metodologia" className="underline">cómo se calcula</Link>). Nada de porcentajes inventados.</p>
+        <p className="mt-1 text-muted">Cada número tiene una definición clara (<Link href="#metodologia" className="underline">cómo se calcula</Link>). Nada de porcentajes inventados. <Link href="/app/path" className="font-semibold text-primary hover:underline">Ver tu camino a C1 →</Link></p>
       </header>
 
       <section className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-label="Resumen">
