@@ -224,6 +224,13 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "nl:comparatives", label: "comparativo y superlativo", language: "nl", grammarId: "nl:g:comparatives" },
   { id: "nl:reflexive", label: "verbos reflexivos", language: "nl", grammarId: "nl:g:reflexive" },
   { id: "nl:relative", label: "oraciones de relativo", language: "nl", grammarId: "nl:g:relative" },
+  { id: "sv:questions", label: "preguntas y negación con inte", language: "sv", grammarId: "sv:g:questions-inte" },
+  { id: "sv:future", label: "futuro (ska / kommer att)", language: "sv", grammarId: "sv:g:ska-kommer-att" },
+  { id: "sv:modals", label: "verbos modales", language: "sv", grammarId: "sv:g:modals" },
+  { id: "sv:comparatives", label: "comparativo y superlativo", language: "sv", grammarId: "sv:g:comparatives" },
+  { id: "sv:imperative", label: "imperativo", language: "sv", grammarId: "sv:g:imperative" },
+  { id: "sv:possessive-reflexive", label: "sin / hans / hennes", language: "sv", grammarId: "sv:g:sin-hans" },
+  { id: "sv:relative", label: "relativo som", language: "sv", grammarId: "sv:g:som" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {
