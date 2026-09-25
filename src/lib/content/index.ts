@@ -15,6 +15,7 @@ import { IT_GRAMMAR, IT_VOCAB } from "./it";
 import { PT_GRAMMAR, PT_VOCAB } from "./pt";
 import { EN_GRAMMAR_ADVANCED } from "./en/grammar-advanced";
 import { EN_GRAMMAR_CORE } from "./en/grammar-core";
+import { DE_GRAMMAR_CORE } from "./de/grammar-core";
 import { FR_GRAMMAR_CORE } from "./fr/grammar-core";
 import { FR_GRAMMAR_ADVANCED } from "./fr/grammar-advanced";
 import { DE_GRAMMAR_ADVANCED } from "./de/grammar-advanced";
@@ -40,7 +41,7 @@ const GRAMMAR: Record<LanguageCode, GrammarConcept[]> = {
   ja: [...JA_GRAMMAR, ...JA_GRAMMAR_ADVANCED],
   pt: [...PT_GRAMMAR, ...PT_GRAMMAR_ADVANCED],
   it: [...IT_GRAMMAR, ...IT_GRAMMAR_ADVANCED],
-  de: [...DE_GRAMMAR, ...DE_GRAMMAR_ADVANCED],
+  de: [...DE_GRAMMAR, ...DE_GRAMMAR_ADVANCED, ...DE_GRAMMAR_CORE],
   ar: AR_GRAMMAR,
   ko: KO_GRAMMAR,
   nl: NL_GRAMMAR,

@@ -161,6 +161,15 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "ja:conditionals", label: "condicionales", language: "ja", grammarId: "ja:g:conditionals" },
   { id: "ja:passive-causative", label: "pasiva y causativa", language: "ja", grammarId: "ja:g:passive-causative" },
   { id: "ja:keigo", label: "keigo", language: "ja", grammarId: "ja:g:keigo" },
+  { id: "de:separable", label: "verbos separables", language: "de", grammarId: "de:g:trennbare-verben" },
+  { id: "de:dative-prep", label: "preposiciones con dativo", language: "de", grammarId: "de:g:dativ-praepositionen" },
+  { id: "de:praeteritum", label: "Präteritum (war, hatte, konnte)", language: "de", grammarId: "de:g:praeteritum" },
+  { id: "de:comparative", label: "comparativo y superlativo", language: "de", grammarId: "de:g:komparativ" },
+  { id: "de:subordinate", label: "subordinadas (verbo al final)", language: "de", grammarId: "de:g:nebensaetze" },
+  { id: "de:reflexive", label: "verbos reflexivos", language: "de", grammarId: "de:g:reflexiv" },
+  { id: "de:zu-infinitive", label: "zu + infinitivo / um … zu", language: "de", grammarId: "de:g:zu-infinitiv" },
+  { id: "de:relative", label: "oraciones de relativo", language: "de", grammarId: "de:g:relativsaetze" },
+  { id: "de:genitive", label: "genitivo", language: "de", grammarId: "de:g:genitiv" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {
