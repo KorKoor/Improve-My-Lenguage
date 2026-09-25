@@ -84,7 +84,7 @@ export default async function PathPage() {
                       </Link>
                     )}
                     {l.grammar.done < l.grammar.total && (
-                      <Link href="/app/grammar" className={buttonClass("secondary", "sm")}>Gramática de {l.level}</Link>
+                      <Link href={`/app/grammar?level=${l.level}`} className={buttonClass("secondary", "sm")}>Gramática de {l.level}</Link>
                     )}
                     <Link href="/app/explore" className={buttonClass("ghost", "sm")}>Practicar habilidades</Link>
                   </div>
