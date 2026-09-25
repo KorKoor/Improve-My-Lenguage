@@ -75,3 +75,20 @@ test("ejercicio «conjugar»: se genera y se resuelve con o sin pronombre", asyn
   assert.ok(r.accepted.includes(form));
   assert.ok(r.accepted.length >= 2);
 });
+
+test("ejercicio «speak»: frase corta del ejemplo, resuelto en modo voz", async () => {
+  const { buildVocabExercise, resolveExercise } = await import("../src/lib/engine/exercises");
+  const v = { ...verb("avoir", 5), examples: [{ text: "J'ai deux chats à la maison.", translation: { es: "Tengo dos gatos en casa." } }] };
+  const catalog = {
+    vocab: () => [v],
+    vocabById: (id: string) => (id === v.id ? v : undefined),
+    grammarById: () => undefined,
+    spaceSeparated: () => true,
+  } as unknown as Parameters<typeof buildVocabExercise>[2];
+  const ex = buildVocabExercise("speak", v, catalog, "es")!;
+  assert.equal(ex.input, "speech");
+  assert.equal(ex.skill, "pronunciation");
+  const r = resolveExercise(ex.key, catalog, "es")!;
+  assert.equal(r.mode, "speech");
+  assert.equal(r.accepted[0], "J'ai deux chats à la maison.");
+});

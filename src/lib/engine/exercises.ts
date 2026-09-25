@@ -21,6 +21,7 @@ export const EXERCISE_TYPES = [
   "match",
   "grammar",
   "conjugate",
+  "speak",
 ] as const;
 export type ExerciseType = (typeof EXERCISE_TYPES)[number];
 
@@ -43,7 +44,7 @@ export interface Exercise {
   /** Texto a leer con síntesis de voz (dictado, pronunciación). */
   audioText?: string;
   /** Tipo de entrada esperada en la UI. */
-  input: "choice" | "text" | "order" | "match";
+  input: "choice" | "text" | "order" | "match" | "speech";
   expectedMs: number;
 }
 
@@ -52,7 +53,7 @@ export interface ResolvedAnswer {
   display: string;
   explanation?: string;
   errorCategory: string;
-  mode: "text" | "choice" | "match";
+  mode: "text" | "choice" | "match" | "speech";
   /** ¿Se toleran erratas? (no en gramática ni orden de palabras). */
   typos: boolean;
 }
@@ -74,6 +75,7 @@ const TYPE_OFFSET: Record<ExerciseType, number> = {
   dictation: 0.5,
   grammar: 0,
   conjugate: 0.4,
+  speak: 0.3,
 };
 
 const EXPECTED_MS: Record<ExerciseType, number> = {
@@ -86,6 +88,7 @@ const EXPECTED_MS: Record<ExerciseType, number> = {
   dictation: 25000,
   grammar: 15000,
   conjugate: 12000,
+  speak: 20000,
 };
 
 export function translationOf(item: VocabItem, native: LanguageCode): string[] {
@@ -227,6 +230,26 @@ export function buildVocabExercise(
         prompt: blankOut(ex.text, item.lemma, spaced)!,
         context: ex.translation?.[native],
         input: "text",
+      };
+    }
+    case "speak": {
+      // Frase corta del ejemplo: se lee en voz alta y el navegador la transcribe.
+      const idx = item.examples.findIndex((e) => {
+        const n = spaced ? e.text.split(/\s+/).length : [...e.text].length;
+        return spaced ? n >= 3 && n <= 9 : n >= 4 && n <= 16;
+      });
+      if (idx < 0) return null;
+      const ex = item.examples[idx]!;
+      return {
+        ...base,
+        key: `speak|${item.id}|${idx}`,
+        type,
+        skill: "pronunciation",
+        instruction: "Lee la frase en voz alta",
+        prompt: ex.text,
+        context: ex.translation?.[native],
+        audioText: ex.text,
+        input: "speech",
       };
     }
     case "conjugate": {
@@ -415,6 +438,11 @@ export function resolveExercise(
       if (!ex) return null;
       return { accepted: [ex.text], display: ex.text, errorCategory: "listening", mode: "text", typos: true };
     }
+    case "speak": {
+      const ex = item.examples[Number(variant)];
+      if (!ex) return null;
+      return { accepted: [ex.text], display: ex.text, explanation: ex.translation?.[native], errorCategory: "pronunciation", mode: "speech", typos: true };
+    }
     case "conjugate": {
       const [tense, personRaw] = (variant ?? "").split(":");
       const person = Number(personRaw);
@@ -479,6 +507,7 @@ export function pickVocabExerciseType(
   if (allowAudio) pool.push("dictation");
   // Verbos con tabla: a veces se repasan conjugándolos (gramática en contexto).
   if (canConjugate) pool.push("conjugate", "conjugate");
+  if (allowAudio) pool.push("speak");
   // La forma de aprender inclina la balanza, sin eliminar ningún tipo.
   if (style) {
     if (style.ear > 0.3 && allowAudio) pool.push("dictation");

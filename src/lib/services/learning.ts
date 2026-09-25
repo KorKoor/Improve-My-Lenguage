@@ -9,6 +9,7 @@ import { defaultEstimate, updateSkillOnline, type SkillEstimate } from "../engin
 import { planSession, type SessionPlan } from "../engine/planner";
 import { computeStreak, localDay, summarizeVocabulary } from "../engine/progress";
 import { buildSessionSteps, sessionSeed, wordCard, type SessionStep } from "../engine/session-builder";
+import { gradeDictation } from "../listening/diff";
 import { isLeech } from "../engine/insights";
 import { detectWeaknesses, type Weakness } from "../engine/weakness";
 import * as repo from "../db/repositories";
@@ -209,6 +210,9 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
   let result: EvaluationResult;
   if (resolved.mode === "match") {
     result = evaluateChoice(canonicalMatchResponse(input.pairs ?? {}), resolved.accepted[0]!);
+  } else if (resolved.mode === "speech") {
+    const g = gradeDictation(resolved.accepted[0]!, response, learner.language.spaceSeparated);
+    result = { correct: g.score >= 0.8, nearMiss: g.score >= 0.6 && g.score < 0.8 };
   } else if (resolved.mode === "choice") {
     result = resolved.accepted.map((a) => evaluateChoice(response, a)).find((r) => r.correct) ?? { correct: false, nearMiss: false };
   } else {
@@ -217,10 +221,13 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
 
   const timeMs = Math.max(0, Math.min(input.timeMs, 10 * 60_000));
   const skill: Skill =
-    type === "dictation" ? "listening" : type === "grammar" || type === "rearrange" ? "grammar" : "vocabulary";
+    type === "dictation" ? "listening"
+    : type === "speak" ? "pronunciation"
+    : type === "grammar" || type === "rearrange" || type === "conjugate" ? "grammar"
+    : "vocabulary";
 
   // 1. Memoria FSRS por ítem
-  const expectedMs = { match: 20000, dictation: 25000, rearrange: 20000, grammar: 15000, recall: 10000, cloze: 12000 }[type] ?? 7000;
+  const expectedMs = { match: 20000, dictation: 25000, rearrange: 20000, grammar: 15000, recall: 10000, cloze: 12000, conjugate: 12000, speak: 20000 }[type] ?? 7000;
   const rating = ratingFromOutcome({
     correct: result.correct,
     nearMiss: result.nearMiss,

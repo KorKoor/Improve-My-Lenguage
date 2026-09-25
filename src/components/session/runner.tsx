@@ -1,5 +1,5 @@
 "use client";
-import { ArrowRight, Check, Headphones, Lightbulb, Loader2, MessageCircle, Snail, Trophy, Volume2, X } from "lucide-react";
+import { ArrowRight, Check, Headphones, Lightbulb, Loader2, MessageCircle, Mic, Snail, Trophy, Volume2, X } from "lucide-react";
 import { POS_ES } from "@/components/app/labels";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -486,6 +486,80 @@ function ExerciseStep({
       )}
 
       {ex.input === "match" && ex.pairs && <MatchInput ex={ex} language={language} disabled={disabled} onDone={(pairs) => onSubmit(ex, "", pairs)} />}
+
+      {ex.input === "speech" && <SpeechInput locale={locale} disabled={disabled} onResult={(t) => onSubmit(ex, t)} onSkip={onSkip} />}
+    </div>
+  );
+}
+
+type Rec = { lang: string; interimResults: boolean; maxAlternatives: number; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onerror: ((e: { error: string }) => void) | null; onend: (() => void) | null };
+
+/** Micrófono: el navegador transcribe y el servidor compara palabra por palabra. */
+function SpeechInput({ locale, disabled, onResult, onSkip }: { locale: string; disabled: boolean; onResult: (t: string) => void; onSkip: () => void }) {
+  const [supported, setSupported] = useState<boolean | null>(null);
+  const [listening, setListening] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const rec = useRef<Rec | null>(null);
+  useEffect(() => {
+    const w = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec };
+    setSupported(Boolean(w.SpeechRecognition ?? w.webkitSpeechRecognition));
+    return () => rec.current?.stop();
+  }, []);
+  if (supported === false) {
+    return (
+      <div className="card mt-5 p-5 text-center">
+        <p className="text-sm text-muted">Tu navegador no reconoce la voz. Saltamos este ejercicio sin penalizarte.</p>
+        <Button className="mt-3" onClick={onSkip}>Saltar</Button>
+      </div>
+    );
+  }
+  const start = () => {
+    const w = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec };
+    const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
+    if (!Ctor) return;
+    window.speechSynthesis?.cancel();
+    setErr(null);
+    const r = new Ctor();
+    r.lang = locale;
+    r.interimResults = false;
+    r.maxAlternatives = 1;
+    let said = "";
+    r.onresult = (e) => {
+      said = Array.from(e.results).map((x) => x[0]?.transcript ?? "").join(" ").trim();
+    };
+    r.onerror = (e) => {
+      if (e.error !== "aborted") setErr(e.error === "not-allowed" ? "Permite el micrófono para practicar la pronunciación." : "No te oímos bien. Inténtalo otra vez.");
+    };
+    r.onend = () => {
+      setListening(false);
+      if (said) onResult(said);
+    };
+    rec.current = r;
+    setListening(true);
+    try {
+      r.start();
+    } catch {
+      setListening(false);
+    }
+  };
+  return (
+    <div className="mt-5 flex flex-col items-center gap-2">
+      <button
+        type="button"
+        onClick={listening ? () => rec.current?.stop() : start}
+        disabled={disabled}
+        aria-pressed={listening}
+        aria-label={listening ? "Detener" : "Pulsa y lee la frase"}
+        className={cn("relative grid size-20 place-items-center rounded-full text-white shadow-lg transition active:scale-95 disabled:opacity-50", listening ? "bg-danger" : "bg-primary hover:scale-105")}
+      >
+        {listening && <span className="absolute inset-0 animate-ping rounded-full bg-danger opacity-40" aria-hidden />}
+        <Mic size={32} aria-hidden />
+      </button>
+      <p className="text-sm text-muted" aria-live="polite">{listening ? "Te escucho…" : "Pulsa el micrófono y lee la frase"}</p>
+      {err && <p className="text-sm text-danger" role="alert">{err}</p>}
+      {!disabled && !listening && (
+        <button type="button" onClick={onSkip} className="text-xs text-muted hover:text-text">Ahora no puedo hablar</button>
+      )}
     </div>
   );
 }
