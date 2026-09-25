@@ -1,3 +1,4 @@
+import { targetRetention } from "@/lib/engine/fsrs";
 import { ARCHETYPES, DIMENSION_LABELS, type Dimension, type PersonalityResult } from "@/lib/engine/personality";
 
 const FAVORITE_LABEL: Record<string, string> = {
@@ -68,6 +69,7 @@ export function PersonalityCard({ result, compact = false }: { result: Personali
           <li>📝 Explicaciones: <strong>{{ brief: "breves, con ejemplos", balanced: "equilibradas", detailed: "detalladas, con la regla" }[t.explanationDepth]}</strong></li>
           <li>🩹 Corrección: <strong>{t.correction === "thorough" ? "completa" : "sólo lo importante, con tacto"}</strong></li>
           <li>⏱️ Sesión ideal: <strong>~{t.suggestedMinutes} min</strong></li>
+          <li>🧠 Repasos: <strong>objetivo de recuerdo {Math.round(targetRetention({ challenge: result.dims.challenge, dailyMinutes: t.suggestedMinutes }) * 100)} %</strong></li>
           <li className="sm:col-span-2">⭐ Te recomendaremos más: <strong>{t.favorites.map((f) => FAVORITE_LABEL[f]).join(" · ")}</strong></li>
         </ul>
         <p className="mt-3 text-xs text-muted">Son preferencias, no etiquetas: el plan sigue priorizando tus repasos y tus errores reales. Repite el test cuando quieras.</p>

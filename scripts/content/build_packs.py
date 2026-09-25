@@ -829,7 +829,7 @@ def ko_candidates(w: str) -> list[str]:
 
 def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> dict:
     L = LANGS[lang]
-    from wordfreq import top_n_list  # import tardío: dependencia sólo del generador
+    from wordfreq import top_n_list, zipf_frequency  # import tardío: dependencia sólo del generador
 
     wf_lang = "zh" if lang == "zh" else lang
     rx = re.compile(L.script)
@@ -1069,6 +1069,11 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
             seen_rev.add(w.lower())
             vote(w, weight, "wiktionary-es-translations")
         # Para el inglés el «pivote por el inglés» no tiene sentido: sólo directa e inversa.
+        if lang == "en":
+            # Inglés: las tablas de traducción del propio Wiktionary inglés son directas
+            # (ordenadas por acepción: la primera es la más usada).
+            for k, w in enumerate((en_es.get(lemma.lower()) or [])[:4]):
+                vote(w, 1.4 if k == 0 else 1.0 if k == 1 else 0.6, "wiktionary-en")
         tri = [] if lang == "en" else (triang.get(lang, {}).get(tri_key(lang, lemma)) or [])
         for k, w in enumerate(tri[:4]):
             vote(w, 1.3 if k == 0 else 0.9 if k == 1 else 0.5, "wiktionary-en")
@@ -1088,8 +1093,19 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
                         for ci, c in enumerate(short_chunks(pick[1][0])[:2] if pick[1] else []):
                             # El Wiktionary inglés ordena las acepciones por uso: la primera pesa más.
                             vote(c, (1.25 if ci == 0 else 0.8) * (1.0 if gi == 0 else 0.6), "pivot-en")
-        ranked = sorted(votes.items(), key=lambda kv: -kv[1])
-        translations = [display[k] for k, v in ranked if v >= 0.5][:3] or [display[k] for k, _ in ranked[:1]]
+        # Frecuencia real en español: entre traducciones con votos parecidos gana la
+        # palabra común («cuestión» antes que «flujo»), y las rarísimas («casalicio»,
+        # «maguer») no se enseñan salvo que sean la única opción.
+        def es_zipf(c: str) -> float:
+            ws = [x for x in re.findall(r"[\wáéíóúüñ]+", c.lower()) if len(x) > 3] or re.findall(r"[\wáéíóúüñ]+", c.lower())
+            return min((zipf_frequency(x, "es") for x in ws), default=0.0)
+
+        zipf = {k: es_zipf(display[k]) for k in votes}
+        ranked = sorted(votes.items(), key=lambda kv: -(kv[1] * (0.75 + 0.05 * min(zipf[kv[0]], 6))))
+        keep = [(k, v) for i, (k, v) in enumerate(ranked) if i == 0 or zipf[k] >= 2.5]
+        # Las alternativas necesitan un apoyo comparable al de la principal (≥ 40 %).
+        top = keep[0][1] if keep else 0
+        translations = [display[k] for i, (k, v) in enumerate(keep) if v >= 0.5 and (i == 0 or v >= 0.4 * top)][:3] or [display[k] for k, _ in ranked[:1]]
         source = origin[ranked[0][0]] if ranked else None
         if not translations and definition:
             translations = [definition]

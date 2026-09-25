@@ -211,3 +211,17 @@ export function ratingFromOutcome(o: AnswerOutcome): Rating {
   if (speed < 0.5 && (o.confidence === undefined || o.confidence >= 0.8)) return 4;
   return 3;
 }
+
+/**
+ * Retención objetivo personalizada. 0,90 es el estándar de FSRS; quien prefiere
+ * el reto o tiene poco tiempo repasa algo menos (0,87: más palabras nuevas por
+ * minuto) y quien prefiere ir seguro, algo más (0,92: menos olvidos).
+ */
+export function targetRetention(opts: { challenge?: number; dailyMinutes: number }): number {
+  let r = 0.9;
+  const c = opts.challenge ?? 0;
+  if (c > 0.3) r -= 0.02;
+  if (c < -0.3) r += 0.02;
+  if (opts.dailyMinutes <= 10) r -= 0.01;
+  return Math.round(Math.max(0.85, Math.min(0.93, r)) * 100) / 100;
+}

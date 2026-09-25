@@ -4,7 +4,7 @@ import type { Skill } from "../content/types";
 import { ACHIEVEMENT_RULES, newlyUnlocked } from "../engine/achievements";
 import { evaluateChoice, evaluateText, type EvaluationResult } from "../engine/evaluate";
 import { canonicalMatchResponse, resolveExercise } from "../engine/exercises";
-import { Fsrs, newCard, ratingFromOutcome, type CardMemory } from "../engine/fsrs";
+import { Fsrs, newCard, ratingFromOutcome, targetRetention, type CardMemory } from "../engine/fsrs";
 import { defaultEstimate, updateSkillOnline, type SkillEstimate } from "../engine/levels";
 import { planSession, type SessionPlan } from "../engine/planner";
 import { computeStreak, localDay, summarizeVocabulary } from "../engine/progress";
@@ -17,7 +17,14 @@ import type { KnowledgeDbRow } from "../db/types";
 import { aiAvailable } from "../ai/provider";
 import type { Learner } from "./viewer";
 
-const fsrs = new Fsrs();
+// Un planificador FSRS por retención objetivo (se reutilizan: sólo hay unas pocas).
+const schedulers = new Map<number, Fsrs>();
+function fsrsFor(learner: Learner): Fsrs {
+  const r = targetRetention({ challenge: learner.profile.personality?.dims.challenge, dailyMinutes: learner.profile.dailyMinutes });
+  let f = schedulers.get(r);
+  if (!f) schedulers.set(r, (f = new Fsrs({ requestRetention: r })));
+  return f;
+}
 const DAY = 86_400_000;
 
 export function knowledgeToCard(k: KnowledgeDbRow | undefined, now: Date): CardMemory {
@@ -227,7 +234,7 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
   const previousKnowledge = itemIds.map((id) => byId.get(id) ?? null);
   for (const itemId of itemIds) {
     const prev = byId.get(itemId);
-    const card = fsrs.review(knowledgeToCard(prev, now), rating, now);
+    const card = fsrsFor(learner).review(knowledgeToCard(prev, now), rating, now);
     const exposures = (prev?.exposureCount ?? 0) + 1;
     await repo.saveKnowledge({
       userLanguageId: ulId,
@@ -342,7 +349,7 @@ export async function reviseConfidence(learner: Learner, attemptId: string, gues
     const prev = attempt.previousKnowledge[i] ?? undefined;
     const now = current.get(itemId);
     if (!now) continue;
-    const card = fsrs.review(knowledgeToCard(prev, at), 2, at);
+    const card = fsrsFor(learner).review(knowledgeToCard(prev, at), 2, at);
     await repo.saveKnowledge({
       ...now,
       stability: card.stability,

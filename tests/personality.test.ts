@@ -70,3 +70,11 @@ test("tipo de ejercicio: quien prefiere escuchar recibe más dictados", async ()
   assert.ok(count({ ear: 1, challenge: 0 }) > count() * 1.4);
   assert.ok(count({ ear: -1, challenge: 0 }) < count());
 });
+
+test("retención objetivo: el reto y el poco tiempo repasan algo menos; ir seguro, algo más", async () => {
+  const { targetRetention } = await import("../src/lib/engine/fsrs");
+  assert.equal(targetRetention({ dailyMinutes: 20 }), 0.9);
+  assert.equal(targetRetention({ challenge: 0.8, dailyMinutes: 20 }), 0.88);
+  assert.equal(targetRetention({ challenge: -0.8, dailyMinutes: 20 }), 0.92);
+  assert.equal(targetRetention({ challenge: 0.8, dailyMinutes: 5 }), 0.87);
+});

@@ -200,5 +200,65 @@
       "fuera"
     ],
     "p": "adverb"
+  },
+  "issue": {
+    "t": [
+      "asunto",
+      "cuestión",
+      "problema"
+    ],
+    "p": "noun"
+  },
+  "fair": {
+    "t": [
+      "justo",
+      "feria",
+      "rubio"
+    ],
+    "p": "adjective"
+  },
+  "spring": {
+    "t": [
+      "primavera",
+      "muelle",
+      "manantial"
+    ],
+    "p": "noun"
+  },
+  "approach": {
+    "t": [
+      "enfoque",
+      "acercarse",
+      "abordar"
+    ],
+    "p": "noun"
+  },
+  "thing": {
+    "t": [
+      "cosa"
+    ],
+    "p": "noun"
+  },
+  "run": {
+    "t": [
+      "correr",
+      "dirigir",
+      "funcionar"
+    ],
+    "p": "verb"
+  },
+  "however": {
+    "t": [
+      "sin embargo",
+      "no obstante"
+    ],
+    "p": "adverb"
+  },
+  "enough": {
+    "t": [
+      "suficiente",
+      "bastante"
+    ],
+    "p": "determiner"
   }
 }
