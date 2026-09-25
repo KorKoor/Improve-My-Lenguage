@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, Clock, Flame, Gauge, Headphones, MessageCircle, Mic, Newspaper, PenLine, Repeat, Sparkles, Target } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, Flame, Gauge, Headphones, MessageCircle, Mic, Newspaper, PenLine, Repeat, Sparkles, Target, Timer } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BLOCK_META, SKILL_META, formatMinutes, greeting } from "@/components/app/labels";
@@ -23,6 +23,9 @@ import { WhatsNew } from "@/components/dashboard/whats-new";
 import { CHANGELOG, CHANGELOG_VERSION } from "@/lib/content/changelog";
 import { QuestBoard } from "@/components/dashboard/quests";
 import { requireLearner } from "@/lib/services/viewer";
+import { MultiLangToday } from "@/components/dashboard/multilang-today";
+import { listUserLanguages } from "@/lib/db/repositories";
+import { languagesOverview } from "@/lib/services/multilang";
 
 export const metadata: Metadata = { title: "Inicio" };
 
@@ -49,6 +52,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       </p>
     ) : null;
   const board = d.assessed ? await questBoard(learner, d.dueCount) : null;
+  const multi = (await listUserLanguages(learner.userId)).length > 1 ? await languagesOverview(learner) : null;
   const lang = learner.language;
   // Tutorial: la primera vez que llega al inicio (o bajo demanda con ?tutorial=1).
   const tour = (
@@ -183,7 +187,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                   </Link>
                 ))}
               </nav>
-              <ButtonLink href={`/app/session?minutes=${learner.profile.dailyMinutes}&surprise=1`} variant="ghost" size="sm" className="sm:ml-auto">
+              <ButtonLink href="/app/study" variant="ghost" size="sm" className="sm:ml-auto">
+                <Timer size={16} aria-hidden /> Modo estudio
+              </ButtonLink>
+              <ButtonLink href={`/app/session?minutes=${learner.profile.dailyMinutes}&surprise=1`} variant="ghost" size="sm">
                 <Sparkles size={16} aria-hidden /> Sorpréndeme
               </ButtonLink>
             </div>
@@ -202,6 +209,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
 
         <div className="flex flex-col gap-6">
           {board && <QuestBoard quests={board.quests} xp={xp} />}
+
+          {multi && <MultiLangToday o={multi} />}
 
           {/* Recomendación explicada */}
           <section className="rounded-[22px] bg-primary-soft p-6" aria-labelledby="rec-title">

@@ -99,7 +99,10 @@ async function main() {
     const streak = back <= 12;
     if (!streak && rand() < (back > 70 ? 0.55 : 0.35)) continue; // días sin estudio
     const day = new Date(now.getTime() - back * DAY);
-    day.setUTCHours(1 + Math.floor(rand() * 4), Math.floor(rand() * 60)); // tarde en México
+    // Unas veces por la mañana (8–10 h en México), otras por la noche: así
+    // «tu mejor hora» tiene datos reales que comparar.
+    const morning = rand() < 0.4;
+    day.setUTCHours(morning ? 14 + Math.floor(rand() * 2) : 1 + Math.floor(rand() * 4), Math.floor(rand() * 60));
     const exercises = 8 + Math.floor(rand() * 14);
     const sessionRef = langRef.collection("sessions").doc();
     let correct = 0;
@@ -115,7 +118,8 @@ async function main() {
         if (due.length && rand() < 0.7) itemId = pick(due)[0];
         else if (introduced < vocab.length) itemId = vocab[introduced++]!.id;
       }
-      const successP = back > 70 ? 0.62 : 0.78; // mejora con el tiempo
+      // Mejora con el tiempo, rinde más por la mañana y se cansa al final de la sesión.
+      const successP = (back > 70 ? 0.62 : 0.78) + (morning ? 0.08 : -0.02) - (i > 14 ? 0.12 : 0);
       const ok = rand() < successP;
       if (ok) correct++;
       const category = skill === "vocabulary" ? "vocabulary" : pick(weakCats);
@@ -208,6 +212,37 @@ async function main() {
     finishedAt: Timestamp.fromDate(new Date(now.getTime() - 140 * DAY + 6 * 60_000)),
   });
   await repo.unlockAchievements(uid, ["first-assessment", "first-session", "streak-7", "words-100", "exercises-100"]);
+
+  // ── Segundo idioma (francés, «en progreso»): para el reparto multi-idioma.
+  const fr = await repo.upsertUserLanguage(uid, "fr", "A2");
+  await repo.markAssessed(fr.id);
+  await repo.setLanguagePriority(uid, LANG, "main");
+  await repo.setLanguagePriority(uid, "fr", "active");
+  await repo.setGoal(fr.id, { targetLevel: "B1", deadline: null, minutesPerDay: 10, reason: "travel" });
+  await repo.upsertSkillEstimates(fr.id, [
+    { skill: "vocabulary", theta: -1.1, se: 0.4, evidence: 40 },
+    { skill: "grammar", theta: -1.4, se: 0.45, evidence: 20 },
+  ]);
+  for (const back of [2, 3, 5, 6, 9]) {
+    const d = dayStr(new Date(now.getTime() - back * DAY));
+    await db.collection("users").doc(uid).collection("activity").doc(`${d}__fr`).set({ day: d, languageCode: "fr", seconds: 420 + back * 30, exercises: 9, correct: 7, wordsReviewed: 5, sessions: 1 });
+  }
+  const frVocab = vocabFor("fr").filter((v) => v.cefr === "A1").slice(0, 30);
+  for (const [i, v] of frVocab.entries()) {
+    let c = newCard(new Date(now.getTime() - 9 * DAY));
+    c = fsrs.review(c, 3, new Date(now.getTime() - 9 * DAY));
+    await repo.saveKnowledge({
+      userLanguageId: fr.id, itemId: v.id, itemType: "vocab", status: "learning",
+      stability: c.stability, difficulty: c.difficulty, reps: c.reps, lapses: c.lapses, state: c.state,
+      // La mitad vence hoy: el reparto le dará repaso.
+      dueAt: i % 2 ? new Date(now.getTime() - DAY) : c.due, lastReviewAt: c.lastReview,
+      exposureCount: 1, correctCount: 1, incorrectCount: 0, avgResponseMs: 6000,
+    });
+  }
+  // Historial de atención: suele bajar hacia el minuto 13.
+  for (const onset of [12, null, 14, 13, null, 12, 15]) {
+    await repo.pushFocusHistory(uid, { onsetMin: onset, durationMin: 20, breaks: 0, at: new Date().toISOString() });
+  }
 
   // ── Segunda cuenta: «Mamá», en modo sencillo, aprendiendo italiano, y ambos en un grupo familiar.
   const mom = await auth.createUser({ email: MOM_EMAIL, password: PASSWORD, displayName: "Mamá", emailVerified: true });

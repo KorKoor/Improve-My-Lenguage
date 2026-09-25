@@ -13,6 +13,9 @@ import { Chip } from "@/components/ui/chip";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
 import type { Exercise } from "@/lib/engine/exercises";
+import { fatigueOnset, planBreak, readFocus, type BreakPlan, type FocusEvent, type FocusReading } from "@/lib/engine/focus";
+import { BreakCoach, formatClock } from "@/components/focus/break-coach";
+import { PlanNext } from "@/components/focus/plan-next";
 import type { SessionStep } from "@/lib/engine/session-builder";
 import type { AnswerFeedback, SessionSummary } from "@/lib/services/learning";
 
@@ -28,10 +31,22 @@ interface Props {
   title: string;
   /** Tutor de IA disponible y con consentimiento: habilita «¿Por qué?». */
   aiEnabled?: boolean;
+  /** Capacidad de atención aprendida (min): guía las pausas inteligentes. */
+  span?: number;
 }
 
 
-export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false }: Props) {
+export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15 }: Props) {
+  // ── Temporizador inteligente ──
+  const focusEvents = useRef<FocusEvent[]>([]);
+  const lastBreakAt = useRef(0);
+  const breakMs = useRef(0);
+  const breaksTaken = useRef(0);
+  const snoozeUntil = useRef(0);
+  const [suggestion, setSuggestion] = useState<{ reading: FocusReading; plan: BreakPlan } | null>(null);
+  const [onBreak, setOnBreak] = useState<{ plan: BreakPlan; startedAt: number } | null>(null);
+  const [clock, setClock] = useState(0);
+  const [onset, setOnset] = useState<number | null>(null);
   const [lastAnswer, setLastAnswer] = useState<{ key: string; response: string } | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "running" | "finishing" | "done" | "empty">("loading");
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +77,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
     setIndex(0);
     startedAt.current = Date.now();
     stepStartedAt.current = Date.now();
+    lastBreakAt.current = Date.now();
     setStatus(steps.length ? "running" : "empty");
   }, [minutes, focus, surprise]);
 
@@ -71,13 +87,21 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
     void load();
   }, [load]);
 
+  useEffect(() => {
+    if (status !== "running" || onBreak) return;
+    const t = setInterval(() => setClock(Math.round((Date.now() - startedAt.current - breakMs.current) / 1000)), 1000);
+    return () => clearInterval(t);
+  }, [status, onBreak]);
+
   const step = queue[index];
   const progress = queue.length ? index / queue.length : 0;
 
   const finish = useCallback(async () => {
     setStatus("finishing");
     if (sessionId) {
-      const res = await finishSessionAction(sessionId, Math.round((Date.now() - startedAt.current) / 1000));
+      const o = fatigueOnset(focusEvents.current);
+      setOnset(o);
+      const res = await finishSessionAction(sessionId, Math.round((Date.now() - startedAt.current - breakMs.current) / 1000), { onsetMin: o, breaks: breaksTaken.current });
       if (res.ok) setSummary(res.data);
     }
     setStatus("done");
@@ -114,13 +138,20 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         const now = res.data.correct ? c.now + 1 : 0;
         return { now, best: Math.max(c.best, now) };
       });
+      // Lectura de foco tras cada respuesta: ¿toca una pausa?
+      const nowMs = Date.now();
+      focusEvents.current.push({ correct: res.data.correct, timeMs: nowMs - stepStartedAt.current, atMin: (nowMs - startedAt.current - breakMs.current) / 60000 });
+      const reading = readFocus(focusEvents.current, { span, sinceBreakMin: (nowMs - lastBreakAt.current) / 60000 });
+      if (reading.advice !== "continue" && nowMs >= snoozeUntil.current) {
+        setSuggestion({ reading, plan: planBreak(reading, (nowMs - startedAt.current - breakMs.current) / 60000, focusEvents.current.length) });
+      }
       // Lo fallado vuelve a salir al final (una vez): recuperación inmediata.
       const current = queue[index];
       if (!res.data.correct && current && !current.retry && ex.type !== "match") {
         setQueue((q) => [...q, { ...current, uid: current.uid + "-r", retry: true }]);
       }
     },
-    [submitting, feedback, sessionId, queue, index],
+    [submitting, feedback, sessionId, queue, index, span],
   );
 
   if (status === "loading") {
@@ -181,9 +212,17 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
             <ul className="mt-2 space-y-1 text-sm">{summary.newAchievements.map((a) => <li key={a.id}>{a.icon} {a.title}</li>)}</ul>
           </div>
         ) : null}
+        {status === "done" && focusEvents.current.length >= 8 && (
+          <p className="max-w-md rounded-2xl bg-surface px-4 py-3 text-sm shadow-sm">
+            {onset !== null
+              ? <>🧠 Tu precisión empezó a bajar hacia el <strong>minuto {onset}</strong>. El temporizador ya lo tiene en cuenta para proponerte pausas a tiempo.</>
+              : <>🎯 Mantuviste la concentración toda la sesión{breaksTaken.current ? ` (con ${breaksTaken.current} ${breaksTaken.current === 1 ? "pausa" : "pausas"})` : ""}. ¡Así se hace!</>}
+          </p>
+        )}
         <p className="max-w-md text-sm text-muted">Tu perfil ya se actualizó con esta sesión: los repasos, tu nivel por habilidad y tus debilidades se recalculan en cada respuesta.</p>
         {status === "finishing" ? <Loader2 className="animate-spin text-primary" aria-label="Guardando" /> : (
           <>
+            <PlanNext />
             <div className="flex flex-wrap justify-center gap-3">
               <ButtonLink href="/app" size="lg">Volver al inicio</ButtonLink>
               <ButtonLink href="/app/progress" variant="secondary" size="lg">Ver mi progreso</ButtonLink>
@@ -212,6 +251,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         </Link>
         <ProgressBar value={progress} label={`${title}: paso ${index + 1} de ${queue.length}`} height={10} className="flex-1" />
         <span className="text-xs font-semibold text-muted tabular-nums">{index + 1}/{queue.length}</span>
+        <SessionClock seconds={clock} target={minutes * 60} />
       </div>
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold text-white" style={{ background: meta.color }}>
@@ -225,6 +265,25 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         ) : null}
       </div>
 
+      {suggestion && !feedback && !onBreak && (
+        <BreakSuggestion
+          reading={suggestion.reading}
+          plan={suggestion.plan}
+          onTake={() => {
+            setOnBreak({ plan: suggestion.plan, startedAt: Date.now() });
+            setSuggestion(null);
+          }}
+          onFinish={() => {
+            setSuggestion(null);
+            void finish();
+          }}
+          onDismiss={() => {
+            // No insistir durante unos minutos.
+            snoozeUntil.current = Date.now() + 6 * 60_000;
+            setSuggestion(null);
+          }}
+        />
+      )}
       <div key={step.uid} className={cn("mt-4", feedback && !feedback.correct ? "animate-shake" : "animate-rise")} lang={step.kind === "exercise" || step.kind === "intro" ? undefined : "es"}>
         {step.kind === "intro" && <IntroStep step={step} locale={locale} language={language} rtl={rtl} onNext={next} />}
         {step.kind === "tip" && <TipStep step={step} language={language} onNext={next} />}
@@ -244,6 +303,22 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         )}
       </div>
 
+      {onBreak && (
+        <BreakCoach
+          seconds={onBreak.plan.seconds}
+          activity={onBreak.plan.activity}
+          why={onBreak.plan.why}
+          onDone={(completed) => {
+            const now = Date.now();
+            breakMs.current += now - onBreak.startedAt;
+            lastBreakAt.current = now;
+            snoozeUntil.current = now + 5 * 60_000;
+            if (completed) breaksTaken.current += 1;
+            stepStartedAt.current = now;
+            setOnBreak(null);
+          }}
+        />
+      )}
       {feedback && <FeedbackSheet feedback={feedback} onNext={next} combo={combo.now} explain={aiEnabled && !feedback.correct && lastAnswer ? lastAnswer : null} />}
     </div>
   );
@@ -667,6 +742,43 @@ function FeedbackSheet({ feedback: f, onNext, combo, explain }: { feedback: Answ
         <Button size="lg" variant={ok ? "success" : "danger"} className="mt-4 w-full" onClick={onNext} autoFocus>
           Continuar
         </Button>
+      </div>
+    </div>
+  );
+}
+
+/** Reloj de la sesión: tiempo real frente al objetivo, con anillo de progreso. */
+function SessionClock({ seconds, target }: { seconds: number; target: number }) {
+  const pct = Math.min(1, seconds / Math.max(60, target));
+  const over = seconds >= target;
+  const r = 9;
+  const c = 2 * Math.PI * r;
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold tabular-nums", over ? "bg-success-soft text-success" : "bg-surface-muted text-muted")} title={`Objetivo: ${Math.round(target / 60)} min`}>
+      <svg width={22} height={22} viewBox="0 0 22 22" className="-rotate-90" aria-hidden>
+        <circle cx={11} cy={11} r={r} fill="none" stroke="var(--border)" strokeWidth={3} />
+        <circle cx={11} cy={11} r={r} fill="none" stroke={over ? "var(--success)" : "var(--primary)"} strokeWidth={3} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct)} />
+      </svg>
+      <span aria-label={`Tiempo de estudio ${formatClock(seconds)} de ${Math.round(target / 60)} minutos`}>{formatClock(seconds)}</span>
+    </span>
+  );
+}
+
+/** Aviso no intrusivo: el temporizador cree que te vendría bien una pausa. */
+function BreakSuggestion({ reading, plan, onTake, onFinish, onDismiss }: { reading: FocusReading; plan: BreakPlan; onTake: () => void; onFinish: () => void; onDismiss: () => void }) {
+  const stop = reading.advice === "stop";
+  const mins = Math.round(plan.seconds / 60);
+  return (
+    <div role="status" className="mt-4 flex flex-col gap-3 rounded-2xl border border-success/40 bg-success-soft p-4 text-sm animate-sheet sm:flex-row sm:items-center">
+      <span className="text-2xl" aria-hidden>{stop ? "🌙" : "☕"}</span>
+      <div className="flex-1">
+        <p className="font-semibold">{stop ? "Buen momento para terminar" : `¿Una pausa de ${mins === 1 ? "1 minuto" : `${mins} minutos`}?`}</p>
+        <p className="text-muted">{stop ? "Tu atención está bajando: lo practicado se consolida mejor si descansas ahora. " : ""}{plan.why}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {stop ? <Button size="sm" variant="success" onClick={onFinish}>Terminar sesión</Button> : <Button size="sm" variant="success" onClick={onTake}>Tomar pausa</Button>}
+        {stop && <Button size="sm" variant="secondary" onClick={onTake}>Pausa y seguir</Button>}
+        <Button size="sm" variant="ghost" onClick={onDismiss}>Seguir</Button>
       </div>
     </div>
   );

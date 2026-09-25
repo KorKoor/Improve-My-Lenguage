@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, Headphones, Home, Layers, MessageCircle, Mic, Newspaper, PenLine, Play, Repeat, Route, Sparkles, Type, UserRound, Users, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, Globe2, Headphones, Home, Timer, Layers, MessageCircle, Mic, Newspaper, PenLine, Play, Repeat, Route, Sparkles, Type, UserRound, Users, type LucideIcon } from "lucide-react";
 
 /** Secciones de la app (menú lateral, pantalla «Más»). Módulo sin "use client": lo usan servidor y cliente. */
 export interface NavItem {
@@ -28,6 +28,7 @@ export function navItems(due: number, simple = false): NavItem[] {
     { href: "/app", label: "Inicio", icon: Home },
     { href: "/app/session", label: "Sesión de hoy", icon: Play },
     { href: "/app/review", label: "Repaso", icon: Repeat, badge: due > 0 ? due : null },
+    { href: "/app/study", label: "Modo estudio", icon: Timer },
     { href: "/app/vocabulary", label: "Vocabulario", icon: BookOpen },
     { href: "/app/grammar", label: "Gramática", icon: Layers },
     { href: "/app/verbs", label: "Verbos", icon: Type },
@@ -37,6 +38,7 @@ export function navItems(due: number, simple = false): NavItem[] {
     { href: "/app/write", label: "Escritura", icon: PenLine },
     { href: "/app/tutor", label: "Tutor", icon: MessageCircle },
     { href: "/app/progress", label: "Progreso", icon: BarChart3 },
+    { href: "/app/languages", label: "Mis idiomas", icon: Globe2 },
     { href: "/app/path", label: "Camino a C1", icon: Route },
     { href: "/app/group", label: "Familia y amigos", icon: Users },
     { href: "/app/novedades", label: "Novedades", icon: Sparkles },

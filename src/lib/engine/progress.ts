@@ -76,7 +76,7 @@ export function weekStart(d: Date): string {
   return x.toISOString().slice(0, 10);
 }
 
-function addDays(day: string, delta: number): string {
+export function addDays(day: string, delta: number): string {
   const d = new Date(`${day}T12:00:00Z`);
   d.setUTCDate(d.getUTCDate() + delta);
   return d.toISOString().slice(0, 10);
@@ -118,7 +118,7 @@ export function consistency(activeDays: Iterable<string>, today: string, windowD
   return hits / windowDays;
 }
 
-export { addDays };
+
 
 // ── Protector de racha ──────────────────────────────────────────────────────
 export const MAX_STREAK_FREEZES = 2;

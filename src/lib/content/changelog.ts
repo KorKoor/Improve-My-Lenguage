@@ -6,9 +6,13 @@ export interface ChangelogItem {
   href: string;
 }
 
-export const CHANGELOG_VERSION = "2026-09-25";
+export const CHANGELOG_VERSION = "2026-09-25b";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "⏱️", title: "Modo estudio", text: "Dices cuánto tiempo tienes y lo repartimos entre tus idiomas en bloques, con un temporizador que te guía y descansos en el momento justo.", href: "/app/study" },
+  { icon: "🌍", title: "Varios idiomas a la vez", text: "Elige tu idioma principal, los que están en progreso y los que sólo quieres mantener. Cada día repartimos tus minutos y evitamos que se mezclen los parecidos.", href: "/app/languages" },
+  { icon: "🌿", title: "Descansos inteligentes", text: "Durante la sesión detectamos cuándo baja tu atención (más fallos, respuestas más lentas) y te proponemos una pausa guiada: respirar, descansar la vista, estirarte.", href: "/app/session" },
+  { icon: "🧠", title: "Tu ritmo, aprendido", text: "Tu capacidad de atención y tu mejor hora del día se calculan con tus propias respuestas. Míralos en Progreso.", href: "/app/progress" },
   { icon: "📲", title: "Instálala en tu móvil", text: "Un icono en la pantalla de inicio (con instrucciones para iPhone) y una pestaña «Más» con todas las secciones.", href: "/app/settings" },
   { icon: "💡", title: "¿Por qué me equivoqué?", text: "Tras un fallo, pide a tu tutor una explicación breve y personalizada (con la IA activada).", href: "/app/session" },
   { icon: "🧩", title: "El doble de gramática", text: "Los 12 idiomas suman nuevas lecciones de A1 a C1 (hasta 27 en inglés), con errores típicos de hispanohablantes y ejercicios.", href: "/app/grammar" },

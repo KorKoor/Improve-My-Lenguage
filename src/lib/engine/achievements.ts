@@ -29,6 +29,12 @@ export interface AchievementStats {
   inGroup?: boolean;
   /** Hizo el cuestionario «¿Cómo aprendes mejor?». */
   personalityDone?: boolean;
+  /** Días en que estudió 2 o más idiomas. */
+  polyglotDays?: number;
+  /** Planes del modo estudio completados. */
+  studyPlans?: number;
+  /** Descansos guiados completados. */
+  breaksCompleted?: number;
 }
 
 export interface AchievementRule {
@@ -62,6 +68,10 @@ export const ACHIEVEMENT_RULES: AchievementRule[] = [
   { id: "first-scenario", title: "Primera misión", description: "Cumpliste los 3 objetivos de un escenario con el tutor.", icon: "🎭", unlocked: (s) => (s.scenariosCompleted ?? 0) >= 1 },
   { id: "self-aware", title: "Te conoces", description: "Descubriste cómo aprendes mejor.", icon: "🪞", unlocked: (s) => Boolean(s.personalityDone) },
   { id: "polyglot", title: "Políglota en progreso", description: "Empezaste a estudiar un segundo idioma.", icon: "🌍", unlocked: (s) => s.languagesStarted >= 2 },
+  { id: "polyglot-day", title: "Día políglota", description: "Estudiaste dos idiomas el mismo día.", icon: "🗺️", unlocked: (s) => (s.polyglotDays ?? 0) >= 1 },
+  { id: "polyglot-10", title: "Mente multilingüe", description: "10 días estudiando varios idiomas.", icon: "🧠", unlocked: (s) => (s.polyglotDays ?? 0) >= 10 },
+  { id: "first-plan", title: "Plan cumplido", description: "Completaste tu primer plan del modo estudio.", icon: "🏁", unlocked: (s) => (s.studyPlans ?? 0) >= 1 },
+  { id: "mindful-breaks", title: "Pausas sabias", description: "Completaste 5 descansos guiados.", icon: "🌿", unlocked: (s) => (s.breaksCompleted ?? 0) >= 5 },
 ];
 
 export function newlyUnlocked(stats: AchievementStats, already: Set<string>): AchievementRule[] {

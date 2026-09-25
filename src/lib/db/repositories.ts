@@ -14,8 +14,10 @@ import type { SkillEstimate } from "../engine/levels";
 import { parsePersonality, type PersonalityResult } from "../engine/personality";
 import { localDay, weekStart } from "../engine/progress";
 import { firestore } from "../firebase/admin";
+import type { LanguagePriority } from "../engine/multilang";
 import type {
   ActivityRow,
+  FocusHistoryEntry,
   GoalRow,
   KnowledgeDbRow,
   ProfileRow,
@@ -108,9 +110,32 @@ function toProfile(snap: DocumentSnapshot): ProfileRow {
     personality: parsePersonality(json(d.personality)),
     streakFreezes: num(d.streakFreezes),
     groupId: str(d.groupId),
+    focusHistory: parseFocusHistory(json(d.focusHistory)),
     frozenDays: Array.isArray(d.frozenDays) ? (d.frozenDays as string[]).filter((x) => typeof x === "string") : [],
     createdAt: date(d.createdAt) ?? new Date(0),
   };
+}
+
+function parseFocusHistory(v: unknown): FocusHistoryEntry[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .filter((e): e is Record<string, unknown> => !!e && typeof e === "object")
+    .map((e) => ({
+      onsetMin: typeof e.onsetMin === "number" ? e.onsetMin : null,
+      durationMin: num(e.durationMin),
+      breaks: num(e.breaks),
+      at: String(e.at ?? ""),
+    }));
+}
+
+/** Añade una sesión al historial de atención (se guardan las 20 últimas). */
+export async function pushFocusHistory(userId: string, entry: FocusHistoryEntry): Promise<void> {
+  await db().runTransaction(async (tx) => {
+    const ref = userRef(userId);
+    const snap = await tx.get(ref);
+    const prev = parseFocusHistory(json(snap.get("focusHistory")));
+    tx.set(ref, { focusHistory: toJson([...prev, entry].slice(-20)) }, { merge: true });
+  });
 }
 
 export async function getProfile(userId: string): Promise<ProfileRow | null> {
@@ -295,8 +320,23 @@ function toUserLanguage(uid: string, snap: DocumentSnapshot): UserLanguageRow {
     languageCode: snap.id,
     selfReportedLevel: (str(d.selfReportedLevel) as CefrLevel | null) ?? null,
     assessedAt: date(d.assessedAt),
+    priority: d.priority === "main" || d.priority === "active" || d.priority === "maintain" ? d.priority : null,
     createdAt: date(d.createdAt) ?? new Date(0),
   };
+}
+
+export async function setLanguagePriority(userId: string, code: string, priority: LanguagePriority): Promise<void> {
+  const ref = ulRef(userLanguageId(userId, code));
+  await db().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new Error("No estudias ese idioma");
+    // Sólo puede haber un idioma principal: el anterior pasa a «en progreso».
+    if (priority === "main") {
+      const all = await tx.get(userRef(userId).collection("languages").where("priority", "==", "main"));
+      for (const d of all.docs) if (d.id !== code) tx.update(d.ref, { priority: "active" });
+    }
+    tx.update(ref, { priority });
+  });
 }
 
 export async function listUserLanguages(userId: string): Promise<UserLanguageRow[]> {
@@ -807,6 +847,31 @@ export async function getActivity(userId: string, sinceDay: string, languageCode
     byDay.set(d.day, row);
   }
   return [...byDay.values()].sort((a, b) => a.day.localeCompare(b.day));
+}
+
+/** Filas de actividad por día e idioma (sin agregar), para el reparto multi-idioma. */
+export async function getActivityByLanguage(userId: string, sinceDay: string): Promise<{ day: string; languageCode: string; seconds: number; exercises: number }[]> {
+  const snap = await activityOf(userId).where("day", ">=", sinceDay).get();
+  return snap.docs.map((d) => ({ day: String(d.get("day")), languageCode: String(d.get("languageCode")), seconds: num(d.get("seconds")), exercises: num(d.get("exercises")) }));
+}
+
+/** Aciertos por hora local del día (últimos intentos de cada idioma). */
+export async function hourlyAccuracy(ulIds: string[], since: Date, timeZone: string): Promise<{ hour: number; total: number; correct: number }[]> {
+  const hours = Array.from({ length: 24 }, (_, hour) => ({ hour, total: 0, correct: 0 }));
+  const fmt = new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone });
+  await Promise.all(
+    ulIds.map(async (ulId) => {
+      const snap = await ulRef(ulId).collection("attempts").where("createdAt", ">=", Timestamp.fromDate(since)).orderBy("createdAt", "desc").limit(1500).select("correct", "createdAt").get();
+      for (const d of snap.docs) {
+        const at = date(d.get("createdAt"));
+        if (!at) continue;
+        const h = Number(fmt.format(at)) % 24;
+        hours[h]!.total++;
+        if (d.get("correct") === true) hours[h]!.correct++;
+      }
+    }),
+  );
+  return hours;
 }
 
 export async function allActiveDays(userId: string): Promise<string[]> {

@@ -12,6 +12,7 @@ import { buildSessionSteps, sessionSeed, wordCard, type SessionStep } from "../e
 import { gradeDictation } from "../listening/diff";
 import { isLeech } from "../engine/insights";
 import { detectWeaknesses, type Weakness } from "../engine/weakness";
+import { polyglotDays } from "../engine/multilang";
 import * as repo from "../db/repositories";
 import { rateLimit } from "../db/limits";
 import type { KnowledgeDbRow } from "../db/types";
@@ -378,9 +379,24 @@ export interface SessionSummary {
   newAchievements: { id: string; title: string; icon: string }[];
 }
 
-export async function finishSession(learner: Learner, sessionId: string, durationSeconds: number): Promise<SessionSummary | null> {
+export async function finishSession(
+  learner: Learner,
+  sessionId: string,
+  durationSeconds: number,
+  focus?: { onsetMin: number | null; breaks: number },
+): Promise<SessionSummary | null> {
   const s = await repo.completeSession(learner.ul.id, sessionId, Math.max(0, Math.min(durationSeconds, 4 * 3600)));
   if (!s) return null;
+  // Historial de atención: alimenta el temporizador inteligente (sólo sesiones con datos suficientes).
+  if (focus && s.exercisesCount >= 8) {
+    const durationMin = Math.round(s.durationSeconds / 60);
+    await repo.pushFocusHistory(learner.userId, {
+      onsetMin: focus.onsetMin !== null && focus.onsetMin <= durationMin + 1 ? focus.onsetMin : null,
+      durationMin,
+      breaks: focus.breaks,
+      at: new Date().toISOString(),
+    });
+  }
   await repo.bumpActivity(learner.userId, learner.language.code, localDay(new Date(), learner.profile.timezone), { sessions: 1 });
   await repo.track(learner.userId, "session_completed", { exercises: s.exercisesCount, correct: s.correctCount });
   const newAchievements = await checkAchievements(learner);
@@ -404,7 +420,7 @@ export async function checkAchievements(learner: Learner) {
     repo.listUserLanguages(learner.userId),
     repo.getAllKnowledge(learner.ul.id),
   ]);
-  const [readings, writings, listening, speaking, scenarios, verbDrills, questsClaimed] = await Promise.all([
+  const [readings, writings, listening, speaking, scenarios, verbDrills, questsClaimed, studyPlans, breaksCompleted, langActivity] = await Promise.all([
     repo.countReadings(learner.userId),
     repo.countWritings(learner.userId),
     repo.countEvents(learner.userId, "listening_completed"),
@@ -412,6 +428,9 @@ export async function checkAchievements(learner: Learner) {
     repo.countEvents(learner.userId, "scenario_completed"),
     repo.countEvents(learner.userId, "verbs_completed"),
     repo.countEvents(learner.userId, "quest_claimed"),
+    repo.countEvents(learner.userId, "study_plan_completed"),
+    repo.countEvents(learner.userId, "break_completed"),
+    languages.length > 1 ? repo.getActivityByLanguage(learner.userId, "2000-01-01") : Promise.resolve([]),
   ]);
   const vocab = summarizeVocabulary(
     knowledge.map((k) => ({ ...knowledgeToCard(k, now), itemId: k.itemId, itemType: k.itemType })),
@@ -436,6 +455,9 @@ export async function checkAchievements(learner: Learner) {
       questsClaimed,
       inGroup: Boolean(learner.profile.groupId),
       personalityDone: Boolean(learner.profile.personality),
+      polyglotDays: polyglotDays(langActivity).length,
+      studyPlans,
+      breaksCompleted,
     },
     new Set(unlocked.map((u) => u.achievementId)),
   );

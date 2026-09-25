@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SessionRunner } from "@/components/session/runner";
 import { requireLearner } from "@/lib/services/viewer";
 import { aiAvailable } from "@/lib/ai/provider";
+import { viewerAttentionSpan } from "@/lib/services/multilang";
 
 export const metadata: Metadata = { title: "Sesión" };
 
@@ -18,6 +19,7 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
       language={learner.language.code}
       rtl={learner.language.rtl}
       aiEnabled={aiAvailable() && learner.profile.aiConsent}
+      span={viewerAttentionSpan(learner)}
       title={sp.focus === "leeches" ? "Palabras rebeldes" : "Sesión de estudio"}
     />
   );

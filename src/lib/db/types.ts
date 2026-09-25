@@ -1,6 +1,7 @@
 import type { PersonalityResult } from "../engine/personality";
 import type { CefrLevel, Skill } from "../content/types";
 import type { CardState } from "../engine/fsrs";
+import type { LanguagePriority } from "../engine/multilang";
 
 export interface ProfileRow {
   id: string;
@@ -36,7 +37,17 @@ export interface ProfileRow {
   frozenDays: string[];
   /** Grupo familiar o de estudio al que pertenece (código), si lo hay. */
   groupId: string | null;
+  /** Historial de atención de las últimas sesiones (para el temporizador inteligente). */
+  focusHistory: FocusHistoryEntry[];
   createdAt: Date;
+}
+
+export interface FocusHistoryEntry {
+  /** Minuto en que empezó a decaer la precisión (null = no decayó). */
+  onsetMin: number | null;
+  durationMin: number;
+  breaks: number;
+  at: string;
 }
 
 export type TextSize = "normal" | "large" | "xl";
@@ -47,6 +58,8 @@ export interface UserLanguageRow {
   languageCode: string;
   selfReportedLevel: CefrLevel | null;
   assessedAt: Date | null;
+  /** Prioridad al repartir el tiempo entre varios idiomas (null = por defecto). */
+  priority: LanguagePriority | null;
   createdAt: Date;
 }
 

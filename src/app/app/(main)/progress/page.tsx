@@ -12,12 +12,17 @@ import { ACHIEVEMENT_RULES } from "@/lib/engine/achievements";
 import { localDay } from "@/lib/engine/progress";
 import { getProgress } from "@/lib/services/insights";
 import { requireLearner } from "@/lib/services/viewer";
+import { studyTimeInsight, viewerAttentionSpan } from "@/lib/services/multilang";
+import { peakLabel } from "@/lib/engine/focus";
 
 export const metadata: Metadata = { title: "Progreso" };
 
 export default async function ProgressPage() {
   const learner = await requireLearner();
-  const p = await getProgress(learner);
+  const [p, best] = await Promise.all([getProgress(learner), studyTimeInsight(learner)]);
+  const span = viewerAttentionSpan(learner);
+  const fh = learner.profile.focusHistory;
+  const focusedShare = fh.length ? Math.round((fh.filter((h) => h.onsetMin === null).length / fh.length) * 100) : null;
   const today = localDay(new Date(), learner.profile.timezone);
   const unlocked = new Map(p.achievements.map((a) => [a.achievementId, a.unlockedAt]));
   const acc = p.totals.attempts ? p.totals.correct / p.totals.attempts : null;
@@ -45,6 +50,30 @@ export default async function ProgressPage() {
       </section>
 
       <WeekCard week={p.week} />
+
+      <section aria-labelledby="rhythm-title" className="card p-5 sm:p-6">
+        <div className="flex flex-wrap items-center gap-2">
+          <h2 id="rhythm-title" className="flex-1 font-display text-xl font-bold">Tu ritmo de estudio</h2>
+          <Link href="/app/study" className="text-sm font-semibold text-primary hover:underline">Modo estudio →</Link>
+        </div>
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-2xl bg-surface-muted p-4">
+            <p className="text-sm text-muted">Atención sostenida</p>
+            <p className="font-display text-2xl font-extrabold">~{span} min</p>
+            <p className="text-xs text-muted">{fh.length >= 3 ? `aprendida de tus últimas ${Math.min(12, fh.length)} sesiones` : "estimación inicial: se ajusta con tus sesiones"}</p>
+          </div>
+          <div className="rounded-2xl bg-surface-muted p-4">
+            <p className="text-sm text-muted">Tu mejor momento</p>
+            <p className="font-display text-2xl font-extrabold">{best ? best.label.replace(/^por la |^de /, "").replace(/^./, (c) => c.toUpperCase()) : "—"}</p>
+            <p className="text-xs text-muted">{best ? `${peakLabel(best.peakHour)} · ${best.accuracy} % de aciertos (+${best.lift})` : "necesitamos más respuestas a distintas horas"}</p>
+          </div>
+          <div className="rounded-2xl bg-surface-muted p-4">
+            <p className="text-sm text-muted">Sesiones sin bajón</p>
+            <p className="font-display text-2xl font-extrabold">{focusedShare === null ? "—" : `${focusedShare} %`}</p>
+            <p className="text-xs text-muted">sesiones en que tu precisión no cayó al final</p>
+          </div>
+        </div>
+      </section>
 
       {p.insights.length > 0 && (
         <section aria-labelledby="insights-title" className="space-y-3">

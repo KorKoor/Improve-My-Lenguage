@@ -3,6 +3,7 @@ import { SessionRunner } from "@/components/session/runner";
 import { countDue } from "@/lib/db/repositories";
 import { requireLearner } from "@/lib/services/viewer";
 import { aiAvailable } from "@/lib/ai/provider";
+import { viewerAttentionSpan } from "@/lib/services/multilang";
 
 export const metadata: Metadata = { title: "Repaso" };
 
@@ -19,6 +20,7 @@ export default async function ReviewPage() {
       language={learner.language.code}
       rtl={learner.language.rtl}
       aiEnabled={aiAvailable() && learner.profile.aiConsent}
+      span={viewerAttentionSpan(learner)}
       title="Repaso"
     />
   );

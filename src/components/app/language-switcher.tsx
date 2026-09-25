@@ -34,9 +34,12 @@ export function LanguageSwitcher({ options, active }: { options: LangOption[]; a
           </li>
         ))}
       </ul>
-      <Link href="/app/onboarding?add=1" className="mt-2 flex items-center gap-1.5 px-2 text-xs font-semibold text-primary hover:underline">
-        <Plus size={14} aria-hidden /> Añadir idioma
-      </Link>
+      <div className="mt-2 flex items-center justify-between gap-2 px-2 text-xs font-semibold">
+        <Link href="/app/onboarding?add=1" className="flex items-center gap-1.5 text-primary hover:underline">
+          <Plus size={14} aria-hidden /> Añadir
+        </Link>
+        {options.length > 1 && <Link href="/app/languages" className="text-muted hover:text-primary hover:underline">Repartir tiempo</Link>}
+      </div>
     </div>
   );
 }

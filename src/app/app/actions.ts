@@ -175,9 +175,14 @@ export async function reviseConfidenceAction(attemptId: string, guessed: boolean
   });
 }
 
-export async function finishSessionAction(sessionId: string, durationSeconds: number): Promise<ActionResult<SessionSummary | null>> {
+export async function finishSessionAction(
+  sessionId: string,
+  durationSeconds: number,
+  focus?: { onsetMin: number | null; breaks: number },
+): Promise<ActionResult<SessionSummary | null>> {
   return run("session.finish", async () => {
-    const summary = await finishSession(await requireLearner(), str(sessionId, 64), int(durationSeconds, 0, 14_400, 0));
+    const f = focus && typeof focus === "object" ? { onsetMin: focus.onsetMin === null ? null : int(focus.onsetMin, 0, 240, 0), breaks: int(focus.breaks, 0, 20, 0) } : undefined;
+    const summary = await finishSession(await requireLearner(), str(sessionId, 64), int(durationSeconds, 0, 14_400, 0), f);
     revalidatePath("/app");
     return summary;
   });
