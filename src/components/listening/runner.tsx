@@ -1,4 +1,6 @@
 "use client";
+import { VoiceWarning } from "@/components/speak-button";
+import { pickVoice } from "@/lib/voice";
 import { ArrowRight, Headphones, Loader2, RotateCcw, Snail, Trophy, Volume2 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -38,8 +40,11 @@ export function ListeningRunner({ languageName, beginner = false }: { languageNa
       const u = new SpeechSynthesisUtterance(item.text);
       u.lang = locale;
       u.rate = speechRate(rate);
-      const voice = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith(locale.slice(0, 2).toLowerCase()));
-      if (voice) u.voice = voice;
+      const voice = pickVoice(synth.getVoices(), locale);
+      if (voice) {
+        u.voice = voice;
+        u.lang = voice.lang;
+      }
       u.onstart = () => setPlaying(true);
       u.onend = () => setPlaying(false);
       synth.speak(u);
@@ -131,6 +136,7 @@ export function ListeningRunner({ languageName, beginner = false }: { languageNa
         <ProgressBar value={(i + (fb ? 1 : 0)) / items.length} label="Progreso" className="flex-1" height={8} />
         <span className="text-xs font-semibold text-muted">{i + 1}/{items.length}</span>
       </div>
+      {i === 0 && <VoiceWarning locale={locale} languageName={languageName} />}
 
       <div key={i} className="mt-8 animate-rise text-center">
         <p className="font-semibold text-muted">{KIND_LABEL[item.kind]}</p>

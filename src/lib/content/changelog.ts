@@ -9,6 +9,8 @@ export interface ChangelogItem {
 export const CHANGELOG_VERSION = "2026-09-26b";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "👂", title: "Pares mínimos y tu voz", text: "Entrena el oído con palabras casi iguales (tu/tout, ship/sheep, 买/卖…) y graba tu voz para compararla con el modelo. En Pronunciación.", href: "/app/speak" },
+  { icon: "🔊", title: "Mejor audio", text: "Usamos la voz más natural de tu dispositivo y grabaciones humanas cuando existen. Si tu equipo no tiene voz para el idioma, te explicamos cómo instalarla.", href: "/app/listen" },
   { icon: "🎯", title: "Tu nivel se ajusta solo", text: "En tus primeras sesiones de cada idioma, si fallas la mayoría bajamos el nivel (y si aciertas casi todo, lo subimos). Te avisamos cuando pasa.", href: "/app/session" },
   { icon: "🎧", title: "Diagnóstico con escucha y lectura", text: "El test incluye preguntas de escuchar y elegir, y textos cortos de A1 a C1 en francés, italiano, portugués y alemán.", href: "/app/assessment" },
   { icon: "💬", title: "Frases útiles en tus sesiones", text: "Si empiezas de cero, tus sesiones mezclan palabras con frases hechas de Primeros pasos: te comunicas antes.", href: "/app/session" },

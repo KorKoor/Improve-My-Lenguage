@@ -49,6 +49,8 @@ export interface Exercise {
   pairs?: { left: string[]; right: string[] };
   /** Texto a leer con síntesis de voz (dictado, pronunciación). */
   audioText?: string;
+  /** Grabación humana del texto (Wikimedia Commons), preferida a la síntesis. */
+  audioUrl?: string;
   /** Pista opcional para respuestas escritas (primera letra y longitud). */
   hint?: string;
   /** Tipo de entrada esperada en la UI. */
@@ -211,6 +213,7 @@ export function buildVocabExercise(
         context: item.reading,
         options: opts,
         audioText: item.lemma,
+        audioUrl: item.audioUrl,
         input: "choice",
       };
     }
@@ -310,6 +313,7 @@ export function buildVocabExercise(
         prompt: "",
         options: opts,
         audioText: item.lemma,
+        audioUrl: item.audioUrl,
         input: "choice",
       };
     }
@@ -325,6 +329,7 @@ export function buildVocabExercise(
         prompt: "",
         options: opts,
         audioText: item.lemma,
+        audioUrl: item.audioUrl,
         input: "choice",
       };
     }
@@ -338,6 +343,7 @@ export function buildVocabExercise(
         prompt: "",
         context: translationOf(item, native)[0],
         audioText: item.lemma,
+        audioUrl: item.audioUrl,
         hint: letterHint(item.lemma),
         input: "text",
       };

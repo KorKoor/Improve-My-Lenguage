@@ -7,7 +7,7 @@ import { explainMistakeAction, tooHardAction, finishSessionAction, reviseConfide
 import { BLOCK_META } from "@/components/app/labels";
 import { Confetti, CountUp } from "@/components/celebrate";
 import { Mascot } from "@/components/mascot";
-import { SpeakButton, useSpeech } from "@/components/speak-button";
+import { SpeakButton, useSpeech, VoiceWarning } from "@/components/speak-button";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -37,10 +37,12 @@ interface Props {
   smartBreaks?: boolean;
   /** Principiante: el audio suena más despacio por defecto. */
   gentle?: boolean;
+  /** Nombre del idioma (para el aviso de voz ausente). */
+  languageName?: string;
 }
 
 
-export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15, smartBreaks = true, gentle = false }: Props) {
+export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15, smartBreaks = true, gentle = false, languageName = "" }: Props) {
   // ── Temporizador inteligente ──
   const focusEvents = useRef<FocusEvent[]>([]);
   const lastBreakAt = useRef(0);
@@ -300,6 +302,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         <span className="text-xs font-semibold text-muted tabular-nums">{index + 1}/{queue.length}</span>
         <SessionClock seconds={clock} target={minutes * 60} />
       </div>
+      {languageName && <VoiceWarning locale={locale} languageName={languageName} />}
       {index >= 1 && !feedback && (
         <div className="mt-2 flex justify-end">
           <button
@@ -406,8 +409,8 @@ function IntroStep({ step, locale, language, rtl, onNext, gentle = false }: { st
   const w = step.word;
   const { speak } = useSpeech(locale);
   useEffect(() => {
-    speak(w.lemma, gentle ? 0.8 : 1);
-  }, [speak, w.lemma, gentle]);
+    speak(w.lemma, gentle ? 0.8 : 1, w.audioUrl);
+  }, [speak, w.lemma, w.audioUrl, gentle]);
   return (
     <div>
       <p className="text-sm font-semibold text-muted">{step.block === "review" ? "Vuelve a mirarla con calma" : "Palabra nueva"}</p>
@@ -518,7 +521,7 @@ function ExerciseStep({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (listening && ex.audioText) speak(ex.audioText, gentle ? 0.8 : 1);
+    if (listening && ex.audioText) speak(ex.audioText, gentle ? 0.8 : 1, ex.audioUrl);
     if (ex.input === "text") inputRef.current?.focus();
   }, [ex, speak, listening]);
 
@@ -546,10 +549,10 @@ function ExerciseStep({
       {listening ? (
         supported ? (
           <div className="card mt-3 flex flex-wrap items-center justify-center gap-4 p-8">
-            <button type="button" onClick={() => speak(ex.audioText!, gentle ? 0.8 : 1)} className="grid size-20 place-items-center rounded-full bg-primary text-on-primary shadow-lg transition active:scale-95" aria-label="Reproducir audio">
+            <button type="button" onClick={() => speak(ex.audioText!, gentle ? 0.8 : 1, ex.audioUrl)} className="grid size-20 place-items-center rounded-full bg-primary text-on-primary shadow-lg transition active:scale-95" aria-label="Reproducir audio">
               <Volume2 size={34} />
             </button>
-            <button type="button" onClick={() => speak(ex.audioText!, gentle ? 0.55 : 0.7)} className="grid size-12 place-items-center rounded-full bg-primary-soft text-primary transition active:scale-95" aria-label="Reproducir más despacio">
+            <button type="button" onClick={() => speak(ex.audioText!, gentle ? 0.55 : 0.7, ex.audioUrl)} className="grid size-12 place-items-center rounded-full bg-primary-soft text-primary transition active:scale-95" aria-label="Reproducir más despacio">
               <Snail size={22} />
             </button>
             {ex.context && ex.type === "dictation_word" && <p className="basis-full text-center text-sm text-muted">Significa «{ex.context}»</p>}
@@ -567,7 +570,7 @@ function ExerciseStep({
             <p className={cn("flex-1 font-display font-extrabold", ex.prompt.length > 40 ? "text-xl leading-snug" : "text-3xl sm:text-4xl")} lang={ex.type === "reverse_mc" || ex.type === "recall" || ex.type === "phrase_pick" ? "es" : language} dir={ex.type === "reverse_mc" || ex.type === "recall" || ex.type === "phrase_pick" ? "ltr" : dir}>
               {ex.prompt}
             </p>
-            {ex.audioText ? <SpeakButton text={ex.audioText} locale={locale} size={46} /> : null}
+            {ex.audioText ? <SpeakButton text={ex.audioText} audioUrl={ex.audioUrl} locale={locale} size={46} /> : null}
           </div>
           {ex.context && <p className="mt-2 text-sm text-muted" lang={ex.type === "cloze" || ex.type === "conjugate" ? "es" : language}>{ex.context}</p>}
         </div>

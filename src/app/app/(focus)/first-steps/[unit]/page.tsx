@@ -26,6 +26,7 @@ export default async function FirstStepsUnitPage({ params }: { params: Promise<{
       rtl={learner.language.rtl}
       spaced={learner.language.spaceSeparated}
       nextHref={next ? `/app/first-steps/${next.id}` : null}
+      languageName={learner.language.name}
     />
   );
 }

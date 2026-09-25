@@ -10,6 +10,8 @@ import { lookupWord, type DictionaryEntry } from "@/lib/reading/dictionary";
 import { answerVerb, finishVerbDrill, startVerbDrill, type VerbFeedback, type VerbQuestion } from "@/lib/services/verbs";
 import { requireLearner } from "@/lib/services/viewer";
 import { logError } from "@/lib/log";
+import * as repo from "@/lib/db/repositories";
+import { localDay } from "@/lib/engine/progress";
 
 /**
  * Server Actions de las habilidades (lectura, escucha, escritura).
@@ -150,5 +152,18 @@ export async function lookupWordAction(word: string): Promise<SkillResult<Dictio
     // Sólo letras (cualquier alfabeto), apóstrofos y guiones: nada de rutas ni parámetros.
     if (!/^[\p{L}\p{M}'’-]{1,60}$/u.test(w)) throw new UserFacingError("Esa palabra no se puede buscar.");
     return lookupWord(learner.language.code, w);
+  });
+}
+
+/** Pares mínimos: cuenta como práctica de escucha (actividad y racha). */
+export async function recordPairsAction(correct: number, total: number): Promise<SkillResult<null>> {
+  return run("pairs.finish", async () => {
+    const learner = await requireLearner();
+    if (!(await rateLimit(`pairs:${learner.userId}`, 30, 3600))) throw new RateLimitedError();
+    const t = int(total, 1, 50, 10);
+    const c = int(correct, 0, t, 0);
+    await repo.bumpActivity(learner.userId, learner.language.code, localDay(new Date(), learner.profile.timezone), { seconds: t * 8, exercises: t, correct: c });
+    await repo.track(learner.userId, "pairs_completed", { correct: c, total: t });
+    return null;
   });
 }

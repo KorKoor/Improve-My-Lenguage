@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { completeFirstStepsUnitAction } from "@/app/app/first-steps-actions";
 import { Confetti } from "@/components/celebrate";
 import { Mascot } from "@/components/mascot";
-import { useSpeech } from "@/components/speak-button";
+import { useSpeech, VoiceWarning } from "@/components/speak-button";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
@@ -61,6 +61,7 @@ export function FirstStepsRunner({
   rtl,
   spaced,
   nextHref,
+  languageName = "",
 }: {
   unitId: string;
   title: string;
@@ -71,6 +72,7 @@ export function FirstStepsRunner({
   rtl: boolean;
   spaced: boolean;
   nextHref: string | null;
+  languageName?: string;
 }) {
   const { speak } = useSpeech(locale);
   const seed = useMemo(() => Math.floor(Math.random() * 1e6) + 1, []);
@@ -151,6 +153,7 @@ export function FirstStepsRunner({
     return (
       <div className="flex flex-1 flex-col pb-10 pt-5">
         {header(card / (phrases.length * 2), `${title}: frase ${card + 1} de ${phrases.length}`)}
+        {card === 0 && languageName && <VoiceWarning locale={locale} languageName={languageName} />}
         <p className="mt-6 text-sm font-semibold text-muted">Aprende · {card + 1} de {phrases.length}</p>
         <div key={card} className="card mt-3 p-7 text-center animate-rise">
           <p className="font-display text-4xl font-extrabold leading-tight" lang={language} dir={dir}>{ph.text}</p>

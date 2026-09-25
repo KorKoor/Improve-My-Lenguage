@@ -22,6 +22,7 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
       aiEnabled={aiAvailable() && learner.profile.aiConsent}
       span={viewerAttentionSpan(learner)}
       smartBreaks={learner.profile.smartBreaks}
+      languageName={learner.language.name}
       gentle={(await getSkills(learner.ul.id)).get("listening")!.theta < -1.1}
       title={sp.focus === "leeches" ? "Palabras rebeldes" : "Sesión de estudio"}
     />
