@@ -61,8 +61,9 @@ Entrada: minutos, repasos vencidos, debilidades, vector de habilidades, disponib
    - tutor: 1.5, sólo con IA y ≥ 15 min
 3. La **habilidad más débil** (con evidencia) recibe ×1.6.
 4. Los bloques de menos de 2 min se eliminan y se redistribuyen. El redondeo usa el método del mayor resto, así que **el total es exacto**.
-5. "Sorpréndeme" perturba los pesos con una semilla, lo que lo hace reproducible.
-6. Cada bloque lleva su **motivo** legible (explicabilidad).
+5. **Forma de aprender** (si hizo el cuestionario): multiplicadores 0.5–1.8 por bloque (`styleWeights`), p. ej. listening × (1 + 0.6·oído). Nunca eliminan un bloque ni tocan los repasos; si el multiplicador es ≥ 1.2, el motivo lo dice.
+6. "Sorpréndeme" perturba los pesos con una semilla, lo que lo hace reproducible.
+7. Cada bloque lleva su **motivo** legible (explicabilidad).
 
 `session-builder.ts` convierte el plan en pasos:
 - tarjeta de presentación de cada palabra nueva, luego reconocimiento y después emparejar
@@ -84,6 +85,25 @@ Prioridad determinista:
 7. vocabulario de su interés
 
 Siempre devuelve el *porqué*.
+
+**Prácticas sugeridas** (`practicePicks`): ordena Leer / Escuchar / Hablar / Escribir / Tutor con puntuación = 1 + 1·(habilidad ≥ 0.4 logits por debajo de la media) + 0.6·(nunca practicada) + 0.8·(favorita según el cuestionario). Cada tarjeta explica por qué aparece.
+
+## 6b. Cuestionario «¿Cómo aprendes mejor?» — `personality.ts`
+
+15 ítems Likert (1–5), 8 dimensiones en [-1, 1]: ritmo, reto, organización, profundidad, corrección, motivación, canal (oído/lectura) y objetivo (conversar/vocabulario). Ítems invertidos para reducir el sesgo de aquiescencia. Se presenta como **preferencias**, no como «estilos de aprendizaje» (no hay evidencia de que enseñar según estilos mejore el aprendizaje); por eso sólo ajusta la experiencia (dificultad, profundidad, tono del tutor, pesos del plan) y nunca oculta contenido.
+
+Arquetipo = máximo de combinaciones lineales de dimensiones (Explorador, Estratega, Retador, Constante, Buen oído, Conversador, Coleccionista de palabras, Analítico), con «Constante» por defecto si ninguna afinidad supera 0.15.
+
+## 6c. «Lo que dicen tus datos» — `insights.ts`
+
+| Insight | Cálculo |
+|---|---|
+| Cobertura de texto | Σ 1/rango de las palabras aprendidas ÷ H(60 000) (ley de Zipf) |
+| Previsión de nivel | (lemas del siguiente nivel − aprendidas) ÷ (palabras vistas por semana desde el primer día activo) |
+| Palabras rebeldes | ≥ 3 lapsos, o ≥ 3 fallos y más fallos que aciertos |
+| Memoria actual | media de R (FSRS) de las palabras aprendidas |
+| Tendencia | precisión de las 2 últimas semanas con ≥ 10 intentos vs. las 2 anteriores (sólo si cambia ≥ 5 puntos) |
+| Palabra del día | no vista, con ejemplo, rango entre 0.9× y 1.8× del rango conocido; preferencia por audio grabado; semilla = día + usuario |
 
 ## 7. Métricas de progreso — `progress.ts`
 

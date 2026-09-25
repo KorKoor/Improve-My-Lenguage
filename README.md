@@ -68,6 +68,19 @@ Core goals:
 - content configuration that can scale to more languages
 - structured, versioned learning resources
 
+### Real-world skills practice
+
+- **Reader**: Wikipedia, Simple English Wikipedia, Wikinews and Wikivoyage articles ranked by how well they fit your level (vocabulary coverage), graded readings built from Tatoeba, or paste your own text. Tap any word for its translation, audio and IPA; save it to your reviews; comprehension quiz at the end
+- **Listening**: real sentences at your level with adjustable speed (0.75×–1.5×), word spotting, meaning and word-level dictation grading
+- **Pronunciation**: read real sentences aloud; the browser's speech recognition transcribes them and the server grades each word (no audio is stored)
+- **Writing studio**: CEFR prompts (A1 → C1), instant heuristic checks (spelling, accents, capitalization, repetitions, lexical level) and optional AI correction validated against the original text
+
+### Learning-style profile
+
+- "¿Cómo aprendes mejor?": a 15-question preference questionnaire (pace, challenge, structure, explanation depth, feedback tone, motivation, channel, goal) — framed as preferences, not "learning styles"
+- 8 archetypes with strengths and tips; results tune planner block weights, difficulty, explanation depth, tutor correction tone and dashboard suggestions
+- profile page with avatar, per-language levels, lifetime stats and achievements
+
 ### AI tutor
 
 - contextual support based on learner profile
@@ -81,10 +94,12 @@ Core goals:
 - skill-level dashboards
 - learning streaks and retention signals
 - explanation-rich analytics dashboards
+- "Lo que dicen tus datos": text coverage of the words you know (Zipf), forecast to the next CEFR vocabulary level, stubborn words, current FSRS retention and accuracy trend
+- word of the day just above your level, with real example and recorded audio when available
 
 ### Accessible for everyone
 
-- guided welcome tutorial (6 steps), replayable from Settings
+- guided welcome tutorial (7 steps), replayable from Settings
 - **simple mode**: one big "Start" button, plain-language progress, fewer menu items
 - text size (normal / large / extra large) applied app-wide before first paint
 - slower speech synthesis for listening practice
@@ -311,18 +326,19 @@ The repository includes deeper technical documentation for the key systems:
 - progress tracking
 - AI tutor integration
 
-### Phase 2
+### Phase 2 (done)
 
-- richer reading and listening experiences
-- improved grammar feedback
-- more advanced content workflows
-- broader mobile and PWA support
+- reader with real articles and tap-to-translate
+- listening with dictation grading
+- writing studio with heuristic + AI correction
+- pronunciation practice with speech recognition
+- learning-style profile and data-driven insights
 
 ### Phase 3
 
-- speaking and pronunciation evaluation
-- deeper personalization and analytics
-- multi-language growth and content sourcing
+- phoneme-level pronunciation feedback
+- broader mobile and PWA support
+- more native languages for the interface
 - stronger notification and engagement systems
 
 ---
