@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { FIRST_STEPS } from "@/lib/content/first-steps";
+import { getStory } from "@/lib/content/stories";
 import * as repo from "@/lib/db/repositories";
 import { rateLimit } from "@/lib/db/limits";
 import { localDay } from "@/lib/engine/progress";
@@ -38,5 +39,29 @@ export async function completeFirstStepsUnitAction(
     if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
     logError("action:first-steps", err);
     return { ok: false, error: "No se pudo guardar. Inténtalo de nuevo." };
+  }
+}
+
+/** Historia graduada terminada: cuenta como lectura (actividad y racha). */
+export async function completeStoryAction(storyId: string, correct: number, total: number, seconds: number): Promise<{ ok: boolean }> {
+  try {
+    const learner = await requireLearner();
+    if (!(await rateLimit(`story:${learner.userId}`, 40, 3600))) return { ok: false };
+    const story = getStory(learner.language.code, typeof storyId === "string" ? storyId.slice(0, 40) : "");
+    if (!story) return { ok: false };
+    const t = Math.max(1, Math.min(10, Math.round(Number(total) || 0)));
+    const c = Math.max(0, Math.min(t, Math.round(Number(correct) || 0)));
+    await repo.bumpActivity(learner.userId, learner.language.code, localDay(new Date(), learner.profile.timezone), {
+      seconds: Math.max(0, Math.min(1800, Math.round(Number(seconds) || 0))),
+      exercises: t,
+      correct: c,
+    });
+    await repo.track(learner.userId, "story_completed", { story: story.id, correct: c, total: t });
+    revalidatePath("/app/stories");
+    return { ok: true };
+  } catch (err) {
+    if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
+    logError("action:story", err);
+    return { ok: false };
   }
 }

@@ -94,3 +94,14 @@ test("sesión de novato: incluye frases útiles y nada de escribir ni dictados",
   assert.ok(types.some((t) => t === "phrase_listen" || t === "phrase_pick"), types.join(","));
   for (const t of ["recall", "cloze", "dictation", "dictation_word", "conjugate"]) assert.ok(!types.includes(t as never), `incluye ${t}`);
 });
+
+test("historias: bien formadas (respuesta entre las opciones, sin frases vacías)", async () => {
+  const { STORIES } = await import("../src/lib/content/stories");
+  for (const [lang, stories] of Object.entries(STORIES)) {
+    assert.equal(new Set(stories!.map((s) => s.id)).size, stories!.length, lang);
+    for (const s of stories!) {
+      assert.ok(s.lines.length >= 5 && s.lines.every((l) => l.t && l.es), `${lang}/${s.id}`);
+      assert.ok(s.questions.length >= 3 && s.questions.every((q) => q.options.includes(q.answer) && new Set(q.options).size === q.options.length), `${lang}/${s.id}`);
+    }
+  }
+});

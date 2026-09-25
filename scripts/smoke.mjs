@@ -39,6 +39,7 @@ const PRIVATE = [
   "/app/study/break",
   "/app/first-steps",
   "/app/admin",
+  "/app/stories",
   "/app/first-steps/greetings",
   "/app/more",
 ];
