@@ -223,3 +223,13 @@ export function splitGoals(reply: string): { text: string; goals: number[] } {
   const goals = [...new Set(m[1]!.split(",").map((x) => Number(x.trim())).filter((n) => Number.isInteger(n) && n >= 1 && n <= 3))].sort();
   return { text: reply.slice(0, m.index).trim(), goals };
 }
+
+// ── «¿Por qué?»: explicación breve de un fallo en un ejercicio ──────────────
+export function explainMistakeSystemPrompt(c: LearnerContext): string {
+  return [
+    `EXPLAIN MISTAKE. You are a patient ${c.languageEnglishName} teacher for a ${c.nativeLanguageName}-speaking learner (level ${c.level}).`,
+    `Explain in ${c.nativeLanguageName}, in at most 3 short sentences, why the learner's answer is wrong and how the correct answer works.`,
+    "Add one memorable tip or mini-rule. If the learner's answer is also acceptable, say so kindly.",
+    "Plain text only: no markdown, no lists, no greetings.",
+  ].join("\n");
+}

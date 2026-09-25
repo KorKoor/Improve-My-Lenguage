@@ -6,6 +6,7 @@ import * as repo from "../db/repositories";
 import { env } from "../env";
 import { aiAvailable, AiUnavailableError, generate, parseJson } from "../ai/provider";
 import {
+  explainMistakeSystemPrompt,
   feedbackSystemPrompt,
   openingPrompt,
   sanitizeFeedback,
@@ -15,6 +16,8 @@ import {
   type LearnerContext,
 } from "../ai/prompts";
 import { scenarioFromTopic } from "../content/scenarios";
+import { catalog } from "../content";
+import { resolveExercise } from "../engine/exercises";
 import { checkAchievements, getSkills, getWeaknesses } from "./learning";
 import type { Learner } from "./viewer";
 
@@ -65,6 +68,34 @@ export async function buildLearnerContext(learner: Learner): Promise<LearnerCont
         }
       : null,
   };
+}
+
+/** «¿Por qué?» tras un fallo: explicación corta y personalizada (usa la cuota diaria de IA). */
+export async function explainMistake(learner: Learner, key: string, response: string): Promise<string> {
+  const resolved = resolveExercise(key, catalog, learner.native);
+  if (!resolved) throw new Error("Ejercicio desconocido");
+  const [type, id] = key.split("|");
+  if (!id?.startsWith(`${learner.language.code}:`)) throw new Error("Ejercicio de otro idioma");
+  await guardAi(learner);
+  const ctx = await buildLearnerContext(learner);
+  const text = await generate({
+    tier: "fast",
+    temperature: 0.3,
+    maxTokens: 220,
+    system: explainMistakeSystemPrompt(ctx),
+    messages: [
+      {
+        role: "user",
+        content: [
+          `Exercise type: ${type}`,
+          resolved.explanation ? `Hint shown to the learner: ${resolved.explanation}` : null,
+          `Correct answer: ${resolved.display}`,
+          `Learner answered: ${response.slice(0, 300) || "(nothing)"}`,
+        ].filter(Boolean).join("\n"),
+      },
+    ],
+  });
+  return text.replace(/[*#`]/g, "").trim().slice(0, 600);
 }
 
 export async function startConversation(learner: Learner, topic: string | null) {

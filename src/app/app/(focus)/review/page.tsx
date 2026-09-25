@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SessionRunner } from "@/components/session/runner";
 import { countDue } from "@/lib/db/repositories";
 import { requireLearner } from "@/lib/services/viewer";
+import { aiAvailable } from "@/lib/ai/provider";
 
 export const metadata: Metadata = { title: "Repaso" };
 
@@ -17,6 +18,7 @@ export default async function ReviewPage() {
       locale={learner.language.speechLocale}
       language={learner.language.code}
       rtl={learner.language.rtl}
+      aiEnabled={aiAvailable() && learner.profile.aiConsent}
       title="Repaso"
     />
   );

@@ -9,7 +9,7 @@ import { AiUnavailableError } from "@/lib/ai/provider";
 import { answerAssessment, startOrResumeAssessment, type AssessmentStep } from "@/lib/services/assessment";
 import { deleteAccount } from "@/lib/services/account";
 import { finishSession, RateLimitedError, reviseConfidence, startSession, submitAnswer, type AnswerFeedback, type BuiltSession, type SessionFocus, type SessionSummary } from "@/lib/services/learning";
-import { AiQuotaError, endConversation, sendTutorMessage, startConversation } from "@/lib/services/tutor";
+import { AiQuotaError, endConversation, explainMistake, sendTutorMessage, startConversation } from "@/lib/services/tutor";
 import type { ConversationFeedback } from "@/lib/ai/prompts";
 import { requireLearner, requireViewer } from "@/lib/services/viewer";
 
@@ -277,4 +277,8 @@ export async function deleteAccountAction(confirmation: string): Promise<ActionR
   });
   if (res.ok) redirect("/?deleted=1");
   return res;
+}
+
+export async function explainMistakeAction(key: string, response: string): Promise<ActionResult<string>> {
+  return run("session.explain", async () => explainMistake(await requireLearner(), str(key, 300), str(response, 300)));
 }

@@ -41,6 +41,11 @@ function reply(body) {
     });
   }
 
+  if (/^EXPLAIN MISTAKE/.test(system)) {
+    const correct = /Correct answer: (.*)/.exec(last)?.[1] ?? "";
+    return `La forma correcta es «${correct}». (Explicación simulada) Fíjate en la terminación: es la pista más útil para recordarlo.`;
+  }
+
   if (/ROLE-PLAY RULES/.test(system)) {
     // Un objetivo más por cada turno del alumno (tras el saludo inicial).
     const done = Math.min(3, Math.max(0, users.filter((u) => u !== "(conversation start)").length - (users.length && /^Start the role-play/.test(users[0]) ? 1 : 0)));

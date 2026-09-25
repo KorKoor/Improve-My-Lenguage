@@ -3,7 +3,7 @@ import { ArrowRight, Check, Headphones, Lightbulb, Loader2, MessageCircle, Mic, 
 import { POS_ES } from "@/components/app/labels";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { finishSessionAction, reviseConfidenceAction, startSessionAction, submitAnswerAction } from "@/app/app/actions";
+import { explainMistakeAction, finishSessionAction, reviseConfidenceAction, startSessionAction, submitAnswerAction } from "@/app/app/actions";
 import { BLOCK_META } from "@/components/app/labels";
 import { Confetti, CountUp } from "@/components/celebrate";
 import { Mascot } from "@/components/mascot";
@@ -26,10 +26,13 @@ interface Props {
   language: string;
   rtl: boolean;
   title: string;
+  /** Tutor de IA disponible y con consentimiento: habilita «¿Por qué?». */
+  aiEnabled?: boolean;
 }
 
 
-export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title }: Props) {
+export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false }: Props) {
+  const [lastAnswer, setLastAnswer] = useState<{ key: string; response: string } | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "running" | "finishing" | "done" | "empty">("loading");
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -91,6 +94,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
     async (ex: Exercise, response: string, pairs?: Record<string, string>) => {
       if (submitting || feedback) return;
       setSubmitting(true);
+      setLastAnswer({ key: ex.key, response });
       const res = await submitAnswerAction({
         sessionId,
         key: ex.key,
@@ -240,7 +244,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         )}
       </div>
 
-      {feedback && <FeedbackSheet feedback={feedback} onNext={next} combo={combo.now} />}
+      {feedback && <FeedbackSheet feedback={feedback} onNext={next} combo={combo.now} explain={aiEnabled && !feedback.correct && lastAnswer ? lastAnswer : null} />}
     </div>
   );
 }
@@ -626,8 +630,15 @@ function ConfidenceCheck({ attemptId }: { attemptId: string }) {
 
 const PRAISE = ["¡Correcto!", "¡Eso es!", "¡Genial!", "¡Muy bien!", "¡Perfecto!", "¡Exacto!"];
 
-function FeedbackSheet({ feedback: f, onNext, combo }: { feedback: AnswerFeedback; onNext: () => void; combo: number }) {
+function FeedbackSheet({ feedback: f, onNext, combo, explain }: { feedback: AnswerFeedback; onNext: () => void; combo: number; explain: { key: string; response: string } | null }) {
   const ok = f.correct;
+  const [why, setWhy] = useState<{ state: "idle" | "loading" | "done" | "error"; text?: string }>({ state: "idle" });
+  const askWhy = async () => {
+    if (!explain) return;
+    setWhy({ state: "loading" });
+    const r = await explainMistakeAction(explain.key, explain.response);
+    setWhy(r.ok ? { state: "done", text: r.data } : { state: "error", text: r.error });
+  };
   const praise = combo >= 5 ? `¡Imparable! ${combo} seguidas` : combo >= 3 ? `¡En racha! ${combo} seguidas` : PRAISE[(combo + (f.attemptId?.length ?? 0)) % PRAISE.length]!;
   return (
     <div role="status" aria-live="assertive" className={cn("fixed inset-x-0 bottom-0 z-40 animate-rise rounded-t-3xl px-4 pb-[max(env(safe-area-inset-bottom),20px)] pt-5 shadow-[0_-8px_30px_rgb(0_0_0/0.08)]", ok ? "bg-success-soft" : "bg-danger-soft")}>
@@ -644,6 +655,14 @@ function FeedbackSheet({ feedback: f, onNext, combo }: { feedback: AnswerFeedbac
         )}
         {f.explanation && <p className="mt-2 text-sm leading-relaxed">{f.explanation}</p>}
         {!ok && f.errorLabel && <p className="mt-2 text-xs text-muted">Registrado como: {f.errorLabel}. Lo tendremos en cuenta en tus próximas sesiones.</p>}
+        {explain && why.state === "idle" && (
+          <button type="button" onClick={() => void askWhy()} className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-sm font-semibold text-primary shadow-sm hover:brightness-95">
+            <Lightbulb size={15} aria-hidden /> ¿Por qué? Explícamelo
+          </button>
+        )}
+        {why.state === "loading" && <p className="mt-3 flex items-center gap-2 text-sm text-muted"><Loader2 size={14} className="animate-spin" aria-hidden /> Tu tutor lo está pensando…</p>}
+        {why.state === "done" && <p className="mt-3 rounded-xl bg-surface p-3 text-sm leading-relaxed animate-fade">💡 {why.text}</p>}
+        {why.state === "error" && <p className="mt-3 text-sm text-danger">{why.text}</p>}
         {ok && f.attemptId && <ConfidenceCheck attemptId={f.attemptId} />}
         <Button size="lg" variant={ok ? "success" : "danger"} className="mt-4 w-full" onClick={onNext} autoFocus>
           Continuar
