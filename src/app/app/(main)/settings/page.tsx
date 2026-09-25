@@ -1,5 +1,7 @@
 import { Download } from "lucide-react";
 import type { Metadata } from "next";
+import Link from "next/link";
+import { ARCHETYPES } from "@/lib/engine/personality";
 import { ComfortSettings, DangerZone, PreferencesForm, ThemeSetting } from "@/components/settings/forms";
 import { Card, CardHeader } from "@/components/ui/card";
 import { getLanguage, LANGUAGES, TOPICS } from "@/lib/content";
@@ -26,7 +28,7 @@ export default async function SettingsPage() {
       </Card>
 
       <Card>
-        <CardHeader title="Aprendizaje" />
+        <CardHeader title="Aprendizaje" aside={<Link href={p.personality ? "/app/profile" : "/app/profile/test"} className="font-semibold text-primary">{p.personality ? `${ARCHETYPES[p.personality.archetype].icon} Tu forma de aprender` : "🪞 Hacer el test de aprendizaje"}</Link>} />
         <PreferencesForm
           topics={TOPICS}
           natives={LANGUAGES.filter((l) => ["es", "en", "fr", "pt", "it", "de"].includes(l.code)).map((l) => ({ code: l.code, name: l.name }))}

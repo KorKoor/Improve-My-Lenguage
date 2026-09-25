@@ -179,10 +179,18 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         ) : null}
         <p className="max-w-md text-sm text-muted">Tu perfil ya se actualizó con esta sesión: los repasos, tu nivel por habilidad y tus debilidades se recalculan en cada respuesta.</p>
         {status === "finishing" ? <Loader2 className="animate-spin text-primary" aria-label="Guardando" /> : (
-          <div className="flex flex-wrap justify-center gap-3">
-            <ButtonLink href="/app" size="lg">Volver al inicio</ButtonLink>
-            <ButtonLink href="/app/progress" variant="secondary" size="lg">Ver mi progreso</ButtonLink>
-          </div>
+          <>
+            <div className="flex flex-wrap justify-center gap-3">
+              <ButtonLink href="/app" size="lg">Volver al inicio</ButtonLink>
+              <ButtonLink href="/app/progress" variant="secondary" size="lg">Ver mi progreso</ButtonLink>
+            </div>
+            <nav aria-label="Seguir practicando" className="mt-2 flex flex-wrap justify-center gap-2 text-sm">
+              <span className="w-full text-muted">¿Te quedan ganas? Pon en práctica lo de hoy:</span>
+              <Link href="/app/read" className="lift rounded-full bg-surface px-3.5 py-1.5 font-semibold shadow-sm">📖 Leer</Link>
+              <Link href="/app/listen" className="lift rounded-full bg-surface px-3.5 py-1.5 font-semibold shadow-sm">🎧 Escuchar</Link>
+              <Link href="/app/write" className="lift rounded-full bg-surface px-3.5 py-1.5 font-semibold shadow-sm">🖋️ Escribir</Link>
+            </nav>
+          </>
         )}
       </div>
     );

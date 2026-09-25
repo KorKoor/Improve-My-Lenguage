@@ -1,9 +1,10 @@
 import "server-only";
-import { catalog, errorLabel, grammarForCategory, topicLabel } from "../content";
+import { catalog, errorLabel, getVocab, grammarForCategory, topicLabel } from "../content";
 import type { CefrLevel, Skill } from "../content/types";
 import { overallTheta, progressWithinLevel, thetaToCefr, type SkillEstimate } from "../engine/levels";
 import { planSession, type SessionPlan } from "../engine/planner";
-import { addDays, accuracy, computeStreak, consistency, localDay, longestStreak, summarizeVocabulary } from "../engine/progress";
+import { buildInsights, type Insight } from "../engine/insights";
+import { addDays, accuracy, computeStreak, consistency, isLearned, localDay, longestStreak, summarizeVocabulary } from "../engine/progress";
 import { practicePicks, recommend, type PracticePick, type Recommendation } from "../engine/recommender";
 import type { Weakness } from "../engine/weakness";
 import * as repo from "../db/repositories";
@@ -175,6 +176,7 @@ export interface ProgressData {
   weaknesses: ReturnType<typeof topWeaknesses>;
   achievements: { achievementId: string; unlockedAt: Date }[];
   totals: { attempts: number; correct: number };
+  insights: Insight[];
 }
 
 export async function getProgress(learner: Learner): Promise<ProgressData> {
@@ -208,5 +210,23 @@ export async function getProgress(learner: Learner): Promise<ProgressData> {
     weaknesses: topWeaknesses(weaknesses),
     achievements,
     totals: { attempts: totals.total, correct: totals.correct },
+    insights: buildInsights({
+      now,
+      today,
+      activeDays: days,
+      vocab: knowledge
+        .filter((k) => k.itemType === "vocab" && k.reps > 0)
+        .map((k) => {
+          const card = knowledgeToCard(k, now);
+          const v = getVocab(k.itemId);
+          return { card, rank: v?.rank ?? null, lemma: v?.lemma ?? k.itemId, lapses: k.lapses, incorrect: k.incorrectCount, correct: k.correctCount, learned: isLearned(card, now) };
+        }),
+      weekly,
+      level: (() => {
+        const t = overallTheta([...skillsMap.values()].filter((x) => x.evidence > 0));
+        return t === null ? null : thetaToCefr(t);
+      })(),
+      languageName: learner.language.name,
+    }),
   };
 }

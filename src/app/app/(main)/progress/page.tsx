@@ -44,6 +44,21 @@ export default async function ProgressPage() {
         ))}
       </section>
 
+      {p.insights.length > 0 && (
+        <section aria-labelledby="insights-title" className="space-y-3">
+          <h2 id="insights-title" className="font-display text-xl font-bold">Lo que dicen tus datos</h2>
+          <ul className="stagger grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {p.insights.map((i) => (
+              <li key={i.id} className={`card lift flex flex-col gap-2 border-l-4 p-5 ${i.tone === "good" ? "border-l-success" : i.tone === "warn" ? "border-l-warning" : "border-l-primary"}`}>
+                <p className="flex items-center gap-2 font-display font-bold"><span className="text-2xl" aria-hidden>{i.icon}</span>{i.title}</p>
+                <p className="flex-1 text-sm text-muted">{i.body}</p>
+                {i.href && i.cta && <Link href={i.href} className="text-sm font-semibold text-primary hover:underline">{i.cta} →</Link>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Nivel por habilidad" aside="θ → CEFR" />

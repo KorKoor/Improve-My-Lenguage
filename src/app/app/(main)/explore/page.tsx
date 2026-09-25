@@ -1,6 +1,7 @@
 import { BookOpen, Headphones, Layers, MessageCircle, Newspaper, PenLine, Play, Repeat, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ARCHETYPES } from "@/lib/engine/personality";
 import { SKILL_META } from "@/components/app/labels";
 import { IconBox } from "@/components/ui/icon-box";
 import { getSkills } from "@/lib/services/learning";
@@ -60,6 +61,19 @@ export default async function PracticeHub() {
           );
         })}
       </ul>
+      <Link href={learner.profile.personality ? "/app/profile" : "/app/profile/test"} className="card lift flex items-center gap-4 p-5">
+        <span className="text-4xl" aria-hidden>{learner.profile.personality ? ARCHETYPES[learner.profile.personality.archetype].icon : "🪞"}</span>
+        <span className="flex-1">
+          <span className="block font-display text-lg font-extrabold">
+            {learner.profile.personality ? `Tu perfil: ${ARCHETYPES[learner.profile.personality.archetype].name}` : "¿Cómo aprendes mejor?"}
+          </span>
+          <span className="block text-sm text-muted">
+            {learner.profile.personality
+              ? "Tus ejercicios se ajustan a tu forma de aprender. Míralo o repite el test cuando quieras."
+              : "Test de 2 minutos: ajustamos el ritmo, el reto y las explicaciones a tu manera de ser."}
+          </span>
+        </span>
+      </Link>
     </div>
   );
 }
