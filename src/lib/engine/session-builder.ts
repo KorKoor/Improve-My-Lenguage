@@ -12,6 +12,7 @@ import {
   translationOf,
   type Catalog,
   type Exercise,
+  type ExerciseStyle,
 } from "./exercises";
 import { CEFR_CENTER, itemTheta } from "./levels";
 import { exercisesForBlock, type BlockKind, type SessionPlan } from "./planner";
@@ -66,6 +67,8 @@ export interface BuildInput {
   grammarTheta: number;
   interests: string[];
   seed: number;
+  /** Preferencias del cuestionario de perfil (opcional). */
+  style?: ExerciseStyle;
 }
 
 export function wordCard(v: VocabItem, native: LanguageCode): WordCard {
@@ -167,7 +170,7 @@ export function buildSessionSteps(input: BuildInput): SessionStep[] {
           const v = input.catalog.vocabById(k.itemId);
           if (!v) continue;
           reviewedVocab.push(v);
-          const type = pickVocabExerciseType(k.reps, rand, true);
+          const type = pickVocabExerciseType(k.reps, rand, true, input.style);
           const ok = push("review", buildVocabExercise(type, v, input.catalog, input.native, input.seed));
           if (!ok) push("review", buildVocabExercise("meaning_mc", v, input.catalog, input.native));
         }

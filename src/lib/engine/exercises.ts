@@ -417,14 +417,30 @@ export function canonicalMatchResponse(pairs: Record<string, string>): string {
 }
 
 /** Pequeña ayuda para escoger tipo de ejercicio según madurez de la tarjeta. */
+/** Preferencias del cuestionario de perfil que sesgan el tipo de ejercicio (−1…1). */
+export interface ExerciseStyle {
+  /** + prefiere escuchar, − prefiere leer. */
+  ear: number;
+  /** + le gusta el reto, − prefiere ir seguro. */
+  challenge: number;
+}
+
 export function pickVocabExerciseType(
   reps: number,
   rand: () => number,
   allowAudio: boolean,
+  style?: ExerciseStyle,
 ): Exclude<ExerciseType, "grammar" | "match"> {
   if (reps === 0) return "meaning_mc";
-  if (reps === 1) return rand() < 0.5 ? "reverse_mc" : "meaning_mc";
+  if (reps === 1) return rand() < ((style?.challenge ?? 0) > 0.3 ? 0.7 : 0.5) ? "reverse_mc" : "meaning_mc";
   const pool: Exclude<ExerciseType, "grammar" | "match">[] = ["recall", "cloze", "cloze", "reverse_mc", "rearrange"];
   if (allowAudio) pool.push("dictation");
+  // La forma de aprender inclina la balanza, sin eliminar ningún tipo.
+  if (style) {
+    if (style.ear > 0.3 && allowAudio) pool.push("dictation");
+    if (style.ear < -0.3) pool.push("cloze");
+    if (style.challenge > 0.3) pool.push("recall");
+    if (style.challenge < -0.3) pool.push("reverse_mc");
+  }
   return sample(pool, 1, rand)[0]!;
 }

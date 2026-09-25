@@ -57,3 +57,16 @@ test("planificador: los pesos de estilo reparten más minutos a lo preferido", (
   assert.equal(ear.totalMinutes, neutral.totalMinutes);
   assert.match(ear.blocks.find((b) => b.kind === "listening")!.reason, /forma de aprender/);
 });
+
+test("tipo de ejercicio: quien prefiere escuchar recibe más dictados", async () => {
+  const { pickVocabExerciseType } = await import("../src/lib/engine/exercises");
+  const { mulberry32 } = await import("../src/lib/engine/random");
+  const count = (style?: { ear: number; challenge: number }) => {
+    const rand = mulberry32(7);
+    let n = 0;
+    for (let i = 0; i < 2000; i++) if (pickVocabExerciseType(3, rand, true, style) === "dictation") n++;
+    return n;
+  };
+  assert.ok(count({ ear: 1, challenge: 0 }) > count() * 1.4);
+  assert.ok(count({ ear: -1, challenge: 0 }) < count());
+});

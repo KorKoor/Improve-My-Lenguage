@@ -116,10 +116,12 @@ export async function startSession(
     grammar: grammarFor(learner.language.code),
     knowledge,
     due,
-    vocabTheta: skills.get("vocabulary")!.theta,
+    // A quien le gusta el reto, palabras nuevas un poco más altas (±0.3 logits).
+    vocabTheta: skills.get("vocabulary")!.theta + (learner.profile.personality?.dims.challenge ?? 0) * 0.3,
     grammarTheta: skills.get("grammar")!.theta,
     interests: learner.profile.interests,
     seed: sessionSeed(ulId, day, opts.surprise ? String(now.getTime()) : String(knowledge.length)),
+    style: learner.profile.personality ? { ear: learner.profile.personality.dims.ear, challenge: learner.profile.personality.dims.challenge } : undefined,
   });
 
   const kind = focus === "review" ? "review" : focus ? "focus" : opts.surprise ? "surprise" : "daily";
