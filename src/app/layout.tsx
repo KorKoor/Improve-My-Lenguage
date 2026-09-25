@@ -27,6 +27,8 @@ export const metadata: Metadata = {
   },
   twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true },
+  icons: { apple: "/icons/apple-touch-icon.png" },
+  appleWebApp: { capable: true, title: "Improve", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

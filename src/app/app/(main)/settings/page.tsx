@@ -1,6 +1,7 @@
 import { Download } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { InstallApp } from "@/components/install-app";
 import { ARCHETYPES } from "@/lib/engine/personality";
 import { ComfortSettings, DangerZone, PreferencesForm, ThemeSetting } from "@/components/settings/forms";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -21,6 +22,8 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="font-display text-3xl font-extrabold">Configuración</h1>
+
+      <InstallApp />
 
       <Card>
         <CardHeader title="Comodidad" aside="Letra, modo sencillo y audio" />

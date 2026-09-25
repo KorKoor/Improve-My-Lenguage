@@ -1,4 +1,5 @@
 import { ArrowRight, BookOpen, CalendarCheck, CircleHelp, Clock, Gauge, Lightbulb, Repeat } from "lucide-react";
+import { InstallApp } from "@/components/install-app";
 import Link from "next/link";
 import { Mascot } from "@/components/mascot";
 import { ButtonLink } from "@/components/ui/button";
@@ -88,6 +89,8 @@ export function SimpleHome({ d, languageName, dailyMinutes, greeting }: { d: Das
           {d.wordOfDay.example?.translation && <p className="mt-2 text-lg text-muted">«{d.wordOfDay.example.text}» — {d.wordOfDay.example.translation}</p>}
         </Card>
       )}
+
+      <InstallApp compact />
 
       <nav aria-label="Otras formas de practicar" className="grid gap-3 sm:grid-cols-3">
         <Link href="/app/read" className="card lift flex items-center gap-3 p-5 text-lg font-semibold hover:border-primary">

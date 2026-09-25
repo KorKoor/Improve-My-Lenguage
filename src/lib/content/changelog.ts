@@ -9,6 +9,8 @@ export interface ChangelogItem {
 export const CHANGELOG_VERSION = "2026-09-25";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "📲", title: "Instálala en tu móvil", text: "Un icono en la pantalla de inicio (con instrucciones para iPhone) y una pestaña «Más» con todas las secciones.", href: "/app/settings" },
+  { icon: "💡", title: "¿Por qué me equivoqué?", text: "Tras un fallo, pide a tu tutor una explicación breve y personalizada (con la IA activada).", href: "/app/session" },
   { icon: "🧩", title: "El doble de gramática", text: "Los 12 idiomas suman nuevas lecciones de A1 a C1 (hasta 27 en inglés), con errores típicos de hispanohablantes y ejercicios.", href: "/app/grammar" },
   { icon: "👨‍👩‍👧", title: "Familia y amigos", text: "Crea un grupo con un código, mira quién ya estudió hoy y mandaos ánimos (también como notificación).", href: "/app/group" },
   { icon: "🔤", title: "Entrenador de verbos", text: "Tablas de conjugación de cientos de verbos y práctica por tiempos según tu nivel. Los verbos también aparecen en tus sesiones.", href: "/app/verbs" },
