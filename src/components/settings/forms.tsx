@@ -47,9 +47,9 @@ export function PreferencesForm({ initial, topics, natives, aiAvailable }: { ini
             {natives.map((n) => <option key={n.code} value={n.code}>{n.name}</option>)}
           </select>
         </label>
-        <label className="block text-sm font-medium">Minutos por día
+        <label className="block text-sm font-medium">Minutos por día (en total, repartidos entre tus idiomas)
           <select className={cn(field, "mt-1.5")} value={v.dailyMinutes} onChange={(e) => set("dailyMinutes", Number(e.target.value))}>
-            {[5, 10, 15, 20, 30, 45, 60, 90].map((m) => <option key={m} value={m}>{m} min</option>)}
+            {[...new Set([5, 10, 15, 20, 25, 30, 40, 45, 60, 90, 120, initial.dailyMinutes])].sort((a, b) => a - b).map((m) => <option key={m} value={m}>{m} min</option>)}
           </select>
         </label>
         <label className="block text-sm font-medium">Explicaciones
