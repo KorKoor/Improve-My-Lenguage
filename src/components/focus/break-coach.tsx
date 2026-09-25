@@ -105,7 +105,7 @@ export function BreakCoach({
   const C = 2 * Math.PI * R;
 
   return (
-    <div role="dialog" aria-modal="true" aria-labelledby="break-title" className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-bg/95 p-4 backdrop-blur animate-fade">
+    <div role="dialog" aria-modal="true" aria-labelledby="break-title" onKeyDown={(e) => e.key === "Escape" && finish(done)} className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-bg/95 p-4 backdrop-blur animate-fade">
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <div className="animate-drift absolute -left-16 top-10 size-64 rounded-full bg-primary-soft opacity-60 blur-3xl" />
         <div className="animate-drift absolute -right-10 bottom-10 size-72 rounded-full bg-success-soft opacity-60 blur-3xl" style={{ animationDelay: "-3s" }} />
@@ -151,7 +151,7 @@ export function BreakCoach({
             <Button size="lg" onClick={() => finish(true)} autoFocus>{nextLabel}</Button>
           ) : (
             <>
-              <Button variant="secondary" onClick={() => setPaused((p) => !p)} aria-pressed={paused}>
+              <Button variant="secondary" onClick={() => setPaused((p) => !p)} aria-pressed={paused} autoFocus>
                 {paused ? <Play size={16} aria-hidden /> : <Pause size={16} aria-hidden />} {paused ? "Reanudar" : "Pausar"}
               </Button>
               <Button variant="ghost" onClick={() => finish(false)}>
