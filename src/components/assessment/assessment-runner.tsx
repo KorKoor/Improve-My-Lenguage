@@ -100,6 +100,16 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
           <p className="mt-3 text-xs text-muted">Listening y speaking se estimarán con tus primeras sesiones y conversaciones.</p>
         </div>
         <ButtonLink href="/app" size="lg">Ver mi plan personalizado <ArrowRight size={18} aria-hidden /></ButtonLink>
+        <div className="grid w-full max-w-md gap-2 sm:grid-cols-2">
+          <Link href="/app/profile/test" className="card lift flex items-center gap-3 p-3 text-left text-sm">
+            <span className="text-2xl" aria-hidden>🪞</span>
+            <span><strong className="block">¿Cómo aprendes mejor?</strong><span className="text-muted">Test de 2 min</span></span>
+          </Link>
+          <Link href="/app/path" className="card lift flex items-center gap-3 p-3 text-left text-sm">
+            <span className="text-2xl" aria-hidden>🗺️</span>
+            <span><strong className="block">Tu camino a C1</strong><span className="text-muted">Qué te falta en cada nivel</span></span>
+          </Link>
+        </div>
       </div>
     );
   }
