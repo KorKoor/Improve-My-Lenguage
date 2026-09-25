@@ -2,14 +2,14 @@ import type { Metadata } from "next";
 import { SessionRunner } from "@/components/session/runner";
 import { requireLearner } from "@/lib/services/viewer";
 import { aiAvailable } from "@/lib/ai/provider";
-import { viewerAttentionSpan } from "@/lib/services/multilang";
+import { sessionMinutesFor, viewerAttentionSpan } from "@/lib/services/multilang";
 
 export const metadata: Metadata = { title: "Sesión" };
 
 export default async function SessionPage({ searchParams }: { searchParams: Promise<{ minutes?: string; focus?: string; surprise?: string }> }) {
   const learner = await requireLearner();
   const sp = await searchParams;
-  const minutes = Math.max(5, Math.min(60, Number(sp.minutes) || learner.profile.dailyMinutes));
+  const minutes = Math.max(5, Math.min(60, Number(sp.minutes) || (await sessionMinutesFor(learner))));
   return (
     <SessionRunner
       minutes={minutes}

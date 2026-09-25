@@ -12,6 +12,7 @@ import { practicePicks, recommend, type PracticePick, type Recommendation } from
 import type { Weakness } from "../engine/weakness";
 import * as repo from "../db/repositories";
 import { cognateInfo } from "../engine/cognates";
+import { sessionMinutesFor } from "./multilang";
 import type { ActivityRow, GoalRow } from "../db/types";
 import { aiAvailable } from "../ai/provider";
 import { getSkills, getWeaknesses, knowledgeToCard } from "./learning";
@@ -109,7 +110,7 @@ export async function getDashboard(learner: Learner): Promise<DashboardData> {
   const aiEnabled = aiAvailable() && learner.profile.aiConsent;
 
   const plan = planSession({
-    minutes: learner.profile.dailyMinutes,
+    minutes: await sessionMinutesFor(learner),
     dueReviews: dueCount,
     newWordsAvailable: catalog.vocab(learner.language.code).length - seen.size,
     weaknesses,

@@ -9,7 +9,7 @@ import { addDays, localDay } from "../engine/progress";
 import { buildStudyPlan, type StudyPlan } from "../engine/study-plan";
 import type { CefrLevel } from "../content/types";
 import { aiAvailable } from "../ai/provider";
-import type { Viewer } from "./viewer";
+import type { Learner, Viewer } from "./viewer";
 
 export interface LanguageCard {
   code: string;
@@ -107,6 +107,16 @@ const toStat = (c: LanguageCard): LanguageStat => ({
   goalMinutes: c.goalMinutes,
   minutesToday: c.minutesToday,
 });
+
+/**
+ * Minutos de una sesión del idioma activo: con un solo idioma, el total
+ * diario; con varios, el objetivo de ese idioma (el total se reparte).
+ */
+export async function sessionMinutesFor(learner: Learner): Promise<number> {
+  const [langs, goal] = await Promise.all([repo.listUserLanguages(learner.userId), repo.getActiveGoal(learner.ul.id)]);
+  if (langs.length <= 1 || !goal) return learner.profile.dailyMinutes;
+  return Math.max(5, Math.min(learner.profile.dailyMinutes, goal.minutesPerDay));
+}
 
 /** Capacidad de atención actual del alumno (min), aprendida de sus sesiones. */
 export function viewerAttentionSpan(viewer: Viewer): number {
