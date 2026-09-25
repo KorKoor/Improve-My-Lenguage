@@ -170,6 +170,15 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "de:zu-infinitive", label: "zu + infinitivo / um … zu", language: "de", grammarId: "de:g:zu-infinitiv" },
   { id: "de:relative", label: "oraciones de relativo", language: "de", grammarId: "de:g:relativsaetze" },
   { id: "de:genitive", label: "genitivo", language: "de", grammarId: "de:g:genitiv" },
+  { id: "it:ce", label: "c'è / ci sono", language: "it", grammarId: "it:g:ce-ci-sono" },
+  { id: "it:possessives", label: "posesivos", language: "it", grammarId: "it:g:possessivi" },
+  { id: "it:reflexive", label: "verbos reflexivos", language: "it", grammarId: "it:g:riflessivi" },
+  { id: "it:comparatives", label: "comparativos (di / che)", language: "it", grammarId: "it:g:comparativi" },
+  { id: "it:stare", label: "stare + gerundio / stare per", language: "it", grammarId: "it:g:stare-gerundio" },
+  { id: "it:trapassato", label: "trapassato prossimo", language: "it", grammarId: "it:g:trapassato" },
+  { id: "it:combined-pronouns", label: "pronombres combinados", language: "it", grammarId: "it:g:pronomi-combinati" },
+  { id: "it:si", label: "si impersonal y pasivo", language: "it", grammarId: "it:g:si-impersonale" },
+  { id: "it:congiuntivo-imperfetto", label: "congiuntivo imperfetto", language: "it", grammarId: "it:g:congiuntivo-imperfetto" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {
