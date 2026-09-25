@@ -22,6 +22,8 @@ export interface LearnerContext {
   displayName: string | null;
   /** Preferencias del cuestionario de perfil (si lo hizo). */
   learningStyle?: { correction: "gentle" | "thorough"; challenge: boolean; favors: string } | null;
+  /** Otros idiomas que estudia (nombre en inglés) y si se parecen mucho al objetivo. */
+  otherLanguages?: { name: string; close: boolean }[];
 }
 
 export function learnerProfileBlock(c: LearnerContext): string {
@@ -45,6 +47,9 @@ export function learnerProfileBlock(c: LearnerContext): string {
     `Preferred explanation depth: ${c.explanationDepth}`,
     c.learningStyle
       ? `Learning preferences: wants ${c.learningStyle.correction === "thorough" ? "thorough corrections" : "gentle corrections, only what matters"}; ${c.learningStyle.challenge ? "enjoys being challenged slightly above level" : "prefers a comfortable pace"}; ${c.learningStyle.favors}`
+      : null,
+    c.otherLanguages?.length
+      ? `Also studying: ${c.otherLanguages.map((l) => l.name).join(", ")}.${c.otherLanguages.some((l) => l.close) ? ` Watch for interference from ${c.otherLanguages.filter((l) => l.close).map((l) => l.name).join(", ")} (similar words and structures): if they mix them up, point it out briefly.` : ""}`
       : null,
   ];
   return lines.filter(Boolean).join("\n");

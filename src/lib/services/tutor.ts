@@ -2,6 +2,7 @@ import "server-only";
 import { categoriesFor, errorLabel, getLanguage, vocabFor, topicLabel } from "../content";
 import { thetaToCefr, overallTheta } from "../engine/levels";
 import { rateLimit } from "../db/limits";
+import { interference } from "../engine/multilang";
 import * as repo from "../db/repositories";
 import { env } from "../env";
 import { aiAvailable, AiUnavailableError, generate, parseJson } from "../ai/provider";
@@ -33,12 +34,13 @@ export async function guardAi(learner: Learner) {
 }
 
 export async function buildLearnerContext(learner: Learner): Promise<LearnerContext> {
-  const [skills, weaknesses, knowledge, mistakes, goal] = await Promise.all([
+  const [skills, weaknesses, knowledge, mistakes, goal, langs] = await Promise.all([
     getSkills(learner.ul.id),
     getWeaknesses(learner.ul.id),
     repo.getAllKnowledge(learner.ul.id),
     repo.recentMistakeExamples(learner.ul.id, 8),
     repo.getActiveGoal(learner.ul.id),
+    repo.listUserLanguages(learner.userId),
   ]);
   const measured = [...skills.values()].filter((s) => s.evidence > 0);
   const overall = overallTheta(measured);
@@ -60,6 +62,9 @@ export async function buildLearnerContext(learner: Learner): Promise<LearnerCont
     knownWords: learning,
     explanationDepth: learner.profile.explanationDepth,
     displayName: learner.profile.displayName,
+    otherLanguages: langs
+      .filter((l) => l.languageCode !== learner.language.code)
+      .map((l) => ({ name: getLanguage(l.languageCode)?.englishName ?? l.languageCode, close: interference(l.languageCode, learner.language.code) === 2 })),
     learningStyle: learner.profile.personality
       ? {
           correction: learner.profile.personality.tuning.correction,

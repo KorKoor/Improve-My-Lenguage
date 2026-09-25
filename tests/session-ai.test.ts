@@ -163,3 +163,10 @@ test("el feedback de IA se valida: categorías cerradas y sin errores inventados
   assert.equal(out.mistakes[1]!.category, "vocabulary", "categoría desconocida → categoría segura");
   assert.equal(sanitizeFeedback("no es json", allowed, learner), null);
 });
+
+test("perfil del tutor: otros idiomas y aviso de interferencia", () => {
+  const block = learnerProfileBlock({ ...ctx, otherLanguages: [{ name: "Portuguese", close: true }, { name: "Japanese", close: false }] });
+  assert.match(block, /Also studying: Portuguese, Japanese\./);
+  assert.match(block, /interference from Portuguese/);
+  assert.doesNotMatch(learnerProfileBlock(ctx), /Also studying/);
+});
