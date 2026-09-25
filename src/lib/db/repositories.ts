@@ -1107,6 +1107,15 @@ export async function resolveReports(itemId: string, status: "fixed" | "dismisse
   return snap.size;
 }
 
+// ── Modo estudio: plan en curso (se reanuda en otro dispositivo) ─────────
+export async function getStudyPlan(userId: string): Promise<unknown> {
+  return json((await userRef(userId).get()).get("studyPlanJson"));
+}
+
+export async function setStudyPlan(userId: string, plan: unknown): Promise<void> {
+  await userRef(userId).set({ studyPlanJson: plan ? toJson(plan) : null }, { merge: true });
+}
+
 // ── Camino guiado (lecciones aprobadas → estrellas, en el documento del idioma) ─
 export async function getCourse(ulId: string): Promise<Record<number, number>> {
   const v = (await ulRef(ulId).get()).get("course");

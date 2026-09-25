@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { recordStudyPlanAction, switchLanguageForBlockAction } from "@/app/app/study-actions";
 import { cn } from "@/lib/cn";
-import { advancePlan, blockHref, currentPlan, blockLabel, stopPlan, useActivePlan, type ActivePlan } from "./plan-store";
+import { advancePlan, blockHref, currentPlan, blockLabel, restorePlanFromServer, stopPlan, useActivePlan, type ActivePlan } from "./plan-store";
 import { formatClock } from "./break-coach";
 
 /** Lleva al bloque actual del plan (cambiando de idioma si hace falta). */
@@ -50,6 +50,10 @@ export function PlanBar({ inline = false }: { inline?: boolean }) {
   const [pending, start] = useTransition();
   const now = useNow(Boolean(plan));
   const warned = useRef<number>(-1);
+  // Reanudar en este dispositivo un plan empezado en otro.
+  useEffect(() => {
+    void restorePlanFromServer();
+  }, []);
 
   const hidden = !plan || path.startsWith("/app/study");
   const block = plan?.blocks[plan.idx];

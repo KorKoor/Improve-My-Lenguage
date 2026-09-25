@@ -50,6 +50,44 @@ export async function switchLanguageForBlockAction(code: string): Promise<Result
   }
 }
 
+/** Valida un plan del modo estudio que llega del navegador (forma y tamaño). */
+function validPlan(p: unknown): boolean {
+  if (!p || typeof p !== "object") return false;
+  const x = p as { v?: unknown; blocks?: unknown; idx?: unknown; startedAt?: unknown; blockStartedAt?: unknown; names?: unknown };
+  if (x.v !== 1 || !Array.isArray(x.blocks) || x.blocks.length === 0 || x.blocks.length > 40) return false;
+  if (typeof x.idx !== "number" || x.idx < 0 || x.idx >= x.blocks.length) return false;
+  if (typeof x.startedAt !== "number" || typeof x.blockStartedAt !== "number") return false;
+  return x.blocks.every((b) => {
+    const k = b as { kind?: unknown; minutes?: unknown };
+    return (k.kind === "study" || k.kind === "break") && typeof k.minutes === "number" && k.minutes > 0 && k.minutes <= 180;
+  });
+}
+
+/** Guarda (o borra, con null) el plan en curso para reanudarlo en otro dispositivo. */
+export async function syncStudyPlanAction(plan: unknown): Promise<Result<null>> {
+  try {
+    const viewer = await requireViewer();
+    if (!(await rateLimit(`plan-sync:${viewer.userId}`, 120, 3600))) return { ok: true, data: null };
+    if (plan !== null && (!validPlan(plan) || JSON.stringify(plan).length > 20_000)) return { ok: false, error: "Plan no válido" };
+    await repo.setStudyPlan(viewer.userId, plan);
+    return { ok: true, data: null };
+  } catch (err) {
+    return fail("study.sync", err);
+  }
+}
+
+/** Plan en curso guardado en el servidor (si es de las últimas 6 horas). */
+export async function getStudyPlanAction(): Promise<Result<unknown>> {
+  try {
+    const viewer = await requireViewer();
+    const p = await repo.getStudyPlan(viewer.userId);
+    const fresh = validPlan(p) && Date.now() - (p as { startedAt: number }).startedAt < 6 * 3600_000;
+    return { ok: true, data: fresh ? p : null };
+  } catch (err) {
+    return fail("study.get", err);
+  }
+}
+
 /** Registra un descanso (para estadísticas y logros). */
 export async function recordBreakAction(activity: BreakActivity, seconds: number, completed: boolean): Promise<Result<null>> {
   try {

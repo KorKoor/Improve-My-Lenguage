@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { ACTIVITY_META, type PlanBlock } from "@/lib/engine/study-plan";
+import { getStudyPlanAction, syncStudyPlanAction } from "@/app/app/study-actions";
 
 /**
  * Plan del modo estudio en curso. Es una comodidad de este dispositivo
@@ -38,12 +39,23 @@ function read(): ActivePlan | null {
   return plan;
 }
 
-function write(plan: ActivePlan | null) {
+function write(plan: ActivePlan | null, sync = true) {
   try {
     if (plan) localStorage.setItem(KEY, JSON.stringify(plan));
     else localStorage.removeItem(KEY);
   } catch {}
   listeners.forEach((l) => l());
+  // El servidor guarda el plan para reanudarlo en otro dispositivo (localStorage es sólo caché).
+  if (sync) void syncStudyPlanAction(plan).catch(() => {});
+}
+
+/** Al abrir la app en otro dispositivo: recupera el plan en curso del servidor. */
+export async function restorePlanFromServer(): Promise<void> {
+  if (read()) return;
+  try {
+    const r = await getStudyPlanAction();
+    if (r.ok && r.data) write(r.data as ActivePlan, false);
+  } catch {}
 }
 
 function subscribe(l: () => void) {
