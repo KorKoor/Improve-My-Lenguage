@@ -210,6 +210,13 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "zh:result", label: "complementos de resultado", language: "zh", grammarId: "zh:g:result-complement" },
   { id: "zh:direction", label: "complementos direccionales", language: "zh", grammarId: "zh:g:direction-complement" },
   { id: "zh:emphasis", label: "连…都 y 越来越", language: "zh", grammarId: "zh:g:lian-yuelaiyue" },
+  { id: "ko:particles-place", label: "을/를, 에 y 에서", language: "ko", grammarId: "ko:g:object-place" },
+  { id: "ko:numbers", label: "números nativos y sino-coreanos", language: "ko", grammarId: "ko:g:numbers" },
+  { id: "ko:future", label: "futuro -(으)ㄹ 거예요", language: "ko", grammarId: "ko:g:future" },
+  { id: "ko:progressive", label: "-고 있다", language: "ko", grammarId: "ko:g:progressive" },
+  { id: "ko:conditional", label: "condicional -(으)면", language: "ko", grammarId: "ko:g:conditional" },
+  { id: "ko:modifiers", label: "modificadores de nombre", language: "ko", grammarId: "ko:g:modifiers" },
+  { id: "ko:seems", label: "-것 같다", language: "ko", grammarId: "ko:g:geot-gatda" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {
