@@ -1,0 +1,105 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "je": [
+    "tú",
+    "te"
+  ],
+  "te": [
+    "demasiado",
+    "para (+ infinitivo)"
+  ],
+  "maar": [
+    "pero",
+    "solo"
+  ],
+  "wat": [
+    "qué",
+    "algo"
+  ],
+  "kan": null,
+  "meer": [
+    "más",
+    "lago"
+  ],
+  "wel": [
+    "sí (enfático)",
+    "bien"
+  ],
+  "u": [
+    "usted"
+  ],
+  "zullen": [
+    "(auxiliar de futuro)",
+    "deber"
+  ],
+  "het": [
+    "el, la, lo (neutro)",
+    "ello"
+  ],
+  "die": [
+    "ese",
+    "que",
+    "el/la"
+  ],
+  "aan": [
+    "a",
+    "en",
+    "encendido"
+  ],
+  "op": [
+    "en",
+    "sobre"
+  ],
+  "al": [
+    "ya",
+    "todo"
+  ],
+  "over": [
+    "sobre",
+    "acerca de"
+  ],
+  "doen": [
+    "hacer"
+  ],
+  "wil": [
+    "quiere / quiero (de willen)"
+  ],
+  "ik": [
+    "yo"
+  ],
+  "een": [
+    "un",
+    "una"
+  ],
+  "de": [
+    "el, la (género común)"
+  ],
+  "van": [
+    "de"
+  ],
+  "zijn": [
+    "ser",
+    "estar",
+    "su (de él)"
+  ],
+  "dat": [
+    "que",
+    "eso"
+  ],
+  "om": [
+    "alrededor de",
+    "a las",
+    "para (om … te)"
+  ],
+  "voor": [
+    "para",
+    "por",
+    "antes de"
+  ],
+  "niet": [
+    "no"
+  ],
+  "jullie": [
+    "ustedes"
+  ]
+}

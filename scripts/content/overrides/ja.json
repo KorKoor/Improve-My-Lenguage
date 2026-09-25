@@ -1,0 +1,184 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "の": [
+    "de (posesión)",
+    "partícula の"
+  ],
+  "に": [
+    "a, en (destino, tiempo)",
+    "partícula に"
+  ],
+  "は": [
+    "partícula de tema (se lee «wa»)"
+  ],
+  "が": [
+    "partícula de sujeto",
+    "pero"
+  ],
+  "を": [
+    "partícula de objeto directo (se lee «o»)"
+  ],
+  "で": [
+    "en, con (lugar de acción, medio)"
+  ],
+  "と": [
+    "y",
+    "con"
+  ],
+  "も": [
+    "también"
+  ],
+  "か": [
+    "partícula de pregunta",
+    "o"
+  ],
+  "から": [
+    "desde",
+    "porque"
+  ],
+  "まで": [
+    "hasta"
+  ],
+  "へ": [
+    "hacia"
+  ],
+  "や": [
+    "y (en listas)"
+  ],
+  "よ": [
+    "¡eh! (partícula enfática)"
+  ],
+  "ね": [
+    "¿verdad? (partícula)"
+  ],
+  "し": null,
+  "な": null,
+  "さ": null,
+  "れ": null,
+  "う": null,
+  "い": null,
+  "まし": null,
+  "お": null,
+  "き": null,
+  "せ": null,
+  "わ": null,
+  "ば": null,
+  "って": null,
+  "たら": null,
+  "でき": null,
+  "あり": null,
+  "なく": null,
+  "見": null,
+  "的": null,
+  "者": null,
+  "じゃ": [
+    "bueno, entonces"
+  ],
+  "だ": [
+    "es (forma llana de です)"
+  ],
+  "する": [
+    "hacer"
+  ],
+  "いる": [
+    "estar, haber (seres vivos)"
+  ],
+  "ある": [
+    "estar, haber (cosas)"
+  ],
+  "こと": [
+    "cosa, hecho (abstracto)"
+  ],
+  "もの": [
+    "cosa (concreta)"
+  ],
+  "よう": [
+    "manera",
+    "parecer"
+  ],
+  "その": [
+    "ese (+ sustantivo)"
+  ],
+  "ため": [
+    "para (propósito)",
+    "por (causa)"
+  ],
+  "方": [
+    "dirección, lado",
+    "persona (cortés)"
+  ],
+  "一": [
+    "uno"
+  ],
+  "など": [
+    "etcétera, y otros"
+  ],
+  "だろう": [
+    "probablemente",
+    "¿no?"
+  ],
+  "なる": [
+    "llegar a ser, volverse"
+  ],
+  "ない": [
+    "no (negación)",
+    "no hay"
+  ],
+  "人": [
+    "persona"
+  ],
+  "日": [
+    "día",
+    "sol"
+  ],
+  "月": [
+    "mes",
+    "luna"
+  ],
+  "年": [
+    "año"
+  ],
+  "今": [
+    "ahora"
+  ],
+  "時": [
+    "hora",
+    "momento"
+  ],
+  "中": [
+    "dentro",
+    "medio"
+  ],
+  "何": [
+    "qué"
+  ],
+  "私": [
+    "yo"
+  ],
+  "それ": [
+    "eso"
+  ],
+  "これ": [
+    "esto"
+  ],
+  "でも": [
+    "pero",
+    "incluso"
+  ],
+  "ので": [
+    "porque, así que"
+  ],
+  "けれども": [
+    "aunque, pero"
+  ],
+  "として": [
+    "como (en calidad de)"
+  ],
+  "なら": [
+    "si (se trata de)"
+  ],
+  "そう": [
+    "así",
+    "parece que"
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "고": null,
+  "에다": null,
+  "까다": null,
+  "도록": null,
+  "어서": [
+    "¡vamos!, rápido"
+  ],
+  "이": [
+    "este",
+    "diente",
+    "dos"
+  ],
+  "우리": [
+    "nosotros",
+    "nuestro"
+  ],
+  "네": [
+    "sí (cortés)",
+    "tu"
+  ],
+  "제": [
+    "mi (humilde)"
+  ],
+  "저": [
+    "yo (humilde)",
+    "ese"
+  ],
+  "아니": [
+    "no"
+  ],
+  "게임": [
+    "juego",
+    "videojuego"
+  ],
+  "위해": [
+    "para (위해서)"
+  ],
+  "가지": [
+    "clase, tipo",
+    "rama"
+  ],
+  "이상": [
+    "más de",
+    "raro"
+  ],
+  "자신": [
+    "uno mismo"
+  ],
+  "나": [
+    "yo"
+  ],
+  "너": [
+    "tú"
+  ],
+  "그": [
+    "ese",
+    "él"
+  ],
+  "하다": [
+    "hacer"
+  ],
+  "보다": [
+    "ver"
+  ],
+  "크다": [
+    "ser grande"
+  ],
+  "같이": [
+    "juntos",
+    "como"
+  ],
+  "바로": [
+    "justo",
+    "enseguida"
+  ],
+  "하나": [
+    "uno"
+  ],
+  "지금": [
+    "ahora"
+  ],
+  "이제": [
+    "ahora, ya"
+  ],
+  "진짜": [
+    "de verdad"
+  ],
+  "그냥": [
+    "simplemente, porque sí"
+  ]
+}

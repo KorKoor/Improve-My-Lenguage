@@ -1,0 +1,94 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "a": [
+    "la",
+    "a"
+  ],
+  "o": [
+    "el",
+    "lo"
+  ],
+  "não": [
+    "no"
+  ],
+  "foi": [
+    "fue"
+  ],
+  "são": [
+    "son",
+    "sano"
+  ],
+  "estar": [
+    "estar"
+  ],
+  "ela": [
+    "ella"
+  ],
+  "só": [
+    "solo",
+    "solamente"
+  ],
+  "pelar": null,
+  "pau-brasil": null,
+  "seu": [
+    "su",
+    "tu"
+  ],
+  "para": [
+    "para"
+  ],
+  "sempre": [
+    "siempre"
+  ],
+  "melhor": [
+    "mejor"
+  ],
+  "eu": [
+    "yo"
+  ],
+  "ser": [
+    "ser"
+  ],
+  "ter": [
+    "tener"
+  ],
+  "mais": [
+    "más"
+  ],
+  "que": [
+    "que",
+    "qué"
+  ],
+  "de": [
+    "de"
+  ],
+  "em": [
+    "en"
+  ],
+  "um": [
+    "un",
+    "uno"
+  ],
+  "com": [
+    "con"
+  ],
+  "já": [
+    "ya"
+  ],
+  "ir": [
+    "ir"
+  ],
+  "isso": [
+    "eso"
+  ],
+  "casa": [
+    "casa"
+  ],
+  "mesmo": [
+    "mismo",
+    "incluso"
+  ],
+  "vocês": [
+    "ustedes"
+  ]
+}

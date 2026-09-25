@@ -62,7 +62,8 @@ Core goals:
 
 ### Content system
 
-- curated packs for English (complete) and French, Japanese, Portuguese, Italian and German (beta)
+- 12 languages (EN, FR, DE, IT, PT, NL, SV, RU, AR, JA, KO, ZH) with up to ~9,500 frequency-ranked words each (A1 → C1) built from open data (Wiktionary, Tatoeba, wordfreq, Wikimedia Commons audio) — see docs/CONTENT_PIPELINE.md
+- grammar syllabus A1 → C1 for every language (8–13 lessons with exercises), written for Spanish speakers
 - domainized vocabulary and grammar structures
 - content configuration that can scale to more languages
 - structured, versioned learning resources

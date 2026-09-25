@@ -13,6 +13,12 @@ import { JA_GRAMMAR, JA_VOCAB } from "./ja";
 import { DE_GRAMMAR, DE_VOCAB } from "./de";
 import { IT_GRAMMAR, IT_VOCAB } from "./it";
 import { PT_GRAMMAR, PT_VOCAB } from "./pt";
+import { EN_GRAMMAR_ADVANCED } from "./en/grammar-advanced";
+import { FR_GRAMMAR_ADVANCED } from "./fr/grammar-advanced";
+import { DE_GRAMMAR_ADVANCED } from "./de/grammar-advanced";
+import { IT_GRAMMAR_ADVANCED } from "./it/grammar-advanced";
+import { PT_GRAMMAR_ADVANCED } from "./pt/grammar-advanced";
+import { JA_GRAMMAR_ADVANCED } from "./ja/grammar-advanced";
 import { getLanguage } from "./languages";
 import { packVocab } from "./packs";
 import { AR_GRAMMAR } from "./ar/grammar";
@@ -27,12 +33,12 @@ import { translationOf } from "../engine/exercises";
 /** Vocabulario escrito y revisado a mano: tiene prioridad sobre el generado. */
 const CURATED_VOCAB: Record<LanguageCode, VocabItem[]> = { en: EN_VOCAB, fr: FR_VOCAB, ja: JA_VOCAB, pt: PT_VOCAB, it: IT_VOCAB, de: DE_VOCAB };
 const GRAMMAR: Record<LanguageCode, GrammarConcept[]> = {
-  en: EN_GRAMMAR,
-  fr: FR_GRAMMAR,
-  ja: JA_GRAMMAR,
-  pt: PT_GRAMMAR,
-  it: IT_GRAMMAR,
-  de: DE_GRAMMAR,
+  en: [...EN_GRAMMAR, ...EN_GRAMMAR_ADVANCED],
+  fr: [...FR_GRAMMAR, ...FR_GRAMMAR_ADVANCED],
+  ja: [...JA_GRAMMAR, ...JA_GRAMMAR_ADVANCED],
+  pt: [...PT_GRAMMAR, ...PT_GRAMMAR_ADVANCED],
+  it: [...IT_GRAMMAR, ...IT_GRAMMAR_ADVANCED],
+  de: [...DE_GRAMMAR, ...DE_GRAMMAR_ADVANCED],
   ar: AR_GRAMMAR,
   ko: KO_GRAMMAR,
   nl: NL_GRAMMAR,

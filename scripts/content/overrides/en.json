@@ -1,0 +1,136 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "to": [
+    "a",
+    "para",
+    "hacia"
+  ],
+  "a": [
+    "un",
+    "una"
+  ],
+  "an": [
+    "un",
+    "una"
+  ],
+  "on": [
+    "en",
+    "sobre"
+  ],
+  "that": [
+    "que",
+    "ese",
+    "eso"
+  ],
+  "it": [
+    "ello",
+    "lo",
+    "eso"
+  ],
+  "one": [
+    "uno",
+    "una"
+  ],
+  "can": [
+    "poder",
+    "lata"
+  ],
+  "will": [
+    "(auxiliar de futuro)",
+    "voluntad"
+  ],
+  "just": [
+    "solo",
+    "justo",
+    "acabar de"
+  ],
+  "up": [
+    "arriba",
+    "hacia arriba"
+  ],
+  "out": [
+    "fuera",
+    "afuera"
+  ],
+  "about": [
+    "sobre",
+    "acerca de",
+    "alrededor de"
+  ],
+  "more": [
+    "más"
+  ],
+  "do": [
+    "hacer"
+  ],
+  "get": [
+    "conseguir",
+    "obtener",
+    "llegar"
+  ],
+  "first": [
+    "primero"
+  ],
+  "them": [
+    "los",
+    "las",
+    "ellos"
+  ],
+  "him": [
+    "lo",
+    "él"
+  ],
+  "her": [
+    "la",
+    "su (de ella)",
+    "ella"
+  ],
+  "like": [
+    "como",
+    "gustar"
+  ],
+  "by": [
+    "por",
+    "junto a"
+  ],
+  "but": [
+    "pero"
+  ],
+  "all": [
+    "todo",
+    "todos"
+  ],
+  "so": [
+    "así que",
+    "tan",
+    "entonces"
+  ],
+  "as": [
+    "como",
+    "mientras"
+  ],
+  "have": [
+    "tener",
+    "haber"
+  ],
+  "now": [
+    "ahora"
+  ],
+  "good": [
+    "bueno",
+    "buen"
+  ],
+  "only": [
+    "solo",
+    "único"
+  ],
+  "time": [
+    "tiempo",
+    "vez",
+    "hora"
+  ],
+  "which": [
+    "cuál",
+    "que"
+  ]
+}

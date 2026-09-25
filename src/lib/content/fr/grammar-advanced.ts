@@ -1,0 +1,185 @@
+import type { GrammarConcept } from "../types";
+
+/** Francés A1–C1: continúa el programa de fr/index.ts. Revisión humana recomendada. */
+const es = (t: string) => ({ es: t });
+
+export const FR_GRAMMAR_ADVANCED: GrammarConcept[] = [
+  {
+    id: "fr:g:negation",
+    language: "fr",
+    title: "Negación: ne … pas (y ne … jamais, rien, personne)",
+    cefr: "A1",
+    errorCategory: "fr:negation",
+    summary: "La negación francesa tiene dos piezas que rodean al verbo conjugado: ne (n' ante vocal) antes y pas después. En la conversación el ne suele desaparecer, pero se escribe siempre.",
+    whenToUse: ["Negar cualquier verbo: Je ne parle pas allemand.", "Variantes: ne … jamais (nunca), ne … rien (nada), ne … personne (nadie), ne … plus (ya no)."],
+    formation: ["ne + verbo conjugado + pas: Il ne mange pas.", "Ante vocal: n'aime pas.", "En tiempos compuestos rodea al auxiliar: Je n'ai pas vu."],
+    commonMistakes: [
+      { wrong: "Je ne pas parle français.", right: "Je ne parle pas français.", why: "pas va después del verbo." },
+      { wrong: "Je n'ai vu pas le film.", right: "Je n'ai pas vu le film.", why: "En passé composé, pas va tras el auxiliar." },
+    ],
+    examples: [
+      { text: "Je ne bois jamais de café le soir.", translation: es("Nunca tomo café por la noche.") },
+      { text: "Il n'y a personne à la maison.", translation: es("No hay nadie en casa.") },
+    ],
+    contrasts: [{ a: "Je ne fume pas. (no fumo)", b: "Je ne fume plus. (ya no fumo)", explanation: "La segunda pieza cambia el matiz." }],
+    exercises: [
+      { type: "mc", prompt: "Je ___ comprends pas.", options: ["ne", "n'", "pas", "non"], answers: ["ne"], explanation: "comprends empieza por consonante → ne." },
+      { type: "mc", prompt: "Elle n'___ pas le fromage.", options: ["aime", "ne aime", "aime pas", "aimes"], answers: ["aime"], explanation: "Ante vocal: n'aime pas." },
+      { type: "correct", prompt: "Je n'ai vu pas Marie.", answers: ["Je n'ai pas vu Marie."], explanation: "pas va tras el auxiliar." },
+      { type: "mc", prompt: "Il ne dit ___. (nada)", options: ["rien", "pas", "jamais", "personne"], answers: ["rien"], explanation: "ne … rien = nada." },
+    ],
+  },
+  {
+    id: "fr:g:object-pronouns",
+    language: "fr",
+    title: "Pronombres de objeto: le, la, les, lui, leur, y, en",
+    cefr: "A2",
+    errorCategory: "fr:pronouns",
+    summary: "Los pronombres de objeto van delante del verbo conjugado (o del infinitivo). y sustituye a «à + cosa/lugar» y en a «de + cosa» o a cantidades.",
+    whenToUse: ["Directo: le, la, les (lo, la, los).", "Indirecto de persona: lui, leur (le, les).", "y: J'y vais (voy allí). en: J'en veux deux (quiero dos)."],
+    formation: ["Pronombre + verbo: Je le vois.", "Con infinitivo, delante del infinitivo: Je vais le voir.", "Imperativo afirmativo, detrás con guion: Prends-le !"],
+    commonMistakes: [
+      { wrong: "Je vois le.", right: "Je le vois.", why: "El pronombre va antes del verbo." },
+      { wrong: "Je lui aime.", right: "Je l'aime.", why: "aimer es transitivo directo: le/la." },
+    ],
+    examples: [
+      { text: "Tu connais Paul ? — Oui, je le connais bien.", translation: es("¿Conoces a Paul? — Sí, lo conozco bien.") },
+      { text: "Tu as des frères ? — Oui, j'en ai trois.", translation: es("¿Tienes hermanos? — Sí, tengo tres.") },
+    ],
+    contrasts: [{ a: "Je la regarde. (a ella — directo)", b: "Je lui parle. (le hablo — indirecto)", explanation: "Depende de si el verbo lleva «à»." }],
+    exercises: [
+      { type: "mc", prompt: "Tu vois Marie ? — Oui, je ___ vois.", options: ["la", "lui", "le", "y"], answers: ["la"], explanation: "Objeto directo femenino → la." },
+      { type: "mc", prompt: "Tu parles à tes parents ? — Oui, je ___ parle.", options: ["leur", "les", "lui", "en"], answers: ["leur"], explanation: "parler à + plural → leur." },
+      { type: "mc", prompt: "Tu vas à Paris ? — Oui, j'___ vais demain.", options: ["y", "en", "le", "lui"], answers: ["y"], explanation: "à + lugar → y." },
+      { type: "mc", prompt: "Tu veux du pain ? — Oui, j'___ veux.", options: ["en", "y", "le", "la"], answers: ["en"], explanation: "de + cosa → en." },
+    ],
+  },
+  {
+    id: "fr:g:imparfait",
+    language: "fr",
+    title: "Imparfait frente a passé composé",
+    cefr: "B1",
+    errorCategory: "fr:past-tense",
+    summary: "Funcionan como el imperfecto y el indefinido del español: el imparfait describe escenarios, hábitos y acciones en curso; el passé composé, hechos puntuales terminados.",
+    whenToUse: ["Imparfait: descripción, hábito, «estaba haciendo». Quand j'étais petit, je jouais au foot.", "Passé composé: acción que interrumpe o sucede una vez. Je lisais quand il a téléphoné."],
+    formation: ["Raíz de nous en presente (sin -ons) + -ais, -ais, -ait, -ions, -iez, -aient: nous parlons → je parlais.", "Único irregular: être → j'étais."],
+    commonMistakes: [
+      { wrong: "Quand j'ai été petit, j'ai joué dehors.", right: "Quand j'étais petit, je jouais dehors.", why: "Descripción y hábito pasados → imparfait." },
+      { wrong: "Je dormais quand le téléphone sonnait.", right: "Je dormais quand le téléphone a sonné.", why: "La acción que interrumpe va en passé composé." },
+    ],
+    examples: [
+      { text: "Il faisait beau, alors nous sommes allés à la plage.", translation: es("Hacía buen tiempo, así que fuimos a la playa.") },
+      { text: "Avant, je travaillais à Lyon.", translation: es("Antes trabajaba en Lyon.") },
+    ],
+    contrasts: [{ a: "Je lisais. (leía / estaba leyendo)", b: "J'ai lu. (leí)", explanation: "Mismo contraste que en español." }],
+    exercises: [
+      { type: "mc", prompt: "Quand j'___ enfant, j'habitais à Nice.", options: ["étais", "ai été", "suis", "serai"], answers: ["étais"], explanation: "Descripción pasada → imparfait." },
+      { type: "mc", prompt: "Je regardais la télé quand tu ___.", options: ["as appelé", "appelais", "appelles", "appellerais"], answers: ["as appelé"], explanation: "Acción puntual que interrumpe → passé composé." },
+      { type: "mc", prompt: "Tous les étés, nous ___ en Bretagne.", options: ["allions", "sommes allés", "irons", "allons"], answers: ["allions"], explanation: "Hábito pasado → imparfait." },
+      { type: "mc", prompt: "Hier, j'___ trois heures.", options: ["ai travaillé", "travaillais", "travaille", "travaillerai"], answers: ["ai travaillé"], explanation: "Hecho delimitado → passé composé." },
+    ],
+  },
+  {
+    id: "fr:g:subjonctif",
+    language: "fr",
+    title: "Subjuntivo presente",
+    cefr: "B1",
+    errorCategory: "fr:subjunctive",
+    summary: "Se usa en contextos parecidos al español (deseo, obligación, emoción, duda) casi siempre tras que. Diferencia importante: après que va con indicativo y espérer que también.",
+    whenToUse: ["Il faut que tu viennes. Je veux que tu sois là. Bien que ce soit cher…", "NO tras espérer: J'espère qu'il viendra (indicativo)."],
+    formation: [
+      "Raíz de ils en presente + -e, -es, -e, -ions, -iez, -ent: ils parlent → que je parle; ils finissent → que je finisse.",
+      "Irregulares: être (que je sois), avoir (que j'aie), aller (que j'aille), faire (que je fasse), pouvoir (que je puisse).",
+    ],
+    commonMistakes: [
+      { wrong: "Il faut que tu viens.", right: "Il faut que tu viennes.", why: "il faut que → subjuntivo." },
+      { wrong: "J'espère qu'il vienne.", right: "J'espère qu'il viendra.", why: "espérer va con indicativo (a diferencia del español)." },
+    ],
+    examples: [
+      { text: "Je veux que tu sois heureux.", translation: es("Quiero que seas feliz.") },
+      { text: "Bien qu'il fasse froid, on sort.", translation: es("Aunque hace frío, salimos.") },
+    ],
+    contrasts: [{ a: "Je pense qu'il vient. (indicativo)", b: "Je ne pense pas qu'il vienne. (subjuntivo)", explanation: "La duda de la negación pide subjuntivo." }],
+    exercises: [
+      { type: "mc", prompt: "Il faut que nous ___ à l'heure.", options: ["soyons", "sommes", "serons", "étions"], answers: ["soyons"], explanation: "être en subjuntivo: soyons." },
+      { type: "mc", prompt: "Je veux que tu ___ tes devoirs.", options: ["fasses", "fais", "feras", "faisais"], answers: ["fasses"], explanation: "faire → que tu fasses." },
+      { type: "mc", prompt: "J'espère que tu ___ bien.", options: ["vas", "ailles", "aille", "allasses"], answers: ["vas"], explanation: "espérer → indicativo." },
+      { type: "correct", prompt: "Bien qu'il est malade, il travaille.", answers: ["Bien qu'il soit malade, il travaille."], explanation: "bien que → subjuntivo." },
+    ],
+  },
+  {
+    id: "fr:g:conditionnel",
+    language: "fr",
+    title: "Condicional y oraciones con si",
+    cefr: "B2",
+    errorCategory: "fr:conditional",
+    summary: "El condicional se forma con la raíz del futuro + terminaciones del imparfait. Tras si nunca va condicional ni futuro: si + imparfait → condicional; si + plus-que-parfait → condicional pasado.",
+    whenToUse: ["Cortesía: Je voudrais un café.", "Hipótesis: Si j'avais le temps, je voyagerais.", "Irreal pasado: Si j'avais su, je serais venu."],
+    formation: ["Raíz del futuro + -ais, -ais, -ait, -ions, -iez, -aient: parler → je parlerais, être → je serais, avoir → j'aurais.", "Condicional pasado: aurais/serais + participio."],
+    commonMistakes: [
+      { wrong: "Si j'aurais le temps, je viendrais.", right: "Si j'avais le temps, je viendrais.", why: "Tras si: imparfait, nunca condicional." },
+      { wrong: "Si j'avais su, je viendrais.", right: "Si j'avais su, je serais venu.", why: "Irreal pasado → condicional pasado." },
+    ],
+    examples: [
+      { text: "Si j'étais toi, je prendrais ce travail.", translation: es("Yo que tú, aceptaría ese trabajo.") },
+      { text: "Pourriez-vous m'aider, s'il vous plaît ?", translation: es("¿Podría ayudarme, por favor?") },
+    ],
+    contrasts: [{ a: "Si tu viens, on ira au cinéma. (real)", b: "Si tu venais, on irait au cinéma. (hipotético)", explanation: "Presente + futuro frente a imparfait + condicional." }],
+    exercises: [
+      { type: "mc", prompt: "Si j'avais de l'argent, j'___ une maison.", options: ["achèterais", "achète", "achèterai", "achetais"], answers: ["achèterais"], explanation: "si + imparfait → condicional." },
+      { type: "mc", prompt: "Si tu ___ plus, tu réussirais.", options: ["travaillais", "travaillerais", "travailles", "travailleras"], answers: ["travaillais"], explanation: "Tras si → imparfait." },
+      { type: "mc", prompt: "Si nous avions su, nous ___ plus tôt.", options: ["serions partis", "partirions", "sommes partis", "partions"], answers: ["serions partis"], explanation: "Irreal pasado → condicional pasado." },
+      { type: "mc", prompt: "Je ___ un thé, s'il vous plaît. (cortesía)", options: ["voudrais", "veux", "voulais", "voudrai"], answers: ["voudrais"], explanation: "Cortesía → condicional." },
+    ],
+  },
+  {
+    id: "fr:g:relatifs",
+    language: "fr",
+    title: "Pronombres relativos: qui, que, dont, où",
+    cefr: "B2",
+    errorCategory: "fr:relatives",
+    summary: "qui es sujeto del verbo de la relativa; que, objeto directo; dont sustituye a «de + algo» (verbos como parler de, avoir besoin de); où indica lugar y también tiempo (le jour où).",
+    whenToUse: ["L'homme qui parle… · Le livre que je lis… · Le film dont je t'ai parlé… · La ville où je suis né…"],
+    formation: ["qui + verbo · que + sujeto + verbo.", "dont = de + qui/lequel.", "Tiempo: le jour où, l'année où (no «quand»)."],
+    commonMistakes: [
+      { wrong: "Le livre qui je lis.", right: "Le livre que je lis.", why: "El libro es el objeto de «lis» → que." },
+      { wrong: "Le film que je t'ai parlé.", right: "Le film dont je t'ai parlé.", why: "parler de → dont." },
+    ],
+    examples: [
+      { text: "C'est la personne dont j'ai besoin.", translation: es("Es la persona que necesito.") },
+      { text: "Je me souviens du jour où on s'est rencontrés.", translation: es("Recuerdo el día en que nos conocimos.") },
+    ],
+    contrasts: [{ a: "La fille qui chante (la chica que canta — sujeto)", b: "La chanson que j'écoute (la canción que escucho — objeto)", explanation: "Función en la relativa, no si es persona o cosa." }],
+    exercises: [
+      { type: "mc", prompt: "Le train ___ part à 8 h est complet.", options: ["qui", "que", "dont", "où"], answers: ["qui"], explanation: "Sujeto de «part» → qui." },
+      { type: "mc", prompt: "La maison ___ j'ai achetée est vieille.", options: ["que", "qui", "dont", "où"], answers: ["que"], explanation: "Objeto de «acheter» → que." },
+      { type: "mc", prompt: "C'est le livre ___ tout le monde parle.", options: ["dont", "que", "qui", "où"], answers: ["dont"], explanation: "parler de → dont." },
+      { type: "mc", prompt: "Le jour ___ je suis arrivé, il pleuvait.", options: ["où", "quand", "que", "dont"], answers: ["où"], explanation: "Tiempo → où." },
+    ],
+  },
+  {
+    id: "fr:g:discours-indirect",
+    language: "fr",
+    title: "Estilo indirecto y concordancia de tiempos",
+    cefr: "C1",
+    errorCategory: "fr:reported-speech",
+    summary: "Con un verbo introductor en pasado, los tiempos retroceden: presente → imparfait, passé composé → plus-que-parfait, futuro → condicional. Las preguntas usan si / ce que / ce qui.",
+    whenToUse: ["Il a dit qu'il était fatigué. Elle m'a demandé si je venais. Il voulait savoir ce que je faisais."],
+    formation: ["«Je suis prêt» → Il a dit qu'il était prêt.", "«J'ai fini» → Il a dit qu'il avait fini.", "«Je viendrai» → Il a dit qu'il viendrait.", "Qu'est-ce que → ce que · Qu'est-ce qui → ce qui · Est-ce que → si."],
+    commonMistakes: [
+      { wrong: "Il m'a demandé qu'est-ce que je voulais.", right: "Il m'a demandé ce que je voulais.", why: "En interrogativa indirecta: ce que." },
+      { wrong: "Elle a dit qu'elle viendra.", right: "Elle a dit qu'elle viendrait.", why: "Futuro → condicional tras verbo en pasado." },
+    ],
+    examples: [
+      { text: "Il m'a expliqué qu'il avait raté son train.", translation: es("Me explicó que había perdido el tren.") },
+      { text: "Je me demandais si tu étais d'accord.", translation: es("Me preguntaba si estabas de acuerdo.") },
+    ],
+    contrasts: [{ a: "Il dit qu'il vient. (verbo en presente: sin cambio)", b: "Il a dit qu'il venait. (verbo en pasado)", explanation: "Sólo retrocede si el verbo introductor está en pasado." }],
+    exercises: [
+      { type: "mc", prompt: "«J'ai perdu mes clés.» → Elle a dit qu'elle ___ ses clés.", options: ["avait perdu", "a perdu", "perdait", "perdra"], answers: ["avait perdu"], explanation: "Passé composé → plus-que-parfait." },
+      { type: "mc", prompt: "«Je partirai demain.» → Il a dit qu'il ___ le lendemain.", options: ["partirait", "partira", "partait", "est parti"], answers: ["partirait"], explanation: "Futuro → condicional." },
+      { type: "mc", prompt: "Il m'a demandé ___ je voulais boire.", options: ["ce que", "qu'est-ce que", "que", "si"], answers: ["ce que"], explanation: "Interrogativa indirecta → ce que." },
+      { type: "mc", prompt: "Elle voulait savoir ___ j'avais faim.", options: ["si", "que", "ce que", "est-ce que"], answers: ["si"], explanation: "Pregunta sí/no → si." },
+    ],
+  },
+];

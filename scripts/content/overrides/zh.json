@@ -1,0 +1,112 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "上": [
+    "arriba",
+    "sobre, en"
+  ],
+  "吗": [
+    "partícula de pregunta"
+  ],
+  "大": [
+    "grande"
+  ],
+  "她": [
+    "ella"
+  ],
+  "下": [
+    "abajo",
+    "próximo, siguiente"
+  ],
+  "更": [
+    "más (comparativo)"
+  ],
+  "三": [
+    "tres"
+  ],
+  "可": [
+    "poder",
+    "pero"
+  ],
+  "需要": [
+    "necesitar"
+  ],
+  "已": [
+    "ya"
+  ],
+  "爱": [
+    "amar",
+    "amor"
+  ],
+  "一些": [
+    "algunos",
+    "un poco"
+  ],
+  "其中": [
+    "entre ellos, de los cuales"
+  ],
+  "一定": [
+    "seguro, sin duda"
+  ],
+  "不要": [
+    "no (hagas)",
+    "no quiero"
+  ],
+  "任何": [
+    "cualquier"
+  ],
+  "自": [
+    "desde"
+  ],
+  "日": [
+    "día",
+    "sol"
+  ],
+  "月": [
+    "mes",
+    "luna"
+  ],
+  "地": [
+    "tierra",
+    "(partícula adverbial)"
+  ],
+  "人": [
+    "persona",
+    "gente"
+  ],
+  "一": [
+    "uno"
+  ],
+  "是": [
+    "ser (A es B)",
+    "sí"
+  ],
+  "我": [
+    "yo"
+  ],
+  "你": [
+    "tú"
+  ],
+  "他": [
+    "él"
+  ],
+  "到": [
+    "llegar",
+    "hasta"
+  ],
+  "去": [
+    "ir"
+  ],
+  "可以": [
+    "poder (permiso)"
+  ],
+  "知道": [
+    "saber"
+  ],
+  "请": [
+    "por favor",
+    "invitar"
+  ],
+  "如何": [
+    "cómo"
+  ]
+}

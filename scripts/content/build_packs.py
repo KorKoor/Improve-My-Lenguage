@@ -797,6 +797,11 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
             continue
         if lang not in ("ja", "zh") and len(lemma) == 1 and pos not in ("preposition", "conjunction", "pronoun", "determiner"):
             continue
+        if lemma in overrides and overrides[lemma] is None:
+            stats["descartadas"] += 1  # ruido del corpus, nombre propio o forma flexionada (revisado)
+            continue
+        if lang == "ja" and re.fullmatch(r"[぀-ヿ]", lemma) and lemma not in overrides:
+            continue  # sílaba suelta de la tokenización, no una palabra
 
         # Traducción española por VOTACIÓN de tres fuentes independientes:
         #   directa (Wiktionary es) · inversa (tablas de traducción de palabras
@@ -867,7 +872,7 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
                 DROPPED.append(("sin traducción", rank, lemma, pos, (en.glosses[:2] if en else None)))
             continue
         translations = translations[:3]
-        if lemma in overrides:
+        if overrides.get(lemma):
             # Corrección revisada por una persona (scripts/content/overrides/<código>.json).
             translations = overrides[lemma][:3]
             source = "curated"

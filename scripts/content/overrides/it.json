@@ -1,0 +1,91 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "che": [
+    "que",
+    "qué"
+  ],
+  "più": [
+    "más"
+  ],
+  "mai": [
+    "nunca",
+    "jamás"
+  ],
+  "ha": [
+    "ha",
+    "tiene"
+  ],
+  "lo": [
+    "lo",
+    "el"
+  ],
+  "gli": [
+    "los",
+    "le"
+  ],
+  "ci": [
+    "nos",
+    "ahí"
+  ],
+  "cavallo": null,
+  "neo": null,
+  "sulla": null,
+  "sono": [
+    "soy",
+    "son"
+  ],
+  "si": [
+    "se",
+    "sí"
+  ],
+  "altro": [
+    "otro"
+  ],
+  "di": [
+    "de"
+  ],
+  "da": [
+    "de",
+    "desde"
+  ],
+  "su": [
+    "sobre",
+    "arriba"
+  ],
+  "mi": [
+    "me",
+    "mí"
+  ],
+  "ti": [
+    "te"
+  ],
+  "io": [
+    "yo"
+  ],
+  "ma": [
+    "pero"
+  ],
+  "come": [
+    "cómo",
+    "como"
+  ],
+  "solo": [
+    "solo",
+    "solamente"
+  ],
+  "questo": [
+    "este",
+    "esto"
+  ],
+  "quello": [
+    "ese",
+    "aquel"
+  ],
+  "voi": [
+    "ustedes"
+  ],
+  "lei": [
+    "ella",
+    "usted"
+  ]
+}

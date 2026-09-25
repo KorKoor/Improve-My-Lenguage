@@ -1,0 +1,129 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "по": [
+    "por",
+    "según",
+    "a lo largo de"
+  ],
+  "было": [
+    "había",
+    "era / estaba (neutro)"
+  ],
+  "все": [
+    "todos",
+    "todo"
+  ],
+  "только": [
+    "solo",
+    "solamente"
+  ],
+  "есть": [
+    "hay",
+    "comer"
+  ],
+  "при": [
+    "en presencia de",
+    "durante"
+  ],
+  "вот": [
+    "aquí está",
+    "he aquí"
+  ],
+  "того": null,
+  "том": null,
+  "ну": [
+    "bueno",
+    "pues"
+  ],
+  "ли": [
+    "si (partícula interrogativa)"
+  ],
+  "раз": [
+    "vez"
+  ],
+  "себя": [
+    "sí mismo",
+    "se"
+  ],
+  "год": [
+    "año"
+  ],
+  "также": [
+    "también"
+  ],
+  "её": [
+    "su (de ella)",
+    "la"
+  ],
+  "нет": [
+    "no",
+    "no hay"
+  ],
+  "больше": [
+    "más"
+  ],
+  "который": [
+    "que",
+    "el cual"
+  ],
+  "так": [
+    "así",
+    "tan"
+  ],
+  "же": [
+    "(partícula enfática)",
+    "pues"
+  ],
+  "то": [
+    "eso",
+    "entonces"
+  ],
+  "за": [
+    "detrás de",
+    "por",
+    "durante"
+  ],
+  "с": [
+    "con",
+    "desde"
+  ],
+  "как": [
+    "cómo",
+    "como"
+  ],
+  "не": [
+    "no"
+  ],
+  "это": [
+    "esto",
+    "eso",
+    "es"
+  ],
+  "что": [
+    "qué",
+    "que"
+  ],
+  "для": [
+    "para"
+  ],
+  "но": [
+    "pero"
+  ],
+  "мочь": [
+    "poder"
+  ],
+  "время": [
+    "tiempo"
+  ],
+  "человек": [
+    "persona"
+  ],
+  "можно": [
+    "se puede",
+    "¿puedo?"
+  ],
+  "вы": [
+    "usted",
+    "ustedes"
+  ]
+}

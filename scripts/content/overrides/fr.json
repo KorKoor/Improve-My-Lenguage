@@ -1,0 +1,83 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "est": null,
+  "pas": [
+    "no (ne … pas)",
+    "paso"
+  ],
+  "son": [
+    "su (de él/ella)"
+  ],
+  "ku": null,
+  "on": [
+    "se (impersonal)",
+    "nosotros",
+    "uno"
+  ],
+  "ce": [
+    "este",
+    "esto",
+    "eso"
+  ],
+  "la": [
+    "la"
+  ],
+  "le": [
+    "el",
+    "lo"
+  ],
+  "il": [
+    "él"
+  ],
+  "sa": [
+    "su (de él/ella)"
+  ],
+  "ses": [
+    "sus"
+  ],
+  "dit": [
+    "dijo",
+    "dicho"
+  ],
+  "sans": [
+    "sin"
+  ],
+  "en": [
+    "en",
+    "de ello"
+  ],
+  "y": [
+    "allí",
+    "en ello"
+  ],
+  "tout": [
+    "todo",
+    "muy"
+  ],
+  "même": [
+    "mismo",
+    "incluso"
+  ],
+  "non": [
+    "no"
+  ],
+  "leur": [
+    "su (de ellos)",
+    "les"
+  ],
+  "fait": [
+    "hecho",
+    "hace"
+  ],
+  "vous": [
+    "usted",
+    "ustedes"
+  ],
+  "comme": [
+    "como"
+  ],
+  "qui": [
+    "quién",
+    "que"
+  ]
+}

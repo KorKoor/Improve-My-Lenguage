@@ -42,6 +42,25 @@ Un `GrammarConcept` incluye: resumen, cuándo usarlo, formación, errores comune
 
 **Revisión humana recomendada** para IPA y traducciones antes de publicar un idioma.
 
+## Vocabulario desde datos públicos (A1 → C1)
+
+`scripts/content/build_packs.py` genera `data/packs/<código>.json.gz` para 12 idiomas (≈ 4 000–9 500 palabras cada uno):
+
+1. **Frecuencia (wordfreq, CC BY-SA)** → orden de aprendizaje. El rango se cuenta entre lemas (no formas flexionadas) y define el nivel: θ = −2,5 + 1,27·ln(rango/300); A1 ≤ 445, A2 ≤ 978, B1 ≤ 2 150, B2 ≤ 4 730, C1 ≤ 10 400 palabras.
+2. **Lemas y formas (Wiktionary en inglés, CC BY-SA)** → «geht» → «gehen»; lecturas (kana, pinyin, transliteración), IPA, género y audio grabado (Wikimedia Commons).
+3. **Traducción al español por votación** de tres fuentes: Wiktionary en español (directa), tablas de traducción de palabras españolas (inversa, acepción principal) y triangulación por acepción en las tablas del Wiktionary inglés. Gana lo que coincide en varias.
+4. **Ejemplos reales (Tatoeba, CC BY 2.0 FR)** con traducción humana, elegidos por longitud y porque el resto de palabras de la frase sean más fáciles que la palabra nueva.
+5. **Correcciones revisadas** en `scripts/content/overrides/<código>.json` para las palabras más frecuentes (partículas, pronombres, polisemia); `null` descarta ruido del corpus y nombres propios.
+6. Si una palabra no tiene traducción fiable ni ejemplo, **no entra**.
+
+```bash
+pip install -r scripts/content/requirements.txt
+python scripts/content/build_packs.py --all          # ≈ 1 GB de descargas la primera vez (caché en .cache/)
+python scripts/content/build_packs.py --lang de fr   # idiomas concretos
+```
+
+La app carga cada paquete bajo demanda en el servidor (`src/lib/content/packs.ts`) y lo fusiona con el contenido curado (que tiene prioridad). Créditos y licencias: página `/creditos`.
+
 ## Añadir un idioma nuevo
 
 1. Crea `src/lib/content/<código>/index.ts` usando `wordsFor("<código>")` de `src/lib/content/pack.ts`: cada palabra con IPA, traducción, al menos un ejemplo traducido y, si aplica, una nota (género, falsos amigos para hispanohablantes).
@@ -49,7 +68,7 @@ Un `GrammarConcept` incluye: resumen, cuándo usarlo, formación, errores comune
 3. Regístralo en `content/index.ts` y cambia su `status` a `"beta"` en `languages.ts`.
 4. `npm test` valida automáticamente cada idioma disponible: IDs, ejemplos, ≥ 30 palabras, ≥ 2 conceptos, banco de diagnóstico ≥ 12 ítems, temas válidos y que cada ejercicio sea resoluble.
 
-Estado actual: inglés (completo); francés, japonés, portugués, italiano y alemán (beta, revisión humana recomendada).
+Estado actual: 12 idiomas con vocabulario hasta C1 desde datos públicos y gramática A1–C1 (8–13 lecciones por idioma). Inglés marcado como disponible; el resto en beta (revisión humana recomendada).
 
 ## Fase 3: contenido real de internet (diseño)
 

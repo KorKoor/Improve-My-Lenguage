@@ -1,0 +1,117 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "nicht": [
+    "no"
+  ],
+  "werden": [
+    "llegar a ser",
+    "volverse",
+    "(auxiliar de futuro y pasiva)"
+  ],
+  "an": [
+    "en",
+    "junto a",
+    "a"
+  ],
+  "dass": [
+    "que"
+  ],
+  "sich": [
+    "se"
+  ],
+  "mal": [
+    "vez",
+    "alguna vez"
+  ],
+  "alle": [
+    "todos"
+  ],
+  "immer": [
+    "siempre"
+  ],
+  "jetzt": [
+    "ahora"
+  ],
+  "gut": [
+    "bueno",
+    "bien"
+  ],
+  "gehen": [
+    "ir",
+    "caminar"
+  ],
+  "man": [
+    "uno (impersonal)",
+    "se"
+  ],
+  "es": [
+    "ello",
+    "lo",
+    "(sujeto impersonal)"
+  ],
+  "sehr": [
+    "muy"
+  ],
+  "zu": [
+    "a",
+    "para",
+    "demasiado"
+  ],
+  "da": [
+    "ahí",
+    "allí",
+    "ya que"
+  ],
+  "bei": [
+    "en casa de",
+    "junto a",
+    "con"
+  ],
+  "ja": [
+    "sí",
+    "pues"
+  ],
+  "doch": [
+    "sí (contradiciendo)",
+    "pero",
+    "pues"
+  ],
+  "noch": [
+    "todavía",
+    "aún"
+  ],
+  "schon": [
+    "ya"
+  ],
+  "nach": [
+    "después de",
+    "hacia",
+    "según"
+  ],
+  "aus": [
+    "de",
+    "desde",
+    "fuera"
+  ],
+  "um": [
+    "alrededor de",
+    "a las",
+    "para (um … zu)"
+  ],
+  "wie": [
+    "cómo",
+    "como"
+  ],
+  "was": [
+    "qué",
+    "lo que"
+  ],
+  "ihr": [
+    "ustedes (informal)",
+    "su (de ella / de ellos)"
+  ],
+  "Sie": [
+    "usted",
+    "ustedes"
+  ]
+}

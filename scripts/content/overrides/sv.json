@@ -1,0 +1,122 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "vara": [
+    "ser",
+    "estar"
+  ],
+  "det": [
+    "eso",
+    "ello",
+    "lo"
+  ],
+  "att": [
+    "que",
+    "(marca de infinitivo)"
+  ],
+  "på": [
+    "en",
+    "sobre"
+  ],
+  "en": [
+    "un",
+    "una",
+    "uno"
+  ],
+  "som": [
+    "que",
+    "como"
+  ],
+  "för": [
+    "para",
+    "por"
+  ],
+  "med": [
+    "con"
+  ],
+  "ska": [
+    "va a (futuro)",
+    "deber"
+  ],
+  "man": [
+    "uno (impersonal)",
+    "hombre"
+  ],
+  "vad": [
+    "qué"
+  ],
+  "efter": [
+    "después de"
+  ],
+  "över": [
+    "sobre",
+    "encima de"
+  ],
+  "få": [
+    "recibir",
+    "poder",
+    "pocos"
+  ],
+  "får": null,
+  "min": [
+    "mi"
+  ],
+  "lite": [
+    "un poco"
+  ],
+  "upp": [
+    "arriba"
+  ],
+  "göra": [
+    "hacer"
+  ],
+  "bli": [
+    "volverse",
+    "llegar a ser"
+  ],
+  "ni": [
+    "ustedes",
+    "vosotros"
+  ],
+  "också": [
+    "también"
+  ],
+  "andra": [
+    "otros",
+    "segundo"
+  ],
+  "något": [
+    "algo",
+    "algún"
+  ],
+  "till": [
+    "a",
+    "hasta"
+  ],
+  "ha": [
+    "tener",
+    "haber"
+  ],
+  "finnas": [
+    "existir",
+    "haber"
+  ],
+  "vilja": [
+    "querer"
+  ],
+  "eller": [
+    "o"
+  ],
+  "veta": [
+    "saber"
+  ],
+  "jag": [
+    "yo"
+  ],
+  "i": [
+    "en"
+  ],
+  "den": [
+    "el, la",
+    "ese"
+  ]
+}

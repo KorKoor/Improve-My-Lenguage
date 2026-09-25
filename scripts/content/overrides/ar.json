@@ -1,0 +1,133 @@
+{
+  "_comment": "Correcciones revisadas a mano para las palabras más frecuentes. Una lista = traducciones (en orden de uso); null = no enseñar esta entrada (ruido del corpus, nombre propio o forma flexionada).",
+  "من": [
+    "de",
+    "desde",
+    "quién (مَن)"
+  ],
+  "أن": [
+    "que"
+  ],
+  "ما": [
+    "qué",
+    "lo que",
+    "no (con pasado)"
+  ],
+  "بعد": [
+    "después (de)"
+  ],
+  "لم": [
+    "no (con pasado)"
+  ],
+  "بين": [
+    "entre"
+  ],
+  "ان": null,
+  "قبل": [
+    "antes (de)"
+  ],
+  "قد": [
+    "ya (con pasado)",
+    "quizá"
+  ],
+  "إن": [
+    "si",
+    "ciertamente"
+  ],
+  "كما": [
+    "como",
+    "así como"
+  ],
+  "غير": [
+    "otro que, no-",
+    "además de"
+  ],
+  "تم": [
+    "se completó, se hizo"
+  ],
+  "علي": null,
+  "مثل": [
+    "como",
+    "por ejemplo"
+  ],
+  "محمد": null,
+  "لك": [
+    "para ti",
+    "tuyo"
+  ],
+  "أكثر": [
+    "más"
+  ],
+  "لي": [
+    "para mí",
+    "mío"
+  ],
+  "بن": null,
+  "وفي": null,
+  "قال": [
+    "decir",
+    "dijo"
+  ],
+  "إلا": [
+    "excepto, salvo"
+  ],
+  "أحد": [
+    "alguien",
+    "uno"
+  ],
+  "أنا": [
+    "yo"
+  ],
+  "تكون": [
+    "es / será (ella)"
+  ],
+  "كيف": [
+    "cómo"
+  ],
+  "عبد": null,
+  "عدد": [
+    "número"
+  ],
+  "عند": [
+    "en casa de",
+    "junto a",
+    "cuando"
+  ],
+  "لها": [
+    "para ella",
+    "suyo (de ella)"
+  ],
+  "هي": [
+    "ella"
+  ],
+  "في": [
+    "en"
+  ],
+  "على": [
+    "sobre",
+    "en"
+  ],
+  "لا": [
+    "no"
+  ],
+  "إلى": [
+    "hacia",
+    "a"
+  ],
+  "و": [
+    "y"
+  ],
+  "عن": [
+    "sobre, acerca de",
+    "de"
+  ],
+  "كان": [
+    "era, estaba (ser/estar en pasado)"
+  ],
+  "هو": [
+    "él"
+  ],
+  "كل": [
+    "todo, cada"
+  ]
+}
