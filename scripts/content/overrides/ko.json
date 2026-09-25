@@ -89,5 +89,62 @@
   ],
   "그냥": [
     "simplemente, porque sí"
+  ],
+  "있다": [
+    "haber, tener, estar"
+  ],
+  "없다": [
+    "no haber, no tener"
+  ],
+  "이다": [
+    "ser (cópula)"
+  ],
+  "되다": [
+    "llegar a ser, volverse"
+  ],
+  "않다": [
+    "no (negación: -지 않다)"
+  ],
+  "좋다": [
+    "ser bueno, gustar"
+  ],
+  "가다": [
+    "ir"
+  ],
+  "오다": [
+    "venir"
+  ],
+  "먹다": [
+    "comer"
+  ],
+  "알다": [
+    "saber, conocer"
+  ],
+  "모르다": [
+    "no saber"
+  ],
+  "싶다": [
+    "querer (-고 싶다)"
+  ],
+  "주다": [
+    "dar"
+  ],
+  "말하다": [
+    "decir, hablar"
+  ],
+  "같다": [
+    "ser igual, parecer"
+  ],
+  "많다": [
+    "ser mucho"
+  ],
+  "수": [
+    "posibilidad (-ㄹ 수 있다)"
+  ],
+  "것": [
+    "cosa, lo que"
+  ],
+  "거": [
+    "cosa (coloquial)"
   ]
 }

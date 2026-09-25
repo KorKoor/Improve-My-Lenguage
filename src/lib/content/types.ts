@@ -105,6 +105,8 @@ export interface VocabItem {
   usageNote?: string;
   /** Formas aceptadas además del lema al escribir (kana, romaji, variantes). */
   acceptedForms?: string[];
+  /** Formas flexionadas frecuentes ("geht", "ging" → gehen), para el lector. */
+  forms?: string[];
   /** Rango de frecuencia real (1 = la más usada). Define la dificultad fina. */
   rank?: number;
   /** Pronunciación grabada por una persona (Wikimedia Commons), si existe. */

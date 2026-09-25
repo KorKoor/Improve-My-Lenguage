@@ -761,6 +761,89 @@ export async function countConversations(userId: string): Promise<number> {
   return counts.reduce((n, c) => n + c.data().count, 0);
 }
 
+// ── Lecturas, escucha y escritura (historial) ───────────────────────────────
+export interface ReadingRow {
+  id: string;
+  source: string;
+  title: string;
+  url: string;
+  level: string;
+  correct: number;
+  total: number;
+  words: number;
+  readAt: Date;
+}
+
+/** Sólo metadatos y resultado (no el texto): el original sigue en su fuente. */
+export async function saveReading(ulId: string, r: Omit<ReadingRow, "id" | "readAt">): Promise<void> {
+  const id = createHash("sha1").update(`${r.source}|${r.title}`).digest("hex").slice(0, 20);
+  await ulRef(ulId).collection("readings").doc(id).set({ ...r, title: r.title.slice(0, 200), url: r.url.slice(0, 500), readAt: Timestamp.now() });
+}
+
+export async function listReadings(ulId: string, limit = 20): Promise<ReadingRow[]> {
+  const snap = await ulRef(ulId).collection("readings").orderBy("readAt", "desc").limit(limit).get();
+  return snap.docs.map((d) => ({
+    id: d.id,
+    source: String(d.get("source")),
+    title: String(d.get("title")),
+    url: String(d.get("url") ?? ""),
+    level: String(d.get("level") ?? ""),
+    correct: num(d.get("correct")),
+    total: num(d.get("total")),
+    words: num(d.get("words")),
+    readAt: date(d.get("readAt")) ?? new Date(0),
+  }));
+}
+
+export interface WritingRow {
+  id: string;
+  prompt: string;
+  text: string;
+  feedback: unknown;
+  score: number | null;
+  createdAt: Date;
+}
+
+export async function saveWriting(ulId: string, w: { prompt: string; text: string; feedback: unknown; score: number | null }): Promise<string> {
+  const ref = await ulRef(ulId).collection("writings").add({
+    prompt: w.prompt.slice(0, 300),
+    text: w.text.slice(0, 4000),
+    feedbackJson: toJson(w.feedback),
+    score: w.score,
+    createdAt: Timestamp.now(),
+  });
+  return ref.id;
+}
+
+export async function listWritings(ulId: string, limit = 10): Promise<WritingRow[]> {
+  const snap = await ulRef(ulId).collection("writings").orderBy("createdAt", "desc").limit(limit).get();
+  return snap.docs.map((d) => ({
+    id: d.id,
+    prompt: String(d.get("prompt")),
+    text: String(d.get("text")),
+    feedback: json(d.get("feedbackJson")),
+    score: typeof d.get("score") === "number" ? d.get("score") : null,
+    createdAt: date(d.get("createdAt")) ?? new Date(0),
+  }));
+}
+
+export async function countWritings(userId: string): Promise<number> {
+  const langs = await listUserLanguages(userId);
+  const counts = await Promise.all(langs.map((ul) => ulRef(ul.id).collection("writings").count().get()));
+  return counts.reduce((n, c) => n + c.data().count, 0);
+}
+
+export async function countEvents(userId: string, name: string): Promise<number> {
+  const agg = await userRef(userId).collection("events").where("name", "==", name).count().get();
+  return agg.data().count;
+}
+
+export async function countReadings(userId: string): Promise<number> {
+  const langs = await listUserLanguages(userId);
+  const counts = await Promise.all(langs.map((ul) => ulRef(ul.id).collection("readings").count().get()));
+  return counts.reduce((n, c) => n + c.data().count, 0);
+}
+
 // ── Analítica ─────────────────────────────────────────────────────────────
 export async function track(userId: string, name: string, props: Record<string, unknown> = {}): Promise<void> {
   try {
@@ -874,6 +957,8 @@ export async function exportUserData(userId: string) {
           assessments: await all(ref.collection("assessments")),
           attempts: await all(ref.collection("attempts")),
           mistakes: await all(ref.collection("mistakes")),
+          readings: await all(ref.collection("readings")),
+          writings: await all(ref.collection("writings")),
           conversations: await Promise.all(
             conversations.docs.map(async (c) => ({ ...plain(c), messages: await all(c.ref.collection("messages")) })),
           ),

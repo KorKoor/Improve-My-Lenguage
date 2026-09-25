@@ -135,10 +135,40 @@ html[data-text="xl"] { font-size: 125%; }
   60% { transform: scale(1.02); }
   100% { transform: scale(1); }
 }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes flame { 0%, 100% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.12) rotate(3deg); } }
+@keyframes sheet { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes confetti-fall {
+  0% { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 1; }
+  100% { transform: translate3d(var(--drift, 0), 105vh, 0) rotate(720deg); opacity: 0.9; }
+}
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
 .animate-rise { animation: rise 0.35s ease-out both; }
+.animate-fade { animation: fade 0.25s ease-out both; }
+.animate-shake { animation: shake 0.4s ease-in-out both; }
+.animate-float { animation: float 3.2s ease-in-out infinite; }
+.animate-flame { animation: flame 1.6s ease-in-out infinite; transform-origin: 50% 90%; }
+.animate-sheet { animation: sheet 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.1) both; }
+.stagger > * { animation: rise 0.4s ease-out both; }
+.stagger > *:nth-child(2) { animation-delay: 60ms; }
+.stagger > *:nth-child(3) { animation-delay: 120ms; }
+.stagger > *:nth-child(4) { animation-delay: 180ms; }
+.stagger > *:nth-child(5) { animation-delay: 240ms; }
+.stagger > *:nth-child(6) { animation-delay: 300ms; }
+.stagger > *:nth-child(n + 7) { animation-delay: 340ms; }
+.lift { transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; }
+.lift:hover { transform: translateY(-3px); box-shadow: 0 14px 34px rgb(64 51 115 / 0.12); }
+.confetti-piece { position: absolute; top: -12px; animation-name: confetti-fall; animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1); animation-fill-mode: forwards; }
 .animate-pop { animation: pop 0.3s ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {

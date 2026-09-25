@@ -455,6 +455,9 @@ def load_en_kaikki(lang: str, surface: set[str]):
 
     def parse_entry(r: dict) -> EnEntry | None:
         pos = r.get("pos", "")
+        if pos == "character" and lang == "zh":
+            first = next((g for s in r.get("senses", []) for g in s.get("glosses", [])[:1]), "")
+            pos = "verb" if first.startswith("to ") else "particle" if re.match(r"(?i)(used |indicates|.*marker|particle|nominali)", first) else "noun"
         if pos not in POS:
             return None
         e = EnEntry(POS[pos])
@@ -665,8 +668,17 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
 
     es_by_lemma = es_entries.get(lang, {})
     ov_path = Path(__file__).with_name("overrides") / f"{lang}.json"
-    overrides: dict[str, list[str]] = json.loads(ov_path.read_text(encoding="utf-8")) if ov_path.exists() else {}
-    overrides.pop("_comment", None)
+    raw_ov: dict = json.loads(ov_path.read_text(encoding="utf-8")) if ov_path.exists() else {}
+    raw_ov.pop("_comment", None)
+    overrides: dict[str, list[str] | None] = {}
+    pos_override: dict[str, str] = {}
+    for k, v in raw_ov.items():
+        if isinstance(v, dict):
+            overrides[k] = v.get("t")
+            if v.get("p"):
+                pos_override[k] = v["p"]
+        else:
+            overrides[k] = v
     rev = reverse.get(lang, {})
 
     def variants(w: str) -> list[str]:
@@ -792,7 +804,7 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
         en = (en_lemmas.get(lemma) or [None])[0]
         es_list = [e for e in es_by_lemma.get(lemma, []) if e.glosses]
         es = es_list[0] if es_list else None
-        pos = en.pos if en else (POS.get(es.pos) if es else None)
+        pos = pos_override.get(lemma) or (en.pos if en else (POS.get(es.pos) if es else None))
         if not pos:
             continue
         if lang not in ("ja", "zh") and len(lemma) == 1 and pos not in ("preposition", "conjunction", "pronoun", "determiner"):
@@ -866,6 +878,8 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
         if not translations and definition:
             translations = [definition]
             source = "wiktionary-es"
+        if overrides.get(lemma) and not translations:
+            translations, source = overrides[lemma][:3], "curated"
         if not translations:
             stats["sin_traduccion"] += 1
             if DEBUG and len(DROPPED) < 60:
@@ -912,6 +926,11 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
         reading = en.reading if en else None
         if reading:
             entry["rd"] = reading
+        # Formas flexionadas vistas en el corpus: permiten traducir al tocar
+        # cualquier forma en el lector ("geht" → "gehen").
+        forms = sorted({f for f in lemma_forms[lemma] if f and f != lemma.lower() and f != lemma}, key=lambda f: surface_rank.get(f, 10**9))[:15]
+        if forms:
+            entry["f"] = forms
         note = gender_note(lang, lemma, gender) if pos == "noun" else None
         if note:
             entry["n"] = note

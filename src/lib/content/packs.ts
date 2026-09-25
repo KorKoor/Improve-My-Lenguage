@@ -27,6 +27,7 @@ interface PackWord {
   a?: string;
   rd?: string;
   n?: string;
+  f?: string[];
 }
 
 export interface PackSource {
@@ -76,6 +77,7 @@ function toVocab(language: LanguageCode, w: PackWord): VocabItem {
     topics: w.tp,
     register: "neutral",
     usageNote: w.n,
+    forms: w.f,
     sources: [...sources],
   };
 }

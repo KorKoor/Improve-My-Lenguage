@@ -4,15 +4,24 @@
     "arriba",
     "sobre, en"
   ],
-  "吗": [
-    "partícula de pregunta"
-  ],
-  "大": [
-    "grande"
-  ],
-  "她": [
-    "ella"
-  ],
+  "吗": {
+    "t": [
+      "partícula de pregunta"
+    ],
+    "p": "particle"
+  },
+  "大": {
+    "t": [
+      "grande"
+    ],
+    "p": "adjective"
+  },
+  "她": {
+    "t": [
+      "ella"
+    ],
+    "p": "pronoun"
+  },
   "下": [
     "abajo",
     "próximo, siguiente"
@@ -65,10 +74,13 @@
     "mes",
     "luna"
   ],
-  "地": [
-    "tierra",
-    "(partícula adverbial)"
-  ],
+  "地": {
+    "t": [
+      "(partícula adverbial)",
+      "tierra"
+    ],
+    "p": "particle"
+  },
   "人": [
     "persona",
     "gente"
@@ -76,19 +88,31 @@
   "一": [
     "uno"
   ],
-  "是": [
-    "ser (A es B)",
-    "sí"
-  ],
-  "我": [
-    "yo"
-  ],
-  "你": [
-    "tú"
-  ],
-  "他": [
-    "él"
-  ],
+  "是": {
+    "t": [
+      "ser (A es B)",
+      "sí"
+    ],
+    "p": "verb"
+  },
+  "我": {
+    "t": [
+      "yo"
+    ],
+    "p": "pronoun"
+  },
+  "你": {
+    "t": [
+      "tú"
+    ],
+    "p": "pronoun"
+  },
+  "他": {
+    "t": [
+      "él"
+    ],
+    "p": "pronoun"
+  },
   "到": [
     "llegar",
     "hasta"
@@ -108,5 +132,327 @@
   ],
   "如何": [
     "cómo"
-  ]
+  ],
+  "的": {
+    "t": [
+      "de (posesión, descripción)"
+    ],
+    "p": "particle"
+  },
+  "了": {
+    "t": [
+      "(acción completada / cambio)"
+    ],
+    "p": "particle"
+  },
+  "在": {
+    "t": [
+      "en",
+      "estar (haciendo)"
+    ],
+    "p": "preposition"
+  },
+  "不": {
+    "t": [
+      "no"
+    ],
+    "p": "adverb"
+  },
+  "有": [
+    "tener",
+    "haber"
+  ],
+  "这": [
+    "este, esto"
+  ],
+  "那": [
+    "ese, aquel"
+  ],
+  "个": {
+    "t": [
+      "(clasificador general)"
+    ],
+    "p": "particle"
+  },
+  "们": {
+    "t": [
+      "(plural de personas)"
+    ],
+    "p": "particle"
+  },
+  "着": {
+    "t": [
+      "(acción continua)"
+    ],
+    "p": "particle"
+  },
+  "过": {
+    "t": [
+      "(experiencia pasada)",
+      "pasar"
+    ],
+    "p": "particle"
+  },
+  "很": {
+    "t": [
+      "muy"
+    ],
+    "p": "adverb"
+  },
+  "也": {
+    "t": [
+      "también"
+    ],
+    "p": "adverb"
+  },
+  "都": {
+    "t": [
+      "todos",
+      "ya"
+    ],
+    "p": "adverb"
+  },
+  "和": {
+    "t": [
+      "y",
+      "con"
+    ],
+    "p": "conjunction"
+  },
+  "就": {
+    "t": [
+      "entonces",
+      "justo"
+    ],
+    "p": "adverb"
+  },
+  "要": [
+    "querer",
+    "ir a"
+  ],
+  "会": [
+    "saber (hacer)",
+    "(futuro)"
+  ],
+  "说": [
+    "decir",
+    "hablar"
+  ],
+  "对": {
+    "t": [
+      "correcto",
+      "hacia, para"
+    ],
+    "p": "preposition"
+  },
+  "吧": {
+    "t": [
+      "(sugerencia: …, ¿no?)"
+    ],
+    "p": "particle"
+  },
+  "呢": {
+    "t": [
+      "(partícula: ¿y…?)"
+    ],
+    "p": "particle"
+  },
+  "啊": {
+    "t": [
+      "¡ah! (partícula)"
+    ],
+    "p": "particle"
+  },
+  "没": [
+    "no (pasado)"
+  ],
+  "没有": [
+    "no tener",
+    "no haber"
+  ],
+  "这个": [
+    "este"
+  ],
+  "那个": [
+    "ese"
+  ],
+  "什么": [
+    "qué"
+  ],
+  "怎么": [
+    "cómo"
+  ],
+  "为什么": [
+    "por qué"
+  ],
+  "谁": [
+    "quién"
+  ],
+  "哪里": [
+    "dónde"
+  ],
+  "还": {
+    "t": [
+      "todavía",
+      "también"
+    ],
+    "p": "adverb"
+  },
+  "再": [
+    "otra vez"
+  ],
+  "让": [
+    "dejar, hacer que"
+  ],
+  "给": [
+    "dar",
+    "para"
+  ],
+  "从": [
+    "desde"
+  ],
+  "跟": [
+    "con"
+  ],
+  "想": [
+    "querer",
+    "pensar"
+  ],
+  "能": {
+    "t": [
+      "poder"
+    ],
+    "p": "verb"
+  },
+  "得": {
+    "t": [
+      "(complemento: …de manera)",
+      "tener que"
+    ],
+    "p": "particle"
+  },
+  "被": {
+    "t": [
+      "(pasiva)"
+    ],
+    "p": "particle"
+  },
+  "把": {
+    "t": [
+      "(toma el objeto)"
+    ],
+    "p": "particle"
+  },
+  "她们": [
+    "ellas"
+  ],
+  "它": {
+    "t": [
+      "eso (cosa/animal)"
+    ],
+    "p": "pronoun"
+  },
+  "自己": [
+    "uno mismo"
+  ],
+  "一起": [
+    "juntos"
+  ],
+  "现在": [
+    "ahora"
+  ],
+  "今天": [
+    "hoy"
+  ],
+  "明天": [
+    "mañana"
+  ],
+  "昨天": [
+    "ayer"
+  ],
+  "时候": [
+    "momento, cuando"
+  ],
+  "东西": [
+    "cosa"
+  ],
+  "喜欢": [
+    "gustar"
+  ],
+  "觉得": [
+    "sentir, parecer"
+  ],
+  "后": {
+    "t": [
+      "después",
+      "detrás"
+    ],
+    "p": "noun"
+  },
+  "但": {
+    "t": [
+      "pero"
+    ],
+    "p": "conjunction"
+  },
+  "以": {
+    "t": [
+      "con, por medio de",
+      "para"
+    ],
+    "p": "preposition"
+  },
+  "而": {
+    "t": [
+      "y, pero (escrito)"
+    ],
+    "p": "conjunction"
+  },
+  "中": {
+    "t": [
+      "en, dentro",
+      "medio"
+    ],
+    "p": "noun"
+  },
+  "好": {
+    "t": [
+      "bueno",
+      "bien"
+    ],
+    "p": "adjective"
+  },
+  "多": {
+    "t": [
+      "mucho",
+      "muchos"
+    ],
+    "p": "adjective"
+  },
+  "于": {
+    "t": [
+      "en, a (escrito)"
+    ],
+    "p": "preposition"
+  },
+  "为": {
+    "t": [
+      "para, por",
+      "ser (escrito)"
+    ],
+    "p": "preposition"
+  },
+  "与": {
+    "t": [
+      "y, con (escrito)"
+    ],
+    "p": "conjunction"
+  },
+  "等": {
+    "t": [
+      "esperar",
+      "etcétera"
+    ],
+    "p": "verb"
+  }
 }

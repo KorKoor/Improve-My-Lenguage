@@ -11,6 +11,12 @@ export interface AchievementStats {
   minutesStudied: number;
   assessmentsCompleted: number;
   languagesStarted: number;
+  /** Artículos leídos hasta el final (lector). */
+  readingsCompleted?: number;
+  /** Textos escritos y corregidos. */
+  writingsCompleted?: number;
+  /** Sesiones de escucha terminadas. */
+  listeningSessions?: number;
 }
 
 export interface AchievementRule {
@@ -30,6 +36,10 @@ export const ACHIEVEMENT_RULES: AchievementRule[] = [
   { id: "exercises-100", title: "100 ejercicios", description: "Completaste 100 ejercicios.", icon: "✍️", unlocked: (s) => s.exercisesCompleted >= 100 },
   { id: "first-conversation", title: "Primera conversación", description: "Hablaste con tu tutor por primera vez.", icon: "💬", unlocked: (s) => s.conversations >= 1 },
   { id: "hours-30", title: "30 horas", description: "30 horas de estudio acumuladas.", icon: "⏳", unlocked: (s) => s.minutesStudied >= 1800 },
+  { id: "first-article", title: "Primer artículo", description: "Leíste tu primer texto real en el idioma.", icon: "📰", unlocked: (s) => (s.readingsCompleted ?? 0) >= 1 },
+  { id: "reader-10", title: "Lector constante", description: "10 textos reales leídos.", icon: "📖", unlocked: (s) => (s.readingsCompleted ?? 0) >= 10 },
+  { id: "first-writing", title: "Primera redacción", description: "Escribiste y corregiste tu primer texto.", icon: "🖋️", unlocked: (s) => (s.writingsCompleted ?? 0) >= 1 },
+  { id: "first-listening", title: "Buen oído", description: "Completaste tu primera sesión de escucha.", icon: "🎧", unlocked: (s) => (s.listeningSessions ?? 0) >= 1 },
   { id: "polyglot", title: "Políglota en progreso", description: "Empezaste a estudiar un segundo idioma.", icon: "🌍", unlocked: (s) => s.languagesStarted >= 2 },
 ];
 

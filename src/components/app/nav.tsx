@@ -1,5 +1,5 @@
 "use client";
-import { BarChart3, BookOpen, CircleHelp, Compass, Home, Layers, MessageCircle, Play, Repeat, Settings, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, CircleHelp, Headphones, Home, LayoutGrid, Layers, MessageCircle, Newspaper, PenLine, Play, Repeat, Settings, UserRound, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
@@ -20,6 +20,8 @@ export function navItems(due: number, simple = false): NavItem[] {
       { href: "/app/session", label: "Practicar", icon: Play },
       { href: "/app/review", label: "Repasar", icon: Repeat, badge: due > 0 ? due : null },
       { href: "/app/vocabulary", label: "Mis palabras", icon: BookOpen },
+      { href: "/app/read", label: "Leer", icon: Newspaper },
+      { href: "/app/listen", label: "Escuchar", icon: Headphones },
       { href: "/app/progress", label: "Mi progreso", icon: BarChart3 },
     ];
   }
@@ -29,9 +31,12 @@ export function navItems(due: number, simple = false): NavItem[] {
     { href: "/app/review", label: "Repaso", icon: Repeat, badge: due > 0 ? due : null },
     { href: "/app/vocabulary", label: "Vocabulario", icon: BookOpen },
     { href: "/app/grammar", label: "Gramática", icon: Layers },
+    { href: "/app/read", label: "Lecturas", icon: Newspaper },
+    { href: "/app/listen", label: "Escucha", icon: Headphones },
+    { href: "/app/write", label: "Escritura", icon: PenLine },
     { href: "/app/tutor", label: "Tutor", icon: MessageCircle },
     { href: "/app/progress", label: "Progreso", icon: BarChart3 },
-    { href: "/app/explore", label: "Explorar", icon: Compass, soon: true },
+    { href: "/app/profile", label: "Mi perfil", icon: UserRound },
   ];
 }
 
@@ -94,7 +99,7 @@ export function TabBar({ due, simple = false }: { due: number; simple?: boolean 
       ]
     : [
         { href: "/app", label: "Inicio", icon: Home },
-        { href: "/app/session", label: "Aprender", icon: Play },
+        { href: "/app/explore", label: "Practicar", icon: LayoutGrid },
         { href: "/app/review", label: "Repaso", icon: Repeat, badge: due },
         { href: "/app/tutor", label: "Tutor", icon: MessageCircle },
         { href: "/app/progress", label: "Progreso", icon: BarChart3 },
