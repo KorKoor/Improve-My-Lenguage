@@ -221,7 +221,7 @@ export function WelcomeTour({ name, language, simple, open: initiallyOpen }: { n
       ref={dialog}
       aria-labelledby="tour-title"
       aria-describedby="tour-body"
-      className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-[28px] border border-border bg-surface p-0 text-text shadow-[0_30px_80px_rgb(31_27_46/0.25)] backdrop:bg-[rgb(31_27_46/0.45)] backdrop:backdrop-blur-sm"
+      className="m-auto w-[calc(100%-2rem)] max-w-lg overflow-hidden rounded-[28px] border border-border bg-surface p-0 text-text shadow-[0_30px_80px_rgb(31_27_46/0.25)] backdrop:bg-[rgb(31_27_46/0.45)] backdrop:backdrop-blur-sm"
     >
       <div className="flex max-h-[90dvh] flex-col overflow-y-auto p-6 sm:p-8">
         <div className="flex items-center gap-3">

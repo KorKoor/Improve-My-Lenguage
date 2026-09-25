@@ -98,7 +98,7 @@ export default async function ProgressPage() {
         </section>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <Card>
           <CardHeader title="Nivel por habilidad" aside="θ → CEFR" />
           <ul className="space-y-4">
@@ -123,7 +123,7 @@ export default async function ProgressPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
         <Card>
           <CardHeader title="Precisión por habilidad" aside="Últimos 30 días" />
           {p.skillAccuracy.length === 0 ? <p className="text-sm text-muted">Sin ejercicios en los últimos 30 días.</p> : (
