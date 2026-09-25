@@ -9,6 +9,7 @@ export interface ChangelogItem {
 export const CHANGELOG_VERSION = "2026-09-26b";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "🚩", title: "Reporta errores", text: "¿Una traducción rara o un audio que no suena bien? Pulsa «Reportar un error» en la tarjeta: lo revisamos y lo corregimos para todos.", href: "/app/session" },
   { icon: "👂", title: "Pares mínimos y tu voz", text: "Entrena el oído con palabras casi iguales (tu/tout, ship/sheep, 买/卖…) y graba tu voz para compararla con el modelo. En Pronunciación.", href: "/app/speak" },
   { icon: "🔊", title: "Mejor audio", text: "Usamos la voz más natural de tu dispositivo y grabaciones humanas cuando existen. Si tu equipo no tiene voz para el idioma, te explicamos cómo instalarla.", href: "/app/listen" },
   { icon: "🎯", title: "Tu nivel se ajusta solo", text: "En tus primeras sesiones de cada idioma, si fallas la mayoría bajamos el nivel (y si aciertas casi todo, lo subimos). Te avisamos cuando pasa.", href: "/app/session" },

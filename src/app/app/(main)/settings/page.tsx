@@ -12,6 +12,7 @@ import { requireLearner } from "@/lib/services/viewer";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { NotificationSettings } from "@/components/settings/notifications";
 import { isAdminConfigured } from "@/lib/firebase/admin";
+import { isAdminEmail } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Configuración" };
 
@@ -24,6 +25,10 @@ export default async function SettingsPage() {
       <h1 className="font-display text-3xl font-extrabold">Configuración</h1>
 
       <InstallApp />
+
+      {isAdminEmail(learner.email) && (
+        <Link href="/app/admin" className="card lift flex items-center gap-3 p-4 text-sm font-semibold hover:border-primary">🚩 Revisión de contenido (reportes de los alumnos) →</Link>
+      )}
 
       <Card>
         <CardHeader title="Comodidad" aside="Letra, modo sencillo y audio" />

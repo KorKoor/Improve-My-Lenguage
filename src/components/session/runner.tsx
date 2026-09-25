@@ -16,6 +16,7 @@ import type { Exercise } from "@/lib/engine/exercises";
 import { fatigueOnset, planBreak, readFocus, type BreakPlan, type FocusEvent, type FocusReading } from "@/lib/engine/focus";
 import { BreakCoach, formatClock } from "@/components/focus/break-coach";
 import { PlanNext } from "@/components/focus/plan-next";
+import { ReportButton } from "@/components/report-button";
 import type { SessionStep } from "@/lib/engine/session-builder";
 import type { AnswerFeedback, SessionSummary } from "@/lib/services/learning";
 
@@ -400,7 +401,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
           }}
         />
       )}
-      {feedback && <FeedbackSheet feedback={feedback} gaveUp={gaveUp} onNext={next} combo={combo.now} explain={aiEnabled && !feedback.correct && lastAnswer ? lastAnswer : null} />}
+      {feedback && <FeedbackSheet feedback={feedback} gaveUp={gaveUp} explainKey={lastAnswer?.key} onNext={next} combo={combo.now} explain={aiEnabled && !feedback.correct && lastAnswer ? lastAnswer : null} />}
     </div>
   );
 }
@@ -446,6 +447,7 @@ function IntroStep({ step, locale, language, rtl, onNext, gentle = false }: { st
         {w.usageNote && (
           <p className="mt-4 flex gap-2 rounded-2xl bg-warning-soft p-4 text-sm"><Lightbulb size={18} className="mt-0.5 shrink-0 text-warning" aria-hidden /> {w.usageNote}</p>
         )}
+        <div className="mt-3 flex justify-end"><ReportButton itemId={w.id} /></div>
       </div>
       <Button size="lg" className="mt-6 w-full" onClick={onNext} autoFocus>Entendido <ArrowRight size={18} aria-hidden /></Button>
     </div>
@@ -818,7 +820,7 @@ function ConfidenceCheck({ attemptId }: { attemptId: string }) {
 
 const PRAISE = ["¡Correcto!", "¡Eso es!", "¡Genial!", "¡Muy bien!", "¡Perfecto!", "¡Exacto!"];
 
-function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain }: { feedback: AnswerFeedback; gaveUp?: boolean; onNext: () => void; combo: number; explain: { key: string; response: string } | null }) {
+function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain, explainKey }: { feedback: AnswerFeedback; gaveUp?: boolean; onNext: () => void; combo: number; explain: { key: string; response: string } | null; explainKey?: string }) {
   const ok = f.correct;
   const [why, setWhy] = useState<{ state: "idle" | "loading" | "done" | "error"; text?: string }>({ state: "idle" });
   const askWhy = async () => {
@@ -827,6 +829,8 @@ function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain }: 
     const r = await explainMistakeAction(explain.key, explain.response);
     setWhy(r.ok ? { state: "done", text: r.data } : { state: "error", text: r.error });
   };
+  // Ítem del ejercicio (palabra o frase) para «Reportar un error»; no en gramática ni emparejar.
+  const reportId = explainKey && /^(meaning_mc|reverse_mc|recall|cloze|listen_mc|listen_pick|dictation_word|phrase_listen|phrase_pick)\|/.test(explainKey) ? explainKey.split("|")[1]! : null;
   const praise = combo >= 5 ? `¡Imparable! ${combo} seguidas` : combo >= 3 ? `¡En racha! ${combo} seguidas` : PRAISE[(combo + (f.attemptId?.length ?? 0)) % PRAISE.length]!;
   return (
     <div role="status" aria-live="assertive" className={cn("fixed inset-x-0 bottom-0 z-40 animate-rise rounded-t-3xl px-4 pb-[max(env(safe-area-inset-bottom),20px)] pt-5 shadow-[0_-8px_30px_rgb(0_0_0/0.08)]", ok ? "bg-success-soft" : gaveUp ? "bg-primary-soft" : "bg-danger-soft")}>
@@ -837,6 +841,7 @@ function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain }: 
             {f.expected && <p className="mt-1 text-lg font-semibold">{f.expected}</p>}
             {f.explanation && <p className="mt-2 text-sm leading-relaxed">{f.explanation}</p>}
             <p className="mt-2 text-sm text-muted">Volverá pronto, primero con opciones para que la reconozcas.</p>
+            {reportId && <div className="mt-1"><ReportButton itemId={reportId} /></div>}
             <Button size="lg" className="mt-4 w-full" onClick={onNext} autoFocus>Continuar</Button>
           </>
         ) : (<>
@@ -861,6 +866,7 @@ function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain }: 
         {why.state === "done" && <p className="mt-3 rounded-xl bg-surface p-3 text-sm leading-relaxed animate-fade">💡 {why.text}</p>}
         {why.state === "error" && <p className="mt-3 text-sm text-danger">{why.text}</p>}
         {ok && f.attemptId && <ConfidenceCheck attemptId={f.attemptId} />}
+        {reportId && <div className="mt-2"><ReportButton itemId={reportId} /></div>}
         <Button size="lg" variant={ok ? "success" : "danger"} className="mt-4 w-full" onClick={onNext} autoFocus>
           Continuar
         </Button>

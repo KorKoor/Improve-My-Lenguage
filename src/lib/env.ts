@@ -22,7 +22,13 @@ export const env = {
   aiModelFast: read("AI_MODEL_FAST"),
   aiModelSmart: read("AI_MODEL_SMART"),
   aiDailyLimitPerUser: Number(read("AI_DAILY_LIMIT_PER_USER") ?? "60"),
+  /** Correos (separados por comas) que pueden revisar los reportes de contenido. */
+  adminEmails: (read("ADMIN_EMAILS") ?? "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean),
 } as const;
+
+export function isAdminEmail(email: string | null | undefined): boolean {
+  return Boolean(email) && env.adminEmails.includes(email!.toLowerCase());
+}
 
 /**
  * ¿Puede funcionar el área privada? Hace falta la config web de Firebase (login

@@ -18,6 +18,8 @@ const env = {
   FIRESTORE_EMULATOR_HOST: "127.0.0.1:8080",
   FIREBASE_SERVICE_ACCOUNT: "",
   GOOGLE_APPLICATION_CREDENTIALS: "",
+  // La cuenta demo revisa los reportes de contenido en /app/admin.
+  ADMIN_EMAILS: "demo@improve.local",
 };
 
 // --mock-ai: tutor, escenarios y corrección con IA contra un simulador local.

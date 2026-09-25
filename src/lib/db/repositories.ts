@@ -1060,6 +1060,53 @@ export async function countWritings(userId: string): Promise<number> {
   return counts.reduce((n, c) => n + c.data().count, 0);
 }
 
+// ── Reportes de contenido («esta traducción está mal») ─────────────────────
+export type ReportKind = "translation" | "audio" | "example" | "other";
+
+export interface ContentReport {
+  id: string;
+  itemId: string;
+  language: string;
+  kind: ReportKind;
+  note: string | null;
+  shown: string | null;
+  status: "open" | "fixed" | "dismissed";
+  createdAt: Date;
+}
+
+const reports = () => db().collection("contentReports");
+
+/** Un reporte por usuario e ítem (el id lo hace idempotente). */
+export async function reportContent(userId: string, r: { itemId: string; language: string; kind: ReportKind; note: string | null; shown: string | null }): Promise<void> {
+  const id = createHash("sha256").update(`${userId}|${r.itemId}|${r.kind}`).digest("hex").slice(0, 32);
+  await reports().doc(id).set({ ...r, status: "open", createdAt: Timestamp.now() });
+}
+
+export async function listReports(status: ContentReport["status"], limit = 200): Promise<ContentReport[]> {
+  const snap = await reports().where("status", "==", status).limit(limit).get();
+  return snap.docs
+    .map((d) => ({
+      id: d.id,
+      itemId: String(d.get("itemId")),
+      language: String(d.get("language")),
+      kind: d.get("kind") as ReportKind,
+      note: str(d.get("note")),
+      shown: str(d.get("shown")),
+      status: d.get("status") as ContentReport["status"],
+      createdAt: date(d.get("createdAt")) ?? new Date(0),
+    }))
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+}
+
+/** Cierra todos los reportes abiertos de un ítem. */
+export async function resolveReports(itemId: string, status: "fixed" | "dismissed"): Promise<number> {
+  const snap = await reports().where("itemId", "==", itemId).where("status", "==", "open").get();
+  const batch = db().batch();
+  for (const d of snap.docs) batch.update(d.ref, { status, resolvedAt: Timestamp.now() });
+  await batch.commit();
+  return snap.size;
+}
+
 // ── Primeros pasos (mejor puntuación por unidad, en el documento del idioma) ─
 export async function getFirstSteps(ulId: string): Promise<Record<string, number>> {
   const v = (await ulRef(ulId).get()).get("firstSteps");
