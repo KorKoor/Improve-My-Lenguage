@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { finishSessionAction, reviseConfidenceAction, startSessionAction, submitAnswerAction } from "@/app/app/actions";
 import { BLOCK_META } from "@/components/app/labels";
+import { Confetti, CountUp } from "@/components/celebrate";
 import { Mascot } from "@/components/mascot";
 import { SpeakButton, useSpeech } from "@/components/speak-button";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -37,6 +38,8 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
   const [feedback, setFeedback] = useState<AnswerFeedback | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [results, setResults] = useState({ total: 0, correct: 0 });
+  // Racha de aciertos seguidos dentro de la sesión (motivación inmediata).
+  const [combo, setCombo] = useState({ now: 0, best: 0 });
   const [summary, setSummary] = useState<SessionSummary | null>(null);
   const startedAt = useRef(Date.now());
   const stepStartedAt = useRef(Date.now());
@@ -103,6 +106,10 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
       }
       setFeedback(res.data);
       setResults((r) => ({ total: r.total + 1, correct: r.correct + (res.data.correct ? 1 : 0) }));
+      setCombo((c) => {
+        const now = res.data.correct ? c.now + 1 : 0;
+        return { now, best: Math.max(c.best, now) };
+      });
       // Lo fallado vuelve a salir al final (una vez): recuperación inmediata.
       const current = queue[index];
       if (!res.data.correct && current && !current.retry && ex.type !== "match") {
@@ -155,12 +162,14 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
     const acc = results.total ? Math.round((results.correct / results.total) * 100) : null;
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-5 py-16 text-center animate-rise" aria-live="polite">
-        <Mascot size={130} mood="cheer" />
-        <h1 className="font-display text-3xl font-extrabold">¡Sesión completada!</h1>
-        <div className="grid w-full max-w-md grid-cols-3 gap-3">
-          <div className="card p-4"><p className="font-display text-2xl font-extrabold">{results.total}</p><p className="text-xs text-muted">ejercicios</p></div>
-          <div className="card p-4"><p className="font-display text-2xl font-extrabold">{acc === null ? "—" : `${acc} %`}</p><p className="text-xs text-muted">precisión</p></div>
-          <div className="card p-4"><p className="font-display text-2xl font-extrabold">{Math.max(1, Math.round((Date.now() - startedAt.current) / 60000))}</p><p className="text-xs text-muted">minutos</p></div>
+        {status === "done" && acc !== null && acc >= 70 && <Confetti />}
+        <Mascot size={130} mood="cheer" className="animate-float" />
+        <h1 className="font-display text-3xl font-extrabold">{acc === null ? "¡Sesión completada!" : acc >= 90 ? "¡Sesión brillante!" : acc >= 70 ? "¡Muy bien hecho!" : "¡Sesión completada!"}</h1>
+        {acc !== null && acc < 70 && <p className="-mt-2 max-w-sm text-sm text-muted">Los errores de hoy son los repasos de mañana: volverán en el momento justo para fijarlos.</p>}
+        <div className="stagger grid w-full max-w-md grid-cols-3 gap-3">
+          <div className="card p-4"><p className="font-display text-2xl font-extrabold"><CountUp value={results.total} /></p><p className="text-xs text-muted">ejercicios</p></div>
+          <div className="card p-4"><p className="font-display text-2xl font-extrabold">{acc === null ? "—" : <CountUp value={acc} suffix=" %" />}</p><p className="text-xs text-muted">precisión</p></div>
+          <div className="card p-4"><p className="font-display text-2xl font-extrabold">{combo.best >= 3 ? <>🔥 <CountUp value={combo.best} /></> : Math.max(1, Math.round((Date.now() - startedAt.current) / 60000))}</p><p className="text-xs text-muted">{combo.best >= 3 ? "mejor racha" : "minutos"}</p></div>
         </div>
         {summary?.newAchievements.length ? (
           <div className="card w-full max-w-md p-4 text-left">
@@ -197,9 +206,14 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
           <meta.icon size={13} aria-hidden /> {meta.label}
         </span>
         {"retry" in step && step.retry ? <Chip tone="warning">Otra oportunidad</Chip> : null}
+        {combo.now >= 3 ? (
+          <span key={combo.now} className="ml-auto inline-flex items-center gap-1 rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-bold text-warning animate-pop-in" aria-label={`${combo.now} aciertos seguidos`}>
+            <span className="animate-flame" aria-hidden>🔥</span> {combo.now} seguidas
+          </span>
+        ) : null}
       </div>
 
-      <div key={step.uid} className="mt-4 animate-rise" lang={step.kind === "exercise" || step.kind === "intro" ? undefined : "es"}>
+      <div key={step.uid} className={cn("mt-4", feedback && !feedback.correct ? "animate-shake" : "animate-rise")} lang={step.kind === "exercise" || step.kind === "intro" ? undefined : "es"}>
         {step.kind === "intro" && <IntroStep step={step} locale={locale} language={language} rtl={rtl} onNext={next} />}
         {step.kind === "tip" && <TipStep step={step} language={language} onNext={next} />}
         {step.kind === "tutor" && <TutorStep minutes={step.minutes} onSkip={next} onGo={() => void finish()} />}
@@ -218,7 +232,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         )}
       </div>
 
-      {feedback && <FeedbackSheet feedback={feedback} onNext={next} />}
+      {feedback && <FeedbackSheet feedback={feedback} onNext={next} combo={combo.now} />}
     </div>
   );
 }
@@ -528,14 +542,19 @@ function ConfidenceCheck({ attemptId }: { attemptId: string }) {
   );
 }
 
-function FeedbackSheet({ feedback: f, onNext }: { feedback: AnswerFeedback; onNext: () => void }) {
+const PRAISE = ["¡Correcto!", "¡Eso es!", "¡Genial!", "¡Muy bien!", "¡Perfecto!", "¡Exacto!"];
+
+function FeedbackSheet({ feedback: f, onNext, combo }: { feedback: AnswerFeedback; onNext: () => void; combo: number }) {
   const ok = f.correct;
+  const praise = combo >= 5 ? `¡Imparable! ${combo} seguidas` : combo >= 3 ? `¡En racha! ${combo} seguidas` : PRAISE[(combo + (f.attemptId?.length ?? 0)) % PRAISE.length]!;
   return (
     <div role="status" aria-live="assertive" className={cn("fixed inset-x-0 bottom-0 z-40 animate-rise rounded-t-3xl px-4 pb-[max(env(safe-area-inset-bottom),20px)] pt-5 shadow-[0_-8px_30px_rgb(0_0_0/0.08)]", ok ? "bg-success-soft" : "bg-danger-soft")}>
       <div className="mx-auto max-w-2xl">
         <p className={cn("flex items-center gap-2 font-display text-xl font-extrabold", ok ? "text-success" : "text-danger")}>
-          {ok ? <Check size={22} aria-hidden /> : <X size={22} aria-hidden />}
-          {ok ? (f.nearMiss ? "¡Casi perfecto!" : "¡Correcto!") : f.expected ? "Respuesta correcta:" : "Ups"}
+          <span className={cn("grid size-8 place-items-center rounded-full text-white animate-pop-in", ok ? "bg-success" : "bg-danger")} aria-hidden>
+            {ok ? <Check size={18} strokeWidth={3} /> : <X size={18} strokeWidth={3} />}
+          </span>
+          {ok ? (f.nearMiss ? "¡Casi perfecto!" : praise) : f.expected ? "Respuesta correcta:" : "Ups"}
         </p>
         {!ok && f.expected && <p className="mt-1 text-lg font-semibold">{f.expected}</p>}
         {ok && f.nearMiss && (

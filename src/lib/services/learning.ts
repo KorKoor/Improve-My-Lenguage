@@ -101,6 +101,7 @@ export async function startSession(
       aiAvailable: aiAvailable() && learner.profile.aiConsent,
       audioAvailable: true,
       difficulty: learner.profile.preferredDifficulty,
+      styleWeights: learner.profile.personality?.tuning.blockWeights,
       surprise: opts.surprise,
       seed: now.getTime() % 100000,
     });
@@ -388,6 +389,7 @@ export async function checkAchievements(learner: Learner) {
       readingsCompleted: readings,
       writingsCompleted: writings,
       listeningSessions: listening,
+      personalityDone: Boolean(learner.profile.personality),
     },
     new Set(unlocked.map((u) => u.achievementId)),
   );

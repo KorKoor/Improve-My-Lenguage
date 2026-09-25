@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, Clock, Flame, Gauge, Repeat, Sparkles, Target } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, Flame, Gauge, Headphones, MessageCircle, Newspaper, PenLine, Repeat, Sparkles, Target } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BLOCK_META, SKILL_META, formatMinutes, greeting } from "@/components/app/labels";
@@ -13,6 +13,7 @@ import { Chip } from "@/components/ui/chip";
 import { IconBox } from "@/components/ui/icon-box";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cefrToTheta, thetaToCefr } from "@/lib/engine/levels";
+import { ARCHETYPES } from "@/lib/engine/personality";
 import { localDay } from "@/lib/engine/progress";
 import { getDashboard } from "@/lib/services/insights";
 import { requireLearner } from "@/lib/services/viewer";
@@ -20,6 +21,13 @@ import { requireLearner } from "@/lib/services/viewer";
 export const metadata: Metadata = { title: "Inicio" };
 
 const MINUTE_OPTIONS = [5, 10, 20, 30, 45];
+
+const PRACTICE_META = {
+  read: { icon: Newspaper, color: "var(--skill-reading)" },
+  listen: { icon: Headphones, color: "var(--skill-listening)" },
+  write: { icon: PenLine, color: "var(--skill-writing)" },
+  tutor: { icon: MessageCircle, color: "var(--skill-speaking)" },
+} as const;
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ tutorial?: string }> }) {
   const learner = await requireLearner();
@@ -44,6 +52,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     );
   }
   const today = localDay(new Date(), learner.profile.timezone);
+  const personality = learner.profile.personality;
   const weekDays = ["L", "M", "X", "J", "V", "S", "D"];
   const goalMonths = d.goal?.deadline ? Math.max(0, Math.round((new Date(d.goal.deadline).getTime() - Date.now()) / (30 * 86_400_000))) : null;
   // Distancia recorrida en la escala θ desde el inicio (A1 bajo) hasta el umbral del nivel objetivo.
@@ -77,11 +86,11 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         <div className="hidden lg:block"><QuickSearch /></div>
         {d.streak > 0 && (
           <Chip tone="warning" className="shrink-0 px-3 py-1 text-sm">
-            <Flame size={15} aria-hidden /> {d.streak}<span className="hidden sm:inline"> {d.streak === 1 ? "día" : "días"}</span>
+            <Flame size={15} aria-hidden className="animate-flame" /> {d.streak}<span className="hidden sm:inline"> {d.streak === 1 ? "día" : "días"}</span>
           </Chip>
         )}
-        <Link href="/app/settings" aria-label="Tu perfil y configuración" className="hidden size-11 shrink-0 place-items-center rounded-full bg-primary font-display text-base font-extrabold text-on-primary lg:grid">
-          {(learner.profile.displayName ?? learner.email ?? "?").slice(0, 1).toUpperCase()}
+        <Link href="/app/profile" aria-label="Mi perfil" className={`hidden size-11 shrink-0 place-items-center rounded-full font-display font-extrabold transition-transform hover:scale-105 lg:grid ${learner.profile.avatar ? "bg-primary-soft text-2xl" : "bg-primary text-base text-on-primary"}`}>
+          {learner.profile.avatar ?? (learner.profile.displayName ?? learner.email ?? "?").slice(0, 1).toUpperCase()}
         </Link>
       </header>
 
@@ -182,15 +191,56 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         </div>
       </div>
 
+      {/* Prácticas sugeridas: lectura, escucha, escritura, tutor */}
+      {d.assessed && (
+        <section aria-labelledby="practice-title" className="space-y-3">
+          <div className="flex flex-wrap items-end justify-between gap-2">
+            <h2 id="practice-title" className="font-display text-xl font-extrabold">Para ti hoy</h2>
+            {personality ? (
+              <Link href="/app/profile" className="text-sm text-muted hover:text-primary">{ARCHETYPES[personality.archetype].icon} Según tu perfil «{ARCHETYPES[personality.archetype].name}»</Link>
+            ) : (
+              <Link href="/app/explore" className="text-sm font-semibold text-primary">Ver todo</Link>
+            )}
+          </div>
+          <ul className="stagger grid gap-3 sm:grid-cols-3 xl:grid-cols-4">
+            {d.practice.map((p) => {
+              const m = PRACTICE_META[p.kind];
+              return (
+                <li key={p.kind}>
+                  <Link href={p.href} className="card lift group flex h-full items-start gap-3 p-4 sm:flex-col sm:gap-2">
+                    <IconBox icon={m.icon} color={m.color} size={40} />
+                    <span>
+                      <span className="block font-semibold group-hover:text-primary">{p.title}</span>
+                      <span className="mt-0.5 block text-sm text-muted">{p.reason}</span>
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+            {!personality && (
+              <li>
+                <Link href="/app/profile/test" className="lift flex h-full items-start gap-3 rounded-[22px] border-2 border-dashed border-primary/40 bg-primary-soft/50 p-4 sm:flex-col sm:gap-2">
+                  <span className="text-3xl" aria-hidden>🪞</span>
+                  <span>
+                    <span className="block font-semibold text-primary">¿Cómo aprendes mejor?</span>
+                    <span className="mt-0.5 block text-sm text-muted">Test de 2 minutos para ajustar los ejercicios a tu forma de ser.</span>
+                  </span>
+                </Link>
+              </li>
+            )}
+          </ul>
+        </section>
+      )}
+
       {/* KPIs */}
-      <section aria-label="Resumen" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <section aria-label="Resumen" className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
           { icon: Flame, color: "var(--skill-listening)", value: `${d.streak} ${d.streak === 1 ? "día" : "días"}`, label: "Racha actual", hint: `Récord: ${d.bestStreak}` },
           { icon: Clock, color: "var(--skill-reading)", value: formatMinutes(d.minutesTotal), label: "Tiempo estudiado", hint: `${formatMinutes(d.minutesThisMonth)} este mes` },
           { icon: BookOpen, color: "var(--skill-vocabulary)", value: String(d.wordsLearned), label: "Palabras aprendidas", hint: "≥ 2 repasos y recuerdo ≥ 80 %" },
           { icon: Target, color: "var(--skill-grammar)", value: d.accuracy30 === null ? "—" : `${Math.round(d.accuracy30 * 100)} %`, label: "Precisión", hint: "Últimos 30 días" },
         ].map((k) => (
-          <div key={k.label} className="card flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center">
+          <div key={k.label} className="card lift flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center">
             <IconBox icon={k.icon} color={k.color} size={42} />
             <div className="min-w-0">
               <p className="font-display text-xl font-extrabold leading-tight">{k.value}</p>

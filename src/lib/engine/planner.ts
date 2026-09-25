@@ -38,6 +38,8 @@ export interface PlannerInput {
   difficulty?: "easy" | "balanced" | "challenging";
   surprise?: boolean;
   seed?: number;
+  /** Multiplicadores según tu forma de aprender (cuestionario de perfil). */
+  styleWeights?: Partial<Record<BlockKind, number>>;
 }
 
 export interface SessionPlan {
@@ -139,6 +141,13 @@ export function planSession(input: PlannerInput): SessionPlan {
   if (input.difficulty === "easy") weights.set("new_words", (weights.get("new_words") ?? 0) * 0.7);
   if (input.difficulty === "challenging" && weights.has("tutor")) {
     weights.set("tutor", weights.get("tutor")! * 1.3);
+  }
+
+  // Tu forma de aprender: más peso a lo que te motiva, sin eliminar nada.
+  for (const [kind, m] of Object.entries(input.styleWeights ?? {}) as [BlockKind, number][]) {
+    if (!weights.has(kind) || !(m > 0)) continue;
+    weights.set(kind, weights.get(kind)! * m);
+    if (m >= 1.2) reasons.set(kind, `${reasons.get(kind)} Encaja con tu forma de aprender.`);
   }
 
   // "Sorpréndeme": perturbación suave y reproducible.

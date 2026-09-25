@@ -1,3 +1,4 @@
+import type { PersonalityResult } from "../engine/personality";
 import type { CefrLevel, Skill } from "../content/types";
 import type { CardState } from "../engine/fsrs";
 
@@ -26,6 +27,10 @@ export interface ProfileRow {
   slowAudio: boolean;
   /** Cuándo terminó (o saltó) el tutorial de bienvenida. */
   tutorialDoneAt: Date | null;
+  /** Avatar elegido (emoji de una lista cerrada). */
+  avatar: string | null;
+  /** Resultado del cuestionario «¿Cómo aprendes mejor?». */
+  personality: PersonalityResult | null;
   createdAt: Date;
 }
 

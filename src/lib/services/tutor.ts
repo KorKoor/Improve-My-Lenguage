@@ -18,7 +18,7 @@ import type { Learner } from "./viewer";
 
 export class AiQuotaError extends Error {}
 
-async function guardAi(learner: Learner) {
+export async function guardAi(learner: Learner) {
   if (!aiAvailable()) throw new AiUnavailableError("El tutor de IA no está configurado en este servidor.");
   if (!learner.profile.aiConsent) throw new AiUnavailableError("Activa el tutor de IA en Configuración para usarlo.");
   if (!(await rateLimit(`ai-min:${learner.userId}`, 10, 60))) throw new AiQuotaError("Vas muy rápido. Espera un momento.");
@@ -55,6 +55,13 @@ export async function buildLearnerContext(learner: Learner): Promise<LearnerCont
     knownWords: learning,
     explanationDepth: learner.profile.explanationDepth,
     displayName: learner.profile.displayName,
+    learningStyle: learner.profile.personality
+      ? {
+          correction: learner.profile.personality.tuning.correction,
+          challenge: learner.profile.personality.dims.challenge > 0.3,
+          favors: learner.profile.personality.dims.words < -0.2 ? "main goal is conversation" : learner.profile.personality.dims.words > 0.3 ? "loves learning new vocabulary" : "balanced goals",
+        }
+      : null,
   };
 }
 

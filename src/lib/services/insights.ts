@@ -4,7 +4,7 @@ import type { CefrLevel, Skill } from "../content/types";
 import { overallTheta, progressWithinLevel, thetaToCefr, type SkillEstimate } from "../engine/levels";
 import { planSession, type SessionPlan } from "../engine/planner";
 import { addDays, accuracy, computeStreak, consistency, localDay, longestStreak, summarizeVocabulary } from "../engine/progress";
-import { recommend, type Recommendation } from "../engine/recommender";
+import { practicePicks, recommend, type PracticePick, type Recommendation } from "../engine/recommender";
 import type { Weakness } from "../engine/weakness";
 import * as repo from "../db/repositories";
 import type { ActivityRow, GoalRow } from "../db/types";
@@ -42,6 +42,8 @@ export interface DashboardData {
   activity: ActivityRow[];
   studiedToday: boolean;
   aiEnabled: boolean;
+  /** Prácticas sugeridas (lectura/escucha/escritura/tutor), explicadas. */
+  practice: PracticePick[];
 }
 
 const NEXT: Record<CefrLevel, CefrLevel | null> = { A1: "A2", A2: "B1", B1: "B2", B2: "C1", C1: "C2", C2: null };
@@ -99,6 +101,7 @@ export async function getDashboard(learner: Learner): Promise<DashboardData> {
     aiAvailable: aiEnabled,
     audioAvailable: true,
     difficulty: learner.profile.preferredDifficulty,
+    styleWeights: learner.profile.personality?.tuning.blockWeights,
     seed: 1,
   });
 
@@ -147,6 +150,7 @@ export async function getDashboard(learner: Learner): Promise<DashboardData> {
     activity,
     studiedToday,
     aiEnabled,
+    practice: practicePicks({ skills, favorites: learner.profile.personality?.tuning.favorites ?? [], aiAvailable: aiEnabled }),
   };
 }
 

@@ -11,6 +11,7 @@ import {
 } from "firebase-admin/firestore";
 import type { CefrLevel, Skill } from "../content/types";
 import type { SkillEstimate } from "../engine/levels";
+import { parsePersonality, type PersonalityResult } from "../engine/personality";
 import { localDay, weekStart } from "../engine/progress";
 import { firestore } from "../firebase/admin";
 import type {
@@ -103,6 +104,8 @@ function toProfile(snap: DocumentSnapshot): ProfileRow {
     simpleMode: Boolean(d.simpleMode),
     slowAudio: Boolean(d.slowAudio),
     tutorialDoneAt: date(d.tutorialDoneAt),
+    avatar: str(d.avatar),
+    personality: parsePersonality(json(d.personality)),
     createdAt: date(d.createdAt) ?? new Date(0),
   };
 }
@@ -144,6 +147,7 @@ export type ProfileUpdate = Partial<
     | "simpleMode"
     | "slowAudio"
     | "tutorialDoneAt"
+    | "avatar"
   >
 >;
 
@@ -151,6 +155,10 @@ export async function updateProfile(userId: string, patch: ProfileUpdate): Promi
   const entries = Object.entries(patch).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return;
   await userRef(userId).set({ ...Object.fromEntries(entries), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+}
+
+export async function savePersonality(userId: string, result: PersonalityResult | null): Promise<void> {
+  await userRef(userId).set({ personality: toJson(result), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
 }
 
 // ── Idiomas del usuario ───────────────────────────────────────────────────

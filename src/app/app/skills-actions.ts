@@ -4,6 +4,7 @@ import { rateLimit } from "@/lib/db/limits";
 import { RateLimitedError } from "@/lib/services/learning";
 import { answerListening, buildListening, finishListening, type ListeningFeedback, type ListeningItem } from "@/lib/services/listening";
 import { completeReading, readerForOwnText, type ReaderData } from "@/lib/services/reading";
+import { submitWriting, type WritingResult } from "@/lib/services/writing";
 import { requireLearner } from "@/lib/services/viewer";
 
 /**
@@ -89,5 +90,14 @@ export async function finishListeningAction(correct: number, total: number): Pro
   return run("listening.finish", async () => {
     const t = int(total, 0, 50, 0);
     return finishListening(await requireLearner(), int(correct, 0, t, 0), t);
+  });
+}
+
+// ── Escritura ───────────────────────────────────────────────────────────────
+export async function submitWritingAction(promptId: string, text: string, useAi: boolean): Promise<SkillResult<WritingResult>> {
+  return run("writing.submit", async () => {
+    const clean = str(text, 4000);
+    if (clean.length < 10) throw new UserFacingError("Escribe al menos una frase.");
+    return submitWriting(await requireLearner(), str(promptId, 40), clean, useAi === true);
   });
 }

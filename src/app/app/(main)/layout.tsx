@@ -39,7 +39,7 @@ export default async function AppShell({ children }: { children: React.ReactNode
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border/60 bg-bg/85 px-4 py-3 backdrop-blur lg:hidden">
           <Logo href="/app" compact />
           <span className="flex items-center gap-2 font-display font-extrabold"><LanguageMark code={learner.language.code} size={24} /> {learner.language.name}</span>
-          <Link href="/app/settings" aria-label="Configuración" className="ml-auto grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-on-primary">{initial}</Link>
+          <Link href="/app/profile" aria-label="Mi perfil" className={`ml-auto grid size-9 place-items-center rounded-full font-bold ${learner.profile.avatar ? "bg-primary-soft text-xl" : "bg-primary text-sm text-on-primary"}`}>{learner.profile.avatar ?? initial}</Link>
         </header>
         <main id="main" className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-9 lg:pb-12 lg:pt-8">{children}</main>
       </div>

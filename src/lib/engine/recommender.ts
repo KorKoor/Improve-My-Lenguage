@@ -34,8 +34,10 @@ export interface RecommenderInput {
 const SKILL_HREF: Partial<Record<Skill, string>> = {
   vocabulary: "/app/session?focus=new_words",
   grammar: "/app/grammar",
-  listening: "/app/session?focus=listening",
+  listening: "/app/listen",
   speaking: "/app/tutor",
+  reading: "/app/read",
+  writing: "/app/write",
 };
 
 const SKILL_ES: Partial<Record<Skill, string>> = {
@@ -43,6 +45,8 @@ const SKILL_ES: Partial<Record<Skill, string>> = {
   grammar: "gramática",
   listening: "comprensión auditiva",
   speaking: "conversación",
+  reading: "lectura",
+  writing: "escritura",
 };
 
 export function recommend(input: RecommenderInput): Recommendation {
@@ -118,4 +122,58 @@ export function recommend(input: RecommenderInput): Recommendation {
     reason: "Ya estudiaste hoy y estás al día. Si quieres seguir, aprende palabras de un tema que te interesa.",
     href: "/app/session?focus=new_words",
   };
+}
+
+// ── Prácticas sugeridas (lectura, escucha, escritura, tutor) ─────────────────
+export type PracticeKind = "read" | "listen" | "write" | "tutor";
+
+export interface PracticePick {
+  kind: PracticeKind;
+  title: string;
+  reason: string;
+  href: string;
+}
+
+const PRACTICE: Record<PracticeKind, { skill: Skill; title: string; href: string; fav: string }> = {
+  read: { skill: "reading", title: "Lee un artículo real", href: "/app/read", fav: "Te gusta aprender leyendo." },
+  listen: { skill: "listening", title: "Entrena el oído", href: "/app/listen", fav: "Aprendes muy bien escuchando." },
+  write: { skill: "writing", title: "Escribe un texto corto", href: "/app/write", fav: "Quieres comunicarte: escribir fija lo que sabes." },
+  tutor: { skill: "speaking", title: "Conversa con tu tutor", href: "/app/tutor", fav: "Tu objetivo es conversar." },
+};
+
+/**
+ * Ordena las prácticas por utilidad para esta persona: su habilidad más
+ * floja pesa más, luego lo que prefiere (cuestionario) y lo que aún no probó.
+ * Determinista y explicada: cada tarjeta dice por qué aparece.
+ */
+export function practicePicks(input: {
+  skills: SkillEstimate[];
+  favorites: string[];
+  aiAvailable: boolean;
+  limit?: number;
+}): PracticePick[] {
+  const measured = input.skills.filter((s) => s.evidence > 0);
+  const mean = measured.length ? measured.reduce((a, s) => a + s.theta, 0) / measured.length : 0;
+  const scored = (Object.keys(PRACTICE) as PracticeKind[])
+    .filter((k) => k !== "tutor" || input.aiAvailable)
+    .map((kind) => {
+      const p = PRACTICE[kind];
+      const est = input.skills.find((s) => s.skill === p.skill);
+      let score = 1;
+      let reason = "Practicar varias habilidades acelera el progreso general.";
+      if (!est || est.evidence === 0) {
+        score += 0.6;
+        reason = `Aún no has practicado ${SKILL_ES[p.skill]}: mediremos tu nivel mientras practicas.`;
+      } else if (measured.length >= 3 && est.theta < mean - 0.4) {
+        score += 1 + (mean - est.theta) * 0.5;
+        reason = `Tu ${SKILL_ES[p.skill]} va por detrás del resto: es donde más puedes crecer.`;
+      }
+      if (input.favorites.includes(kind)) {
+        score += 0.8;
+        if (!reason.startsWith("Tu ")) reason = p.fav;
+      }
+      return { kind, title: p.title, reason, href: p.href, score };
+    })
+    .sort((a, b) => b.score - a.score);
+  return scored.slice(0, input.limit ?? 3).map(({ score: _score, ...pick }) => pick);
 }

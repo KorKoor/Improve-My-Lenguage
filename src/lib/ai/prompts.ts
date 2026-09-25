@@ -19,6 +19,8 @@ export interface LearnerContext {
   knownWords: string[];
   explanationDepth: "brief" | "balanced" | "detailed";
   displayName: string | null;
+  /** Preferencias del cuestionario de perfil (si lo hizo). */
+  learningStyle?: { correction: "gentle" | "thorough"; challenge: boolean; favors: string } | null;
 }
 
 export function learnerProfileBlock(c: LearnerContext): string {
@@ -40,6 +42,9 @@ export function learnerProfileBlock(c: LearnerContext): string {
     c.goal ? `Goal: ${c.goal}` : null,
     c.knownWords.length ? `Some words they are learning: ${c.knownWords.slice(0, 25).join(", ")}` : null,
     `Preferred explanation depth: ${c.explanationDepth}`,
+    c.learningStyle
+      ? `Learning preferences: wants ${c.learningStyle.correction === "thorough" ? "thorough corrections" : "gentle corrections, only what matters"}; ${c.learningStyle.challenge ? "enjoys being challenged slightly above level" : "prefers a comfortable pace"}; ${c.learningStyle.favors}`
+      : null,
   ];
   return lines.filter(Boolean).join("\n");
 }
@@ -133,4 +138,56 @@ export function openingPrompt(c: LearnerContext, topic: string | null): string {
   return topic
     ? `Start the conversation about: ${topic}. Greet ${c.displayName ?? "the learner"} briefly and ask an opening question.`
     : `Greet ${c.displayName ?? "the learner"} briefly and propose a topic from their interests with an opening question.`;
+}
+
+// ── Corrección de escritura ─────────────────────────────────────────────────
+export interface WritingMistake {
+  original: string;
+  correction: string;
+  category: string;
+  explanation: string;
+}
+
+export interface WritingFeedback {
+  corrected: string;
+  mistakes: WritingMistake[];
+  strengths: string[];
+  suggestions: string[];
+  level: CefrLevel | null;
+}
+
+export function writingSystemPrompt(c: LearnerContext, task: string, allowedCategories: { id: string; label: string }[]): string {
+  return [
+    `You are a warm, precise ${c.languageEnglishName} writing teacher for a ${c.nativeLanguageName}-speaking learner.`,
+    learnerProfileBlock(c),
+    `TASK THE LEARNER WAS GIVEN: ${task}`,
+    "Correct the learner's text. Rules:",
+    "- Only report real mistakes that appear VERBATIM in the text (copy the exact wrong fragment into \"original\").",
+    "- Prioritise meaning, grammar and naturalness over style; at most 8 mistakes, most important first.",
+    `- "category" must be one of: ${allowedCategories.map((x) => x.id).join(", ")}.`,
+    `- "explanation": short, in Spanish, adapted to level ${c.level}${c.explanationDepth === "detailed" ? ", with an example" : ""}.`,
+    '- "corrected": the full text rewritten correctly and naturally, keeping the learner\'s meaning and level.',
+    '- "strengths": 1–3 concrete things they did well (Spanish). "suggestions": 1–3 ideas to sound more natural or advanced (Spanish).',
+    '- "level": CEFR level shown by this text (A1–C2).',
+    'Reply ONLY with JSON: {"corrected": string, "mistakes": [{"original": string, "correction": string, "category": string, "explanation": string}], "strengths": string[], "suggestions": string[], "level": string}',
+  ].join("\n");
+}
+
+/** Valida la respuesta de la IA: categorías cerradas y errores que existen de verdad en el texto. */
+export function sanitizeWritingFeedback(raw: unknown, allowed: Set<string>, text: string): WritingFeedback | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+  const list = (v: unknown, max: number) => (Array.isArray(v) ? v.map((x) => str(x, 300)).filter(Boolean).slice(0, max) : []);
+  const lower = text.toLowerCase();
+  const mistakes: WritingMistake[] = (Array.isArray(r.mistakes) ? r.mistakes : [])
+    .map((m) => m as Record<string, unknown>)
+    .map((m) => ({ original: str(m.original, 200), correction: str(m.correction, 200), category: str(m.category, 60), explanation: str(m.explanation, 400) }))
+    .filter((m) => m.original && m.correction && m.original !== m.correction && lower.includes(m.original.toLowerCase()))
+    .map((m) => ({ ...m, category: allowed.has(m.category) ? m.category : "vocabulary" }))
+    .slice(0, 8);
+  const level = ["A1", "A2", "B1", "B2", "C1", "C2"].includes(str(r.level, 3)) ? (str(r.level, 3) as CefrLevel) : null;
+  const corrected = str(r.corrected, 6000);
+  if (!corrected && mistakes.length === 0) return null;
+  return { corrected: corrected || text, mistakes, strengths: list(r.strengths, 3), suggestions: list(r.suggestions, 3), level };
 }
