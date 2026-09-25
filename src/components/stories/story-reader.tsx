@@ -4,6 +4,7 @@ import { ArrowRight, Check, Eye, Loader2, Snail, Volume2, X } from "lucide-react
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { completeStoryAction } from "@/app/app/first-steps-actions";
+import { setWordStatusAction } from "@/app/app/actions";
 import { Confetti } from "@/components/celebrate";
 import { useSpeech, VoiceWarning } from "@/components/speak-button";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -11,11 +12,20 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
 import type { Story } from "@/lib/content/stories";
 
+export interface StoryToken {
+  t: string;
+  id?: string;
+  lemma?: string;
+  tr?: string;
+}
+
 /**
  * Historia graduada: se lee frase a frase (con audio lento y traducción al
  * tocar) y se termina con preguntas de comprensión.
  */
-export function StoryReader({ story, locale, language, languageName, rtl }: { story: Story; locale: string; language: string; languageName: string; rtl: boolean }) {
+export function StoryReader({ story, tokens, locale, language, languageName, rtl }: { story: Story; tokens: StoryToken[][]; locale: string; language: string; languageName: string; rtl: boolean }) {
+  const [word, setWord] = useState<{ line: number; k: number } | null>(null);
+  const [saved, setSaved] = useState<Set<string>>(new Set());
   const { speak } = useSpeech(locale);
   const [shown, setShown] = useState(1);
   const [reveal, setReveal] = useState<Set<number>>(new Set());
@@ -97,16 +107,47 @@ export function StoryReader({ story, locale, language, languageName, rtl }: { st
       </div>
       <VoiceWarning locale={locale} languageName={languageName} />
       <h1 className="mt-6 font-display text-2xl font-extrabold" lang={language} dir={dir}>{story.title}</h1>
-      <p className="text-sm text-muted">Toca <Eye size={13} className="inline" aria-label="el ojo" /> para ver la traducción de una frase.</p>
+      <p className="text-sm text-muted">Toca una palabra para ver qué significa, o <Eye size={13} className="inline" aria-label="el ojo" /> para traducir la frase entera.</p>
       <ol className="mt-4 space-y-3">
         {story.lines.slice(0, shown).map((l, i) => (
           <li key={i} className={cn("card p-4 animate-rise", i === shown - 1 && "border-primary")}>
             <div className="flex items-start gap-2">
-              <p className="flex-1 text-lg leading-relaxed" lang={language} dir={dir}>{l.t}</p>
+              <p className="flex-1 text-lg leading-relaxed" lang={language} dir={dir}>
+                {(tokens[i] ?? [{ t: l.t }]).map((tk, k) =>
+                  tk.id ? (
+                    <button key={k} type="button" onClick={() => setWord(word?.line === i && word.k === k ? null : { line: i, k })} className={cn("rounded px-0.5 underline decoration-dotted decoration-primary/40 underline-offset-4 hover:bg-primary-soft", word?.line === i && word.k === k && "bg-primary-soft")}>
+                      {tk.t}
+                    </button>
+                  ) : (
+                    <span key={k}>{tk.t}</span>
+                  ),
+                )}
+              </p>
               <button type="button" onClick={() => speak(l.t, 0.8)} className="grid size-9 shrink-0 place-items-center rounded-full bg-primary-soft text-primary" aria-label="Escuchar"><Volume2 size={16} /></button>
               <button type="button" onClick={() => speak(l.t, 0.55)} className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted text-primary" aria-label="Escuchar despacio"><Snail size={16} /></button>
               <button type="button" onClick={() => setReveal((r) => new Set(r).add(i))} className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted text-muted" aria-label="Ver traducción"><Eye size={16} /></button>
             </div>
+            {l.r && <p className="mt-1 text-sm text-muted">{l.r}</p>}
+            {word?.line === i && tokens[i]?.[word.k]?.id && (() => {
+              const tk = tokens[i]![word.k]!;
+              return (
+                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-primary-soft px-3 py-2 text-sm animate-fade">
+                  <strong lang={language}>{tk.lemma}</strong> <span>= {tk.tr}</span>
+                  <button type="button" onClick={() => speak(tk.lemma!, 0.8)} className="grid size-7 place-items-center rounded-full bg-surface text-primary" aria-label="Escuchar la palabra"><Volume2 size={13} /></button>
+                  <button
+                    type="button"
+                    disabled={saved.has(tk.id!)}
+                    onClick={async () => {
+                      const r = await setWordStatusAction(tk.id!, "saved");
+                      if (r.ok) setSaved((s) => new Set(s).add(tk.id!));
+                    }}
+                    className="ml-auto rounded-full bg-surface px-3 py-1 text-xs font-semibold text-primary"
+                  >
+                    {saved.has(tk.id!) ? "✓ Guardada para repasar" : "+ Guardar para repasar"}
+                  </button>
+                </div>
+              );
+            })()}
             {reveal.has(i) && <p className="mt-2 text-sm text-muted animate-fade">{l.es}</p>}
           </li>
         ))}

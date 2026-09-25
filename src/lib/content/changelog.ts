@@ -9,8 +9,9 @@ export interface ChangelogItem {
 export const CHANGELOG_VERSION = "2026-09-27";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "🏠", title: "Un solo botón en modo sencillo", text: "«Seguir aprendiendo» elige solo lo que toca: repaso, la siguiente lección del Camino guiado, un poco de práctica o una historia.", href: "/app" },
   { icon: "🧭", title: "Camino guiado: de cero a A1", text: "30 lecciones de 10 minutos en orden: frases útiles, las palabras más básicas (casa, agua, comer…), gramática sencilla y repaso. Tú sólo pulsa «Continuar».", href: "/app/course" },
-  { icon: "📚", title: "Historias para empezar", text: "Historias cortas A1–A2 en francés, inglés, italiano, portugués y alemán: frase a frase, audio lento, traducción al tocar y preguntas al final.", href: "/app/stories" },
+  { icon: "📚", title: "Historias para empezar", text: "Historias cortas A1–A2 en los 12 idiomas (con transcripción en ruso, árabe, japonés, coreano y chino): toca una palabra para ver qué significa y guárdala para repasar.", href: "/app/stories" },
   { icon: "🚩", title: "Reporta errores", text: "¿Una traducción rara o un audio que no suena bien? Pulsa «Reportar un error» en la tarjeta: lo revisamos y lo corregimos para todos.", href: "/app/session" },
   { icon: "👂", title: "Pares mínimos y tu voz", text: "Entrena el oído con palabras casi iguales (tu/tout, ship/sheep, 买/卖…) y graba tu voz para compararla con el modelo. En Pronunciación.", href: "/app/speak" },
   { icon: "🔊", title: "Mejor audio", text: "Usamos la voz más natural de tu dispositivo y grabaciones humanas cuando existen. Si tu equipo no tiene voz para el idioma, te explicamos cómo instalarla.", href: "/app/listen" },

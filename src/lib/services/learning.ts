@@ -485,7 +485,7 @@ export async function checkAchievements(learner: Learner) {
     repo.listUserLanguages(learner.userId),
     repo.getAllKnowledge(learner.ul.id),
   ]);
-  const [readings, writings, listening, speaking, scenarios, verbDrills, questsClaimed, studyPlans, breaksCompleted, langActivity] = await Promise.all([
+  const [readings, writings, listening, speaking, scenarios, verbDrills, questsClaimed, studyPlans, breaksCompleted, langActivity, storiesCompleted, course] = await Promise.all([
     repo.countReadings(learner.userId),
     repo.countWritings(learner.userId),
     repo.countEvents(learner.userId, "listening_completed"),
@@ -496,6 +496,8 @@ export async function checkAchievements(learner: Learner) {
     repo.countEvents(learner.userId, "study_plan_completed"),
     repo.countEvents(learner.userId, "break_completed"),
     languages.length > 1 ? repo.getActivityByLanguage(learner.userId, "2000-01-01") : Promise.resolve([]),
+    repo.countEvents(learner.userId, "story_completed"),
+    repo.getCourse(learner.ul.id),
   ]);
   const vocab = summarizeVocabulary(
     knowledge.map((k) => ({ ...knowledgeToCard(k, now), itemId: k.itemId, itemType: k.itemType })),
@@ -523,6 +525,8 @@ export async function checkAchievements(learner: Learner) {
       polyglotDays: polyglotDays(langActivity).length,
       studyPlans,
       breaksCompleted,
+      storiesCompleted,
+      lessonsPassed: Object.keys(course).length,
     },
     new Set(unlocked.map((u) => u.achievementId)),
   );

@@ -55,3 +55,20 @@ test("seguir aprendiendo: un solo botón que elige bien el siguiente paso", asyn
   assert.equal(nextStep({ ...base, lessonsToday: 2, minutesToday: 20 }).kind, "done");
   assert.equal(nextStep({ ...base, courseDone: 30, minutesToday: 0 }).kind, "session");
 });
+
+test("errores dirigidos: con 3 fallos de género en francés, la sesión practica género (≥ 2 ejercicios)", async () => {
+  const { planSession } = await import("../src/lib/engine/planner");
+  const { buildSessionSteps } = await import("../src/lib/engine/session-builder");
+  const { errorLabel, grammarForCategory } = await import("../src/lib/content");
+  const { defaultEstimate } = await import("../src/lib/engine/levels");
+  const weak = { category: "fr:articles-gender", count: 3, sessionsWithError: 2, recentSessions: 3, errorRate: 0.4, score: 3, recurring: true };
+  for (const seed of [1, 2, 3, 4, 5]) {
+    const plan = planSession({
+      minutes: 15, dueReviews: 0, newWordsAvailable: 500, weaknesses: [weak], weaknessLabel: errorLabel, grammarForCategory,
+      skills: (["vocabulary", "grammar", "reading", "listening"] as const).map((s) => defaultEstimate(s, -1.5)), aiAvailable: false, audioAvailable: true, seed,
+    });
+    const steps = buildSessionSteps({ plan, language: "fr", native: "es", catalog, grammar: grammarFor("fr"), knowledge: [], due: [], vocabTheta: -1.5, grammarTheta: -1.5, interests: [], seed });
+    const gender = steps.filter((s) => s.kind === "exercise" && s.exercise.grammarId === "fr:g:gender-articles");
+    assert.ok(gender.length >= 2, `seed ${seed}: ${gender.length} ejercicios de género · bloques ${plan.blocks.map((b) => b.kind + ":" + (b.target ?? "")).join(",")}`);
+  }
+});

@@ -35,6 +35,10 @@ export interface AchievementStats {
   studyPlans?: number;
   /** Descansos guiados completados. */
   breaksCompleted?: number;
+  /** Historias graduadas terminadas. */
+  storiesCompleted?: number;
+  /** Lecciones aprobadas del Camino guiado (idioma activo). */
+  lessonsPassed?: number;
 }
 
 export interface AchievementRule {
@@ -71,6 +75,9 @@ export const ACHIEVEMENT_RULES: AchievementRule[] = [
   { id: "polyglot-day", title: "Día políglota", description: "Estudiaste dos idiomas el mismo día.", icon: "🗺️", unlocked: (s) => (s.polyglotDays ?? 0) >= 1 },
   { id: "polyglot-10", title: "Mente multilingüe", description: "10 días estudiando varios idiomas.", icon: "🧠", unlocked: (s) => (s.polyglotDays ?? 0) >= 10 },
   { id: "first-plan", title: "Plan cumplido", description: "Completaste tu primer plan del modo estudio.", icon: "🏁", unlocked: (s) => (s.studyPlans ?? 0) >= 1 },
+  { id: "first-book", title: "Primer libro", description: "Terminaste 5 historias en el idioma.", icon: "📚", unlocked: (s) => (s.storiesCompleted ?? 0) >= 5 },
+  { id: "course-10", title: "Buen camino", description: "Aprobaste 10 lecciones del Camino guiado.", icon: "🧭", unlocked: (s) => (s.lessonsPassed ?? 0) >= 10 },
+  { id: "course-30", title: "¡A1 conseguido!", description: "Terminaste las 30 lecciones del Camino guiado.", icon: "🏅", unlocked: (s) => (s.lessonsPassed ?? 0) >= 30 },
   { id: "mindful-breaks", title: "Pausas sabias", description: "Completaste 5 descansos guiados.", icon: "🌿", unlocked: (s) => (s.breaksCompleted ?? 0) >= 5 },
 ];
 

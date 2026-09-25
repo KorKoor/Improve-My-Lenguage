@@ -97,10 +97,13 @@ test("sesión de novato: incluye frases útiles y nada de escribir ni dictados",
 
 test("historias: bien formadas (respuesta entre las opciones, sin frases vacías)", async () => {
   const { STORIES } = await import("../src/lib/content/stories");
+  assert.equal(Object.keys(STORIES).length, 12, "historias en los 12 idiomas");
   for (const [lang, stories] of Object.entries(STORIES)) {
+    assert.ok(stories!.length >= 2, `${lang}: pocas historias`);
     assert.equal(new Set(stories!.map((s) => s.id)).size, stories!.length, lang);
     for (const s of stories!) {
       assert.ok(s.lines.length >= 5 && s.lines.every((l) => l.t && l.es), `${lang}/${s.id}`);
+      if (["ru", "ar", "ja", "ko", "zh"].includes(lang)) assert.ok(s.lines.every((l) => l.r), `${lang}/${s.id}: falta transcripción`);
       assert.ok(s.questions.length >= 3 && s.questions.every((q) => q.options.includes(q.answer) && new Set(q.options).size === q.options.length), `${lang}/${s.id}`);
     }
   }

@@ -57,6 +57,7 @@ export async function completeStoryAction(storyId: string, correct: number, tota
       correct: c,
     });
     await repo.track(learner.userId, "story_completed", { story: story.id, correct: c, total: t });
+    await checkAchievements(learner);
     revalidatePath("/app/stories");
     return { ok: true };
   } catch (err) {
