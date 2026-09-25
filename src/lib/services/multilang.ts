@@ -50,7 +50,7 @@ function daysBetween(a: string, b: string): number {
   return Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 86_400_000);
 }
 
-export async function languagesOverview(viewer: Viewer): Promise<LanguagesOverview> {
+export async function languagesOverview(viewer: Viewer, opts: { forecast?: boolean } = {}): Promise<LanguagesOverview> {
   const now = new Date();
   const tz = viewer.profile.timezone;
   const today = localDay(now, tz);
@@ -60,7 +60,7 @@ export async function languagesOverview(viewer: Viewer): Promise<LanguagesOvervi
 
   const cards = await Promise.all(
     langs.map(async (ul, i): Promise<LanguageCard> => {
-      const [skills, due, goal, forecast] = await Promise.all([repo.getSkillEstimates(ul.id), repo.countDue(ul.id, now), repo.getActiveGoal(ul.id), repo.dueForecast(ul.id, now)]);
+      const [skills, due, goal, forecast] = await Promise.all([repo.getSkillEstimates(ul.id), repo.countDue(ul.id, now), repo.getActiveGoal(ul.id), opts.forecast === false ? Promise.resolve([] as number[]) : repo.dueForecast(ul.id, now)]);
       const t = overallTheta(skills.filter((s) => s.evidence > 0));
       const mine = rows.filter((r) => r.languageCode === ul.languageCode);
       const minutesOn = (day: string) => Math.round(mine.filter((r) => r.day === day).reduce((a, r) => a + r.seconds, 0) / 60);
@@ -125,7 +125,7 @@ export interface StudyModeData {
 export const STUDY_DURATIONS = [15, 25, 45, 60, 90] as const;
 
 export async function studyModeData(viewer: Viewer): Promise<StudyModeData> {
-  const overview = await languagesOverview(viewer);
+  const overview = await languagesOverview(viewer, { forecast: false });
   const span = viewerAttentionSpan(viewer);
   const today = localDay(new Date(), viewer.profile.timezone);
   const seed = Number(today.replaceAll("-", "")) % 97;

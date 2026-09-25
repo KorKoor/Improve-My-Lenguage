@@ -52,7 +52,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       </p>
     ) : null;
   const board = d.assessed ? await questBoard(learner, d.dueCount) : null;
-  const multi = (await listUserLanguages(learner.userId)).length > 1 ? await languagesOverview(learner) : null;
+  const multi = (await listUserLanguages(learner.userId)).length > 1 ? await languagesOverview(learner, { forecast: false }) : null;
   const lang = learner.language;
   // Tutorial: la primera vez que llega al inicio (o bajo demanda con ?tutorial=1).
   const tour = (

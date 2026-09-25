@@ -26,20 +26,32 @@ export function FocusGuard({ span }: { span: number }) {
   useEffect(() => {
     if (!get(START)) set(START, Date.now());
     let hiddenAt = 0;
+    let lastInput = Date.now();
     const onVis = () => {
       if (document.hidden) hiddenAt = Date.now();
       else if (hiddenAt && Date.now() - hiddenAt > AWAY_RESET_MS) set(START, Date.now());
     };
+    // Sin tocar nada durante un rato también es una pausa.
+    const onInput = () => {
+      const now = Date.now();
+      if (now - lastInput > AWAY_RESET_MS) set(START, now);
+      lastInput = now;
+    };
     const check = () => {
       if (document.hidden) return;
       const now = Date.now();
+      if (now - lastInput > AWAY_RESET_MS) return;
       if (now - get(START) >= limitMs && now >= get(SNOOZE)) setAsk(true);
     };
     document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("pointerdown", onInput, { passive: true });
+    window.addEventListener("keydown", onInput);
     const t = setInterval(check, 30_000);
     check();
     return () => {
       document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("pointerdown", onInput);
+      window.removeEventListener("keydown", onInput);
       clearInterval(t);
     };
   }, [limitMs]);
