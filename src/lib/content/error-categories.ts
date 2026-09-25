@@ -179,6 +179,15 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "it:combined-pronouns", label: "pronombres combinados", language: "it", grammarId: "it:g:pronomi-combinati" },
   { id: "it:si", label: "si impersonal y pasivo", language: "it", grammarId: "it:g:si-impersonale" },
   { id: "it:congiuntivo-imperfetto", label: "congiuntivo imperfetto", language: "it", grammarId: "it:g:congiuntivo-imperfetto" },
+  { id: "pt:plural", label: "plural (-ões, -ães, -ãos, -ais)", language: "pt", grammarId: "pt:g:plural-ao" },
+  { id: "pt:possessives", label: "posesivos (seu / dele)", language: "pt", grammarId: "pt:g:possessivos" },
+  { id: "pt:future", label: "futuro con ir + infinitivo", language: "pt", grammarId: "pt:g:ir-infinitivo" },
+  { id: "pt:progressive", label: "estar + gerundio", language: "pt", grammarId: "pt:g:estar-gerundio" },
+  { id: "pt:comparatives", label: "comparativos (melhor, maior…)", language: "pt", grammarId: "pt:g:comparativos" },
+  { id: "pt:pluperfect", label: "pluscuamperfecto (tinha feito)", language: "pt", grammarId: "pt:g:mais-que-perfeito" },
+  { id: "pt:imperative", label: "imperativo", language: "pt", grammarId: "pt:g:imperativo" },
+  { id: "pt:subj-imperfect", label: "imperfeito do subjuntivo", language: "pt", grammarId: "pt:g:subjuntivo-imperfeito" },
+  { id: "pt:passive", label: "pasiva con ser y con se", language: "pt", grammarId: "pt:g:passiva-se" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {
