@@ -17,6 +17,8 @@ import { cefrToTheta, thetaToCefr } from "@/lib/engine/levels";
 import { ARCHETYPES } from "@/lib/engine/personality";
 import { localDay } from "@/lib/engine/progress";
 import { getDashboard } from "@/lib/services/insights";
+import { getXp, questBoard } from "@/lib/services/quests";
+import { QuestBoard } from "@/components/dashboard/quests";
 import { requireLearner } from "@/lib/services/viewer";
 
 export const metadata: Metadata = { title: "Inicio" };
@@ -33,7 +35,8 @@ const PRACTICE_META = {
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ tutorial?: string }> }) {
   const learner = await requireLearner();
-  const [d, sp] = await Promise.all([getDashboard(learner), searchParams]);
+  const [d, sp, xp] = await Promise.all([getDashboard(learner), searchParams, getXp(learner.userId)]);
+  const board = d.assessed ? await questBoard(learner, d.dueCount) : null;
   const lang = learner.language;
   // Tutorial: la primera vez que llega al inicio (o bajo demanda con ?tutorial=1).
   const tour = (
@@ -50,6 +53,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <>
         {tour}
         <SimpleHome d={d} languageName={lang.name} dailyMinutes={learner.profile.dailyMinutes} greeting={greeting(learner.profile.timezone)} />
+        {board && <div className="mx-auto mt-6 max-w-2xl"><QuestBoard quests={board.quests} xp={xp} /></div>}
       </>
     );
   }
@@ -174,6 +178,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         )}
 
         <div className="flex flex-col gap-6">
+          {board && <QuestBoard quests={board.quests} xp={xp} />}
+
           {/* Recomendación explicada */}
           <section className="rounded-[22px] bg-primary-soft p-6" aria-labelledby="rec-title">
             <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-primary"><Sparkles size={13} aria-hidden /> Recomendado para ti</p>

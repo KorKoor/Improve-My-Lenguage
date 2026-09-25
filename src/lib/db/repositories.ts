@@ -846,6 +846,42 @@ export async function countEvents(userId: string, name: string): Promise<number>
   return agg.data().count;
 }
 
+/** Eventos desde una fecha (sólo nombre y hora). Filtra por nombre en memoria: sin índices compuestos. */
+export async function eventsSince(userId: string, since: Date): Promise<{ name: string; at: Date }[]> {
+  const snap = await userRef(userId).collection("events").where("createdAt", ">=", Timestamp.fromDate(since)).limit(500).get();
+  return snap.docs.map((d) => ({ name: String(d.get("name") ?? ""), at: date(d.get("createdAt")) ?? new Date(0) }));
+}
+
+// ── Misiones diarias ──────────────────────────────────────────────────────
+export async function getQuestDay(userId: string, day: string): Promise<{ claimed: string[]; quests: unknown[] | null }> {
+  const snap = await userRef(userId).collection("quests").doc(day).get();
+  const c = snap.get("claimed");
+  const q = json(snap.get("questsJson"));
+  return { claimed: Array.isArray(c) ? (c as string[]) : [], quests: Array.isArray(q) ? q : null };
+}
+
+/** Fija las misiones del día la primera vez que se generan (no cambian aunque cambie tu nivel). */
+export async function saveQuestSet(userId: string, day: string, quests: unknown[]): Promise<void> {
+  await userRef(userId).collection("quests").doc(day).set({ questsJson: toJson(quests) }, { merge: true });
+}
+
+/** Reclama una misión (idempotente). Devuelve false si ya estaba reclamada. */
+export async function claimQuest(userId: string, day: string, questId: string, xp: number): Promise<boolean> {
+  const ref = userRef(userId).collection("quests").doc(day);
+  return firestore().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    const claimed: string[] = Array.isArray(snap.get("claimed")) ? snap.get("claimed") : [];
+    if (claimed.includes(questId)) return false;
+    tx.set(ref, { claimed: [...claimed, questId], xp: num(snap.get("xp")) + xp, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    return true;
+  });
+}
+
+export async function totalQuestXp(userId: string): Promise<number> {
+  const snap = await userRef(userId).collection("quests").select("xp").get();
+  return snap.docs.reduce((a, d) => a + num(d.get("xp")), 0);
+}
+
 export async function countReadings(userId: string): Promise<number> {
   const langs = await listUserLanguages(userId);
   const counts = await Promise.all(langs.map((ul) => ulRef(ul.id).collection("readings").count().get()));
@@ -975,6 +1011,7 @@ export async function exportUserData(userId: string) {
     ),
     dailyActivity: await all(root.collection("activity")),
     achievements: await all(root.collection("achievements")),
+    quests: await all(root.collection("quests")),
     events: await all(root.collection("events")),
     pushDevices: (await pushTokens().where("userId", "==", userId).get()).docs.map((d) => ({
       userAgent: d.get("userAgent") ?? null,

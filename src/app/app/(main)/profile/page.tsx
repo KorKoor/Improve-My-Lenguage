@@ -9,13 +9,15 @@ import { buttonClass } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { ARCHETYPES } from "@/lib/engine/personality";
 import { AVATARS, profileOverview } from "@/lib/services/profile";
+import { getXp } from "@/lib/services/quests";
+import { LevelRing } from "@/components/dashboard/quests";
 import { requireLearner } from "@/lib/services/viewer";
 
 export const metadata: Metadata = { title: "Mi perfil" };
 
 export default async function ProfilePage() {
   const learner = await requireLearner();
-  const p = await profileOverview(learner);
+  const [p, xp] = await Promise.all([profileOverview(learner), getXp(learner.userId)]);
   const personality = learner.profile.personality;
   const arch = personality ? ARCHETYPES[personality.archetype] : null;
   const since = new Date(p.memberSince).toLocaleDateString("es", { month: "long", year: "numeric" });
@@ -42,9 +44,19 @@ export default async function ProfilePage() {
             <h1 className="font-display text-3xl font-extrabold">{p.displayName ?? "Tu perfil"}</h1>
             <p className="text-sm text-muted">Aprendiendo desde {since}{p.email ? ` · ${p.email}` : ""}</p>
             <div className="mt-3 flex flex-wrap gap-2">
+              <Chip>⭐ Nivel {xp.level} · {xp.title}</Chip>
               {arch && <Chip>{arch.icon} {arch.name}</Chip>}
               <Chip tone="muted">{unlocked} de {p.achievements.length} logros</Chip>
               <Chip tone="muted">{p.languages.length} {p.languages.length === 1 ? "idioma" : "idiomas"}</Chip>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 sm:flex-col sm:items-end">
+            <div className="flex items-center gap-2">
+              <LevelRing xp={xp} size={64} />
+              <div className="text-sm">
+                <p className="font-display text-lg font-extrabold tabular-nums">{xp.total.toLocaleString("es")} XP</p>
+                <p className="text-xs text-muted">{xp.span - xp.into} XP para el nivel {xp.level + 1}</p>
+              </div>
             </div>
           </div>
           <IdentityEditor avatar={p.avatar} name={p.displayName} avatars={AVATARS} />
