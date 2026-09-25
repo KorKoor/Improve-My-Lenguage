@@ -20,6 +20,7 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
       rtl={learner.language.rtl}
       aiEnabled={aiAvailable() && learner.profile.aiConsent}
       span={viewerAttentionSpan(learner)}
+      smartBreaks={learner.profile.smartBreaks}
       title={sp.focus === "leeches" ? "Palabras rebeldes" : "Sesión de estudio"}
     />
   );

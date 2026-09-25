@@ -230,6 +230,7 @@ export async function updateSettingsAction(input: {
   textSize?: string;
   simpleMode?: boolean;
   slowAudio?: boolean;
+  smartBreaks?: boolean;
 }): Promise<ActionResult<null>> {
   return run("settings.update", async () => {
     const viewer = await requireViewer();
@@ -246,6 +247,7 @@ export async function updateSettingsAction(input: {
       textSize: input.textSize !== undefined ? oneOf(input.textSize, ["normal", "large", "xl"] as const, "normal") : undefined,
       simpleMode: input.simpleMode !== undefined ? Boolean(input.simpleMode) : undefined,
       slowAudio: input.slowAudio !== undefined ? Boolean(input.slowAudio) : undefined,
+      smartBreaks: input.smartBreaks !== undefined ? Boolean(input.smartBreaks) : undefined,
     });
     revalidatePath("/app", "layout");
     return null;

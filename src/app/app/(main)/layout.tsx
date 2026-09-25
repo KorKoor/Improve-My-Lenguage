@@ -47,7 +47,7 @@ export default async function AppShell({ children }: { children: React.ReactNode
         <main id="main" className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-9 lg:pb-12 lg:pt-8">{children}</main>
       </div>
       <PlanBar />
-      <FocusGuard span={viewerAttentionSpan(learner)} />
+      {learner.profile.smartBreaks && <FocusGuard span={viewerAttentionSpan(learner)} />}
       <TabBar due={due} simple={learner.profile.simpleMode} />
     </div>
   );

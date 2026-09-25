@@ -21,6 +21,7 @@ export default async function ReviewPage() {
       rtl={learner.language.rtl}
       aiEnabled={aiAvailable() && learner.profile.aiConsent}
       span={viewerAttentionSpan(learner)}
+      smartBreaks={learner.profile.smartBreaks}
       title="Repaso"
     />
   );

@@ -122,7 +122,7 @@ export function DangerZone() {
 }
 
 /** Comodidad: tamaño de letra, modo sencillo y audio lento. Se aplica al instante. */
-export function ComfortSettings({ initial }: { initial: { textSize: TextSize; simpleMode: boolean; slowAudio: boolean } }) {
+export function ComfortSettings({ initial }: { initial: { textSize: TextSize; simpleMode: boolean; slowAudio: boolean; smartBreaks: boolean } }) {
   const [v, setV] = useState(initial);
   const [saved, setSaved] = useState(false);
   const [, start] = useTransition();
@@ -165,6 +165,15 @@ export function ComfortSettings({ initial }: { initial: { textSize: TextSize; si
         <span>
           <span className="block font-semibold">Audio más lento</span>
           <span className="text-sm text-muted">Las palabras y frases se pronuncian un poco más despacio para entenderlas mejor.</span>
+        </span>
+      </button>
+      <button type="button" role="switch" aria-checked={v.smartBreaks} onClick={() => save({ smartBreaks: !v.smartBreaks })} className={cn(toggle, v.smartBreaks && "border-primary bg-primary-soft")}>
+        <span className={cn("mt-0.5 flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition", v.smartBreaks ? "bg-primary" : "bg-border")}>
+          <span className={cn("size-5 rounded-full bg-white shadow transition", v.smartBreaks && "translate-x-5")} />
+        </span>
+        <span>
+          <span className="block font-semibold">Descansos inteligentes</span>
+          <span className="text-sm text-muted">Te proponemos una pausa guiada cuando tu atención baja o llevas mucho rato seguido. Nunca interrumpen: sólo sugieren.</span>
         </span>
       </button>
       <div className="flex flex-wrap items-center gap-3">

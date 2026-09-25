@@ -26,6 +26,8 @@ export interface ProfileRow {
   simpleMode: boolean;
   /** Audio más lento por defecto (0,8×). */
   slowAudio: boolean;
+  /** Descansos inteligentes (sugerencias de pausa); activados por defecto. */
+  smartBreaks: boolean;
   /** Cuándo terminó (o saltó) el tutorial de bienvenida. */
   tutorialDoneAt: Date | null;
   /** Avatar elegido (emoji de una lista cerrada). */

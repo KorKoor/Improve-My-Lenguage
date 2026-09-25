@@ -33,10 +33,12 @@ interface Props {
   aiEnabled?: boolean;
   /** Capacidad de atención aprendida (min): guía las pausas inteligentes. */
   span?: number;
+  /** El alumno quiere sugerencias de pausa. */
+  smartBreaks?: boolean;
 }
 
 
-export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15 }: Props) {
+export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15, smartBreaks = true }: Props) {
   // ── Temporizador inteligente ──
   const focusEvents = useRef<FocusEvent[]>([]);
   const lastBreakAt = useRef(0);
@@ -142,7 +144,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
       const nowMs = Date.now();
       focusEvents.current.push({ correct: res.data.correct, timeMs: nowMs - stepStartedAt.current, atMin: (nowMs - startedAt.current - breakMs.current) / 60000 });
       const reading = readFocus(focusEvents.current, { span, sinceBreakMin: (nowMs - lastBreakAt.current) / 60000 });
-      if (reading.advice !== "continue" && nowMs >= snoozeUntil.current) {
+      if (smartBreaks && reading.advice !== "continue" && nowMs >= snoozeUntil.current) {
         setSuggestion({ reading, plan: planBreak(reading, (nowMs - startedAt.current - breakMs.current) / 60000, focusEvents.current.length) });
       }
       // Lo fallado vuelve a salir al final (una vez): recuperación inmediata.
@@ -151,7 +153,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         setQueue((q) => [...q, { ...current, uid: current.uid + "-r", retry: true }]);
       }
     },
-    [submitting, feedback, sessionId, queue, index, span],
+    [submitting, feedback, sessionId, queue, index, span, smartBreaks],
   );
 
   if (status === "loading") {

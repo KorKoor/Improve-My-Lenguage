@@ -105,6 +105,7 @@ function toProfile(snap: DocumentSnapshot): ProfileRow {
     textSize: d.textSize === "large" || d.textSize === "xl" ? d.textSize : "normal",
     simpleMode: Boolean(d.simpleMode),
     slowAudio: Boolean(d.slowAudio),
+    smartBreaks: d.smartBreaks !== false,
     tutorialDoneAt: date(d.tutorialDoneAt),
     avatar: str(d.avatar),
     personality: parsePersonality(json(d.personality)),
@@ -174,6 +175,7 @@ export type ProfileUpdate = Partial<
     | "textSize"
     | "simpleMode"
     | "slowAudio"
+    | "smartBreaks"
     | "tutorialDoneAt"
     | "avatar"
     | "groupId"
