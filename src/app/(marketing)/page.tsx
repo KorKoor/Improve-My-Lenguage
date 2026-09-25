@@ -1,4 +1,4 @@
-import { ArrowRight, Brain, CircleHelp, Compass, Gauge, MessageCircle, Repeat, Snail, Sparkles, Target, Type } from "lucide-react";
+import { ArrowRight, Brain, CircleHelp, Compass, Gauge, Headphones, MessageCircle, Mic, Newspaper, PenLine, Repeat, Snail, Sparkles, Target, Type, UserRound } from "lucide-react";
 import { LanguageMark } from "@/components/language-mark";
 import Link from "next/link";
 import { Mascot } from "@/components/mascot";
@@ -17,6 +17,12 @@ const FEATURES = [
   { icon: Brain, color: "var(--skill-grammar)", title: "Vector de habilidades", text: "Tu nivel no es una letra: vocabulario, gramática, listening, speaking… cada una con su propio CEFR." },
   { icon: MessageCircle, color: "var(--skill-speaking)", title: "Tutor personal", text: "Conversa con un tutor que conoce tu nivel, tus intereses y tus errores. Te da feedback al final, sin interrumpirte." },
   { icon: Compass, color: "var(--skill-listening)", title: "Recomendaciones explicadas", text: "\"Practica preposiciones: fallaste en 4 de tus últimas 6 sesiones.\" Siempre sabrás por qué." },
+  { icon: Newspaper, color: "var(--skill-reading)", title: "Lecturas reales", text: "Artículos de Wikipedia, Wikinews y Wikivoyage ordenados según cuánto entiendes. Toca cualquier palabra y verás qué significa." },
+  { icon: Headphones, color: "var(--skill-listening)", title: "Escucha y dictado", text: "Frases reales a la velocidad que elijas. Escribe lo que oyes y te marcamos palabra por palabra." },
+  { icon: Mic, color: "var(--skill-pronunciation)", title: "Pronunciación", text: "Lee en voz alta y comprueba qué palabras se entienden. Sin grabar ni guardar tu voz." },
+  { icon: PenLine, color: "var(--skill-writing)", title: "Escritura corregida", text: "Consignas de A1 a C1 y correcciones de ortografía, acentos y estilo al instante, con IA opcional." },
+  { icon: UserRound, color: "var(--primary)", title: "Hecho a tu manera", text: "Un test de 2 minutos descubre cómo aprendes mejor y ajusta el ritmo, el reto y las explicaciones." },
+  { icon: Sparkles, color: "var(--skill-vocabulary)", title: "Tus datos te hablan", text: "Qué parte de un texto real entiendes ya, cuándo llegarás al siguiente nivel y qué palabras se te resisten." },
 ];
 
 export default function Landing() {

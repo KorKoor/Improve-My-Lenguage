@@ -12,7 +12,9 @@ const SECTIONS = [
   ["3. Repetición espaciada (FSRS)", "Cada palabra y cada tema de gramática tienen una 'memoria' calculada: cuánto aguanta y cuándo está a punto de olvidarse. Te lo mostramos justo en ese momento."],
   ["4. Errores clasificados", "“She go to school yesterday” no es sólo un fallo: es pasado simple. “I have 20 years” es traducción literal del español. Así detectamos patrones y los atacamos."],
   ["5. Sesiones que se arman solas", "Dinos cuántos minutos tienes. El planificador reparte el tiempo entre repaso, tus debilidades, vocabulario nuevo de tus intereses y listening, y explica cada decisión."],
-  ["6. IA sólo donde aporta", "La IA conversa contigo y analiza lo que escribes. Todo lo demás es lógica determinista: más barata, más rápida y sin inventar reglas ni definiciones."],
+  ["6. Las cuatro destrezas con material real", "Lecturas de Wikipedia a tu nivel con traducción al tocar una palabra, escucha con dictado, pronunciación en voz alta y un editor que corrige lo que escribes. Todo alimenta tu perfil."],
+  ["7. Se adapta a tu forma de ser", "Un cuestionario breve mide tus preferencias (ritmo, reto, explicaciones, tono de la corrección) y el plan diario, el tutor y las sugerencias se ajustan a ellas."],
+  ["8. IA sólo donde aporta", "La IA conversa contigo y analiza lo que escribes. Todo lo demás es lógica determinista: más barata, más rápida y sin inventar reglas ni definiciones."],
 ];
 
 export default function Features() {
