@@ -63,7 +63,7 @@ class Lang:
 
 
 LANGS: dict[str, Lang] = {
-    "en": Lang("en", "eng", None, ("en",), r"^[a-z][a-z'\-]*$"),
+    "en": Lang("en", "eng", "English", ("en",), r"^[a-z][a-z'\-]*$"),
     "fr": Lang("fr", "fra", "French", ("fr",), r"^[a-zàâæçéèêëîïôœùûüÿ][a-zàâæçéèêëîïôœùûüÿ'\-]*$", articles={"masculine": "le", "feminine": "la"}),
     "de": Lang("de", "deu", "German", ("de",), r"^[a-zäöüß][a-zäöüß\-]*$", articles={"masculine": "der", "feminine": "die", "neuter": "das"}),
     "it": Lang("it", "ita", "Italian", ("it",), r"^[a-zàèéìíîòóùú][a-zàèéìíîòóùú'\-]*$", articles={"masculine": "il", "feminine": "la"}),
@@ -86,6 +86,7 @@ POS = {
 }
 POS_ES = {"noun": "noun", "verb": "verb", "adj": "adj", "adv": "adv", "pron": "pron", "prep": "prep", "conj": "conj",
           "intj": "intj", "article": "det", "det": "det", "num": "num", "particle": "particle", "phrase": "phrase"}
+FORM_SKIP_TAGS = {"regional", "colloquial", "misspelling", "nonstandard", "dialectal", "eye-dialect", "pronunciation-spelling", "obsolete", "archaic", "rare", "informal", "slang", "Internet", "abbreviation", "UK-dialect", "Scotland"}
 SKIP_TAGS = {"obsolete", "archaic", "rare", "dated", "historical", "dialectal", "nonstandard", "misspelling",
              "Cantonese", "Hokkien", "Min-Nan", "Hakka", "Wu", "Classical", "Literary-Chinese", "Teochew"}
 
@@ -211,12 +212,27 @@ FORM_GLOSS = re.compile(
 )
 
 
+GRAMMAR_TAGS = {
+    "past", "present", "future", "plural", "singular", "participle", "gerund", "infinitive", "imperative", "subjunctive",
+    "indicative", "conditional", "first-person", "second-person", "third-person", "comparative", "superlative",
+    "nominative", "accusative", "genitive", "dative", "instrumental", "prepositional", "locative", "ablative", "vocative",
+    "masculine", "feminine", "neuter", "definite", "indefinite", "polite", "formal", "informal", "preterite", "imperfect",
+    "perfect", "passive", "active", "negative", "diminutive", "augmentative", "possessive", "contraction", "construct",
+    "stem", "adverbial", "attributive", "predicative", "romanization", "hiragana", "katakana", "kanji", "simplified", "traditional",
+}
+GLOSS_STOP = {"the", "a", "an", "this", "that", "these", "those", "its", "his", "her", "their", "any", "some", "one", "each", "every"}
+
+
 def gloss_form_of(gloss: str) -> str | None:
-    """'Dative plural of der' → 'der'. Sólo para glosas cortas y descriptivas."""
+    """'Dative plural of der' → 'der'. Sólo glosas cortas que *empiezan* describiendo
+    la forma («The ordinal form of the number six» o «diminutive of the female
+    name…» no son formas flexionadas)."""
     if len(gloss) > 140:
         return None
     m = FORM_GLOSS.search(gloss)
-    return m.group(1) if m else None
+    if not m or m.start() > 30 or m.group(1).lower() in GLOSS_STOP:
+        return None
+    return m.group(1)
 
 
 def singulars(head: str) -> list[str]:
@@ -452,6 +468,13 @@ def load_en_kaikki(lang: str, surface: set[str]):
     want = surface | {s.capitalize() for s in surface} if L.spaced else surface
     form_to_lemma: dict[str, list[str]] = defaultdict(list)
     lemma_entries: dict[str, list[EnEntry]] = defaultdict(list)
+    # «was»: su primera acepción es «pasado de be» y sólo tiene una coloquial
+    # propia → se enseña bajo «be». «left» (adjetivo con muchas acepciones) no.
+    form_first: set[str] = set()
+    own_senses: dict[str, int] = defaultdict(int)
+    # Formas con rasgos gramaticales (pasado, plural…), frente a meras variantes
+    # («och» como variante proscrita de «att» no es una forma de «att»).
+    inflected: set[str] = set()
 
     def parse_entry(r: dict) -> EnEntry | None:
         pos = r.get("pos", "")
@@ -503,14 +526,24 @@ def load_en_kaikki(lang: str, surface: set[str]):
             if w is None or w not in want:
                 continue
             r = json.loads(line)
-            for s in r.get("senses", []):
+            for si, s in enumerate(r.get("senses", [])):
+                tags = set(s.get("tags") or [])
+                # Variantes dialectales, arcaicas o erratas no son formas que enseñar.
+                if tags & FORM_SKIP_TAGS:
+                    continue
                 links = [fo.get("word") for fo in (s.get("form_of") or []) + (s.get("alt_of") or [])]
-                if not links:
+                if not links and tags & {"form-of", "alt-of"}:
                     links = [gloss_form_of(g) for g in s.get("glosses", [])[:1]]
+                links = [l for l in links if l and l != w and " " not in l]
+                if links and si == 0:
+                    form_first.add(w)
+                elif not links:
+                    own_senses[w] += 1
+                if links and tags & GRAMMAR_TAGS:
+                    inflected.add(w)
                 for lemma in links:
-                    if lemma and lemma != w:
-                        form_to_lemma[w].append(lemma)
-                        needed.add(lemma)
+                    form_to_lemma[w].append(lemma)
+                    needed.add(lemma)
     log(f"[{lang}] pasada 2/2 (datos de {len(needed):,} lemas)…")
     with open_text(path) as f:
         for line in f:
@@ -521,7 +554,9 @@ def load_en_kaikki(lang: str, surface: set[str]):
             if e:
                 lemma_entries[w].append(e)
     log(f"[{lang}] {len(lemma_entries):,} lemas con datos, {len(form_to_lemma):,} formas flexionadas")
-    return form_to_lemma, lemma_entries
+    primary_form = {w for w in form_first if own_senses[w] <= 1}
+    variant_only = {w for w in form_to_lemma if w not in inflected and own_senses[w] >= 2}
+    return form_to_lemma, lemma_entries, primary_form, variant_only
 
 
 # ── 3. Tatoeba: frases reales con traducción humana al español ──────────────
@@ -649,7 +684,7 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
     surface = set(freq[:SURFACE_LIMIT])
 
     if L.en_name:
-        form_to_lemma, en_lemmas = load_en_kaikki(lang, surface)
+        form_to_lemma, en_lemmas, primary_form, variant_only = load_en_kaikki(lang, surface)
         if lang == "zh":
             # El Wiktionary guarda los datos bajo la forma tradicional; mostramos
             # la simplificada (la que usa wordfreq y se enseña en China continental).
@@ -660,7 +695,7 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
                         en_lemmas[w] = en_lemmas[src]
                         del form_to_lemma[w]
     else:
-        form_to_lemma, en_lemmas = defaultdict(list), {}
+        form_to_lemma, en_lemmas, primary_form, variant_only = defaultdict(list), {}, set(), set()
         for w, es in es_entries[lang].items():
             for e in es:
                 for lem in e.form_of:
@@ -670,6 +705,8 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
     ov_path = Path(__file__).with_name("overrides") / f"{lang}.json"
     raw_ov: dict = json.loads(ov_path.read_text(encoding="utf-8")) if ov_path.exists() else {}
     raw_ov.pop("_comment", None)
+    # "_forms": {"est": "être"} fuerza forma → lema (homógrafos que el corpus resuelve mal).
+    forced_forms: dict[str, str] = raw_ov.pop("_forms", None) or {}
     overrides: dict[str, list[str] | None] = {}
     pos_override: dict[str, str] = {}
     for k, v in raw_ov.items():
@@ -701,6 +738,8 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
                 case_count[tok] += 1
 
     def resolve(w: str) -> list[str]:
+        if w in forced_forms:
+            return [forced_forms[w]]
         if lang == "de" and w.capitalize() != w:
             cap, low = w.capitalize(), w
             cap_noun = any(e.pos == "noun" for e in en_lemmas.get(cap, []))
@@ -714,10 +753,14 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
             base = next((c for c in ko_candidates(w) if is_lemma(c)), None)
             if base:
                 return [base]
+        if len(w) == 1 and L.spaced and any(e.pos == "pronoun" for e in en_lemmas.get(w.upper(), [])):
+            return [w.upper()]  # «i» → «I»: la entrada en minúscula es la letra
         for v in variants(w):
             forms = form_to_lemma.get(v) or []
             base = next((f for f in forms if is_lemma(f)), None)
-            if base and (not is_lemma(v) or freq_pos.get(base.lower(), 10**9) < freq_pos.get(w, 10**9)):
+            if base and is_lemma(v) and v in variant_only:
+                return [v]
+            if base and (not is_lemma(v) or v in primary_form or freq_pos.get(base.lower(), 10**9) < freq_pos.get(w, 10**9)):
                 return [base]
             if is_lemma(v):
                 return [v]
@@ -802,6 +845,9 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
         if len(words) >= size or rank > LEMMA_LIMIT:
             break
         en = (en_lemmas.get(lemma) or [None])[0]
+        if len(lemma) == 1 and lang not in ("ja", "zh"):
+            # «a», «I», «y», «à»: la entrada de la letra va primero; queremos la palabra.
+            en = next((e for e in en_lemmas.get(lemma, []) if e.pos in ("preposition", "conjunction", "pronoun", "determiner")), en)
         es_list = [e for e in es_by_lemma.get(lemma, []) if e.glosses]
         es = es_list[0] if es_list else None
         pos = pos_override.get(lemma) or (en.pos if en else (POS.get(es.pos) if es else None))
@@ -853,16 +899,17 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
                 weight *= 0.2  # repetido: refuerza poco
             seen_rev.add(w.lower())
             vote(w, weight, "wiktionary-es-translations")
-        tri = triang.get(lang, {}).get(tri_key(lang, lemma)) or []
+        # Para el inglés el «pivote por el inglés» no tiene sentido: sólo directa e inversa.
+        tri = [] if lang == "en" else (triang.get(lang, {}).get(tri_key(lang, lemma)) or [])
         for k, w in enumerate(tri[:4]):
             vote(w, 1.3 if k == 0 else 0.9 if k == 1 else 0.5, "wiktionary-en")
-        if en:
+        if en and lang != "en":
             for gi, g in enumerate(en.glosses[:2]):
                 for head in english_heads(g, pos)[:2]:
                     table = next((en_es[h] for h in singulars(head) if h in en_es), [])
                     for ci, c in enumerate(table[:2]):
                         vote(c, (1.1 if ci == 0 else 0.6) * (1.0 if gi == 0 else 0.6), "pivot-en")
-        if en:
+        if en and lang != "en":
             want_pos = {"adjective": "adj", "adverb": "adv", "pronoun": "pron", "preposition": "prep", "conjunction": "conj"}.get(pos, pos)
             for gi, g in enumerate(en.glosses[:2]):
                 for head in english_heads(g, pos)[:2]:
@@ -928,7 +975,7 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
             entry["rd"] = reading
         # Formas flexionadas vistas en el corpus: permiten traducir al tocar
         # cualquier forma en el lector ("geht" → "gehen").
-        forms = sorted({f for f in lemma_forms[lemma] if f and f != lemma.lower() and f != lemma}, key=lambda f: surface_rank.get(f, 10**9))[:15]
+        forms = sorted({f for f in lemma_forms[lemma] if f and f != lemma.lower() and f != lemma}, key=lambda f: freq_pos.get(f, 10**9))[:15]
         if forms:
             entry["f"] = forms
         note = gender_note(lang, lemma, gender) if pos == "noun" else None

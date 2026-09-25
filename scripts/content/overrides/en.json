@@ -82,8 +82,7 @@
   ],
   "her": [
     "la",
-    "su (de ella)",
-    "ella"
+    "su (de ella)"
   ],
   "like": [
     "como",
@@ -132,5 +131,28 @@
   "which": [
     "cuál",
     "que"
+  ],
+  "go": [
+    "ir"
+  ],
+  "or": [
+    "o"
+  ],
+  "their": [
+    "su (de ellos)"
+  ],
+  "would": [
+    "(condicional: -ría)"
+  ],
+  "child": [
+    "niño",
+    "niña"
+  ],
+  "be": [
+    "ser",
+    "estar"
+  ],
+  "what": [
+    "qué"
   ]
 }

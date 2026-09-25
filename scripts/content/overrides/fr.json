@@ -79,5 +79,8 @@
   "qui": [
     "quién",
     "que"
-  ]
+  ],
+  "_forms": {
+    "est": "être"
+  }
 }
