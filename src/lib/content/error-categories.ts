@@ -188,6 +188,13 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "pt:imperative", label: "imperativo", language: "pt", grammarId: "pt:g:imperativo" },
   { id: "pt:subj-imperfect", label: "imperfeito do subjuntivo", language: "pt", grammarId: "pt:g:subjuntivo-imperfeito" },
   { id: "pt:passive", label: "pasiva con ser y con se", language: "pt", grammarId: "pt:g:passiva-se" },
+  { id: "ja:aru-iru", label: "あります / います", language: "ja", grammarId: "ja:g:aru-iru" },
+  { id: "ja:counters", label: "contadores", language: "ja", grammarId: "ja:g:counters" },
+  { id: "ja:comparison", label: "comparativos (より, のほうが)", language: "ja", grammarId: "ja:g:comparison" },
+  { id: "ja:potential", label: "forma potencial", language: "ja", grammarId: "ja:g:potential" },
+  { id: "ja:giving", label: "dar y recibir (あげる, くれる, もらう)", language: "ja", grammarId: "ja:g:giving" },
+  { id: "ja:evidentials", label: "そうだ, らしい, ようだ", language: "ja", grammarId: "ja:g:evidentials" },
+  { id: "ja:hazu-wake", label: "はず y わけ", language: "ja", grammarId: "ja:g:hazu-wake" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {

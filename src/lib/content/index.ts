@@ -15,6 +15,7 @@ import { IT_GRAMMAR, IT_VOCAB } from "./it";
 import { PT_GRAMMAR, PT_VOCAB } from "./pt";
 import { EN_GRAMMAR_ADVANCED } from "./en/grammar-advanced";
 import { EN_GRAMMAR_CORE } from "./en/grammar-core";
+import { JA_GRAMMAR_CORE } from "./ja/grammar-core";
 import { PT_GRAMMAR_CORE } from "./pt/grammar-core";
 import { IT_GRAMMAR_CORE } from "./it/grammar-core";
 import { DE_GRAMMAR_CORE } from "./de/grammar-core";
@@ -40,7 +41,7 @@ const CURATED_VOCAB: Record<LanguageCode, VocabItem[]> = { en: EN_VOCAB, fr: FR_
 const GRAMMAR: Record<LanguageCode, GrammarConcept[]> = {
   en: [...EN_GRAMMAR, ...EN_GRAMMAR_CORE, ...EN_GRAMMAR_ADVANCED],
   fr: [...FR_GRAMMAR, ...FR_GRAMMAR_ADVANCED, ...FR_GRAMMAR_CORE],
-  ja: [...JA_GRAMMAR, ...JA_GRAMMAR_ADVANCED],
+  ja: [...JA_GRAMMAR, ...JA_GRAMMAR_ADVANCED, ...JA_GRAMMAR_CORE],
   pt: [...PT_GRAMMAR, ...PT_GRAMMAR_ADVANCED, ...PT_GRAMMAR_CORE],
   it: [...IT_GRAMMAR, ...IT_GRAMMAR_ADVANCED, ...IT_GRAMMAR_CORE],
   de: [...DE_GRAMMAR, ...DE_GRAMMAR_ADVANCED, ...DE_GRAMMAR_CORE],
