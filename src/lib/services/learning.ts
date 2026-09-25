@@ -14,6 +14,8 @@ import { isLeech } from "../engine/insights";
 import { detectWeaknesses, type Weakness } from "../engine/weakness";
 import { polyglotDays } from "../engine/multilang";
 import { calibrationStep } from "../engine/calibration";
+import { buildCourse, lessonPassed, lessonSteps, type Lesson } from "../engine/course";
+import { storiesFor } from "../content/stories";
 import * as repo from "../db/repositories";
 import { rateLimit } from "../db/limits";
 import type { KnowledgeDbRow } from "../db/types";
@@ -78,7 +80,7 @@ export async function getWeaknesses(ulId: string, now = new Date()): Promise<Wea
   return detectWeaknesses(mistakes, stats, sessions, now).filter((w) => w.category !== "vocabulary");
 }
 
-export type SessionFocus = "new_words" | "listening" | "review" | "leeches" | `grammar:${string}` | null;
+export type SessionFocus = "new_words" | "listening" | "review" | "leeches" | `grammar:${string}` | `lesson:${number}` | null;
 
 export interface BuiltSession {
   sessionId: string;
@@ -144,6 +146,17 @@ export async function startSession(
   }
 
   const day = localDay(now, learner.profile.timezone);
+  // Camino guiado: la lección fija sustituye a la sesión planificada.
+  if (focus?.startsWith("lesson:")) {
+    const course = courseFor(learner);
+    const n = Math.max(1, Math.min(course.length, Number(focus.slice(7)) || 1));
+    const lesson = course[n - 1]!;
+    const lessonPlan: SessionPlan & { lesson: number } = { totalMinutes: 10, blocks: [{ kind: "new_words", minutes: 10, reason: lesson.goal }], lesson: n };
+    const steps = lessonSteps(lesson, course[n - 2] ?? null, learner.language.code, learner.native, catalog, grammarFor(learner.language.code), sessionSeed(ulId, day, `lesson-${n}`));
+    const session = await repo.createSession(ulId, "focus", 10, lessonPlan);
+    await repo.track(learner.userId, "lesson_started", { lesson: n, language: learner.language.code });
+    return { sessionId: session.id, plan: lessonPlan, steps };
+  }
   const steps = buildSessionSteps({
     plan,
     language: learner.language.code,
@@ -398,6 +411,8 @@ export interface SessionSummary {
   correct: number;
   minutes: number;
   newAchievements: { id: string; title: string; icon: string }[];
+  /** Lección del Camino guiado (si la sesión era una lección). */
+  lesson?: { n: number; passed: boolean; stars: number; next: number | null; title: string | null; storyId: string | null };
   /** Si el nivel se ajustó con esta sesión (primeras sesiones de un idioma). */
   levelAdjusted?: { direction: "down" | "up"; level: string; reason: string };
 }
@@ -434,6 +449,19 @@ export async function finishSession(
     levelAdjusted = { direction: cal.delta < 0 ? "down" : "up", level: overall === null ? "A1" : thetaToCefr(overall), reason: cal.reason };
     await repo.track(learner.userId, "level_recalibrated", { delta: cal.delta, language: learner.language.code });
   }
+  // Lección del Camino guiado: se aprueba con ≥ 60 % de aciertos.
+  let lesson: SessionSummary["lesson"];
+  const planLesson = (s.plan as { lesson?: number } | null)?.lesson;
+  if (typeof planLesson === "number") {
+    const passed = lessonPassed(s.correctCount, s.exercisesCount);
+    const acc = s.exercisesCount ? s.correctCount / s.exercisesCount : 0;
+    const stars = !passed ? 0 : acc >= 0.9 ? 3 : acc >= 0.75 ? 2 : 1;
+    if (passed) await repo.saveCourseLesson(learner.ul.id, planLesson, stars);
+    const course = courseFor(learner);
+    const next = passed && planLesson < course.length ? course[planLesson]! : null;
+    lesson = { n: planLesson, passed, stars, next: next?.n ?? null, title: next?.title ?? null, storyId: course[planLesson - 1]?.storyId ?? null };
+    await repo.track(learner.userId, passed ? "lesson_passed" : "lesson_failed", { lesson: planLesson, language: learner.language.code });
+  }
   const newAchievements = await checkAchievements(learner);
   return {
     total: s.exercisesCount,
@@ -441,6 +469,7 @@ export async function finishSession(
     minutes: Math.round(s.durationSeconds / 60),
     newAchievements,
     levelAdjusted,
+    lesson,
   };
 }
 
@@ -502,3 +531,15 @@ export async function checkAchievements(learner: Learner) {
 }
 
 export { ACHIEVEMENT_RULES };
+
+/** Camino guiado del idioma activo (determinista: se calcula, no se guarda). */
+const courses = new Map<string, Lesson[]>();
+export function courseFor(learner: Pick<Learner, "language" | "native">): Lesson[] {
+  const key = `${learner.language.code}|${learner.native}`;
+  let c = courses.get(key);
+  if (!c) {
+    c = buildCourse(learner.language.code, catalog.vocab(learner.language.code), grammarFor(learner.language.code), learner.native, storiesFor(learner.language.code).filter((s) => s.level === "A1" || s.level === "A2").map((s) => s.id));
+    courses.set(key, c);
+  }
+  return c;
+}

@@ -30,7 +30,7 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
     setPhase("loading");
     const res = await startFromZeroAction();
     if (!res.ok) { setError(res.error); setPhase("error"); return; }
-    router.push("/app/first-steps");
+    router.push("/app/course");
   }
 
   async function begin() {
@@ -118,7 +118,7 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
         </div>
         {r.level === "A1" ? (
           <>
-            <ButtonLink href="/app/first-steps" size="lg">Empezar por los primeros pasos <ArrowRight size={18} aria-hidden /></ButtonLink>
+            <ButtonLink href="/app/course" size="lg">Empezar el Camino guiado <ArrowRight size={18} aria-hidden /></ButtonLink>
             <Link href="/app" className="text-sm text-muted hover:text-text">Ir a mi plan</Link>
           </>
         ) : (

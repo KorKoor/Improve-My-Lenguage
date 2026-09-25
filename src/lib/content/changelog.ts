@@ -6,9 +6,10 @@ export interface ChangelogItem {
   href: string;
 }
 
-export const CHANGELOG_VERSION = "2026-09-26b";
+export const CHANGELOG_VERSION = "2026-09-27";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "🧭", title: "Camino guiado: de cero a A1", text: "30 lecciones de 10 minutos en orden: frases útiles, las palabras más básicas (casa, agua, comer…), gramática sencilla y repaso. Tú sólo pulsa «Continuar».", href: "/app/course" },
   { icon: "📚", title: "Historias para empezar", text: "Historias cortas A1–A2 en francés, inglés, italiano, portugués y alemán: frase a frase, audio lento, traducción al tocar y preguntas al final.", href: "/app/stories" },
   { icon: "🚩", title: "Reporta errores", text: "¿Una traducción rara o un audio que no suena bien? Pulsa «Reportar un error» en la tarjeta: lo revisamos y lo corregimos para todos.", href: "/app/session" },
   { icon: "👂", title: "Pares mínimos y tu voz", text: "Entrena el oído con palabras casi iguales (tu/tout, ship/sheep, 买/卖…) y graba tu voz para compararla con el modelo. En Pronunciación.", href: "/app/speak" },

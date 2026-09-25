@@ -1107,6 +1107,24 @@ export async function resolveReports(itemId: string, status: "fixed" | "dismisse
   return snap.size;
 }
 
+// ── Camino guiado (lecciones aprobadas → estrellas, en el documento del idioma) ─
+export async function getCourse(ulId: string): Promise<Record<number, number>> {
+  const v = (await ulRef(ulId).get()).get("course");
+  const out: Record<number, number> = {};
+  if (v && typeof v === "object") for (const [k, n] of Object.entries(v as Record<string, unknown>)) if (typeof n === "number" && Number(k) > 0) out[Number(k)] = n;
+  return out;
+}
+
+export async function saveCourseLesson(ulId: string, lesson: number, stars: number): Promise<void> {
+  await db().runTransaction(async (tx) => {
+    const ref = ulRef(ulId);
+    const snap = await tx.get(ref);
+    const prev = (snap.get("course") ?? {}) as Record<string, number>;
+    if ((prev[String(lesson)] ?? 0) >= stars) return;
+    tx.set(ref, { course: { [String(lesson)]: stars } }, { merge: true });
+  });
+}
+
 // ── Primeros pasos (mejor puntuación por unidad, en el documento del idioma) ─
 export async function getFirstSteps(ulId: string): Promise<Record<string, number>> {
   const v = (await ulRef(ulId).get()).get("firstSteps");

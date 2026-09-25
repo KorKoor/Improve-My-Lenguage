@@ -477,5 +477,21 @@
       "alguien"
     ],
     "p": "pronoun"
-  }
+  },
+  "面包": {
+    "t": [
+      "pan"
+    ],
+    "p": "noun"
+  },
+  "爸爸": [
+    "papá"
+  ],
+  "牛奶": [
+    "leche"
+  ],
+  "工作": [
+    "trabajo",
+    "trabajar"
+  ]
 }

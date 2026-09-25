@@ -167,7 +167,10 @@ export async function startSessionAction(opts: { minutes?: number; focus?: strin
     const learner = await requireLearner();
     const f = str(opts.focus, 80);
     const focus: SessionFocus =
-      f === "new_words" || f === "listening" || f === "review" || f === "leeches" ? f : f.startsWith("grammar:") ? (f as `grammar:${string}`) : null;
+      f === "new_words" || f === "listening" || f === "review" || f === "leeches" ? f
+      : f.startsWith("grammar:") ? (f as `grammar:${string}`)
+      : /^lesson:\d{1,2}$/.test(f) ? (f as `lesson:${number}`)
+      : null;
     return startSession(learner, int(opts.minutes, 5, 60, learner.profile.dailyMinutes), { focus, surprise: Boolean(opts.surprise) });
   });
 }

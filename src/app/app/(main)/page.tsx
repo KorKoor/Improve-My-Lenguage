@@ -24,9 +24,11 @@ import { CHANGELOG, CHANGELOG_VERSION } from "@/lib/content/changelog";
 import { QuestBoard } from "@/components/dashboard/quests";
 import { requireLearner } from "@/lib/services/viewer";
 import { MultiLangToday } from "@/components/dashboard/multilang-today";
-import { FirstStepsCard } from "@/components/dashboard/first-steps-card";
-import { FIRST_STEPS, hasFirstSteps } from "@/lib/content/first-steps";
-import { getFirstSteps } from "@/lib/db/repositories";
+import { CourseCard } from "@/components/dashboard/course-card";
+import { hasFirstSteps } from "@/lib/content/first-steps";
+import { getCourse } from "@/lib/db/repositories";
+import { nextLesson } from "@/lib/engine/course";
+import { courseFor } from "@/lib/services/learning";
 import { listUserLanguages } from "@/lib/db/repositories";
 import { languagesOverview } from "@/lib/services/multilang";
 
@@ -56,11 +58,15 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     ) : null;
   const board = d.assessed ? await questBoard(learner, d.dueCount) : null;
   const multi = (await listUserLanguages(learner.userId)).length > 1 ? await languagesOverview(learner, { forecast: false }) : null;
-  // Principiante total con «Primeros pasos» sin terminar: se lo proponemos arriba del todo.
-  const firstSteps = hasFirstSteps(learner.language.code) && (d.skills.find((s) => s.skill === "vocabulary")?.theta ?? -3) < -2.1 ? await getFirstSteps(learner.ul.id) : null;
+  // Principiante (≤ A1) con el Camino guiado sin terminar: la siguiente lección va arriba del todo.
+  const vocabTheta = d.skills.find((s) => s.skill === "vocabulary")?.theta ?? -3;
+  // Se muestra a principiantes y a quien ya empezó el camino, hasta terminarlo.
+  const courseProgress = hasFirstSteps(learner.language.code) ? await getCourse(learner.ul.id) : null;
+  const courseDone = courseProgress && (vocabTheta < -1.6 || Object.keys(courseProgress).length > 0) ? courseProgress : null;
+  const course = courseDone ? courseFor(learner) : [];
   const firstStepsCard =
-    firstSteps && FIRST_STEPS.some((u) => !firstSteps[u.id]) ? (
-      <FirstStepsCard done={FIRST_STEPS.filter((u) => firstSteps[u.id]).length} total={FIRST_STEPS.length} next={FIRST_STEPS.find((u) => !firstSteps[u.id])!} language={learner.language.name} />
+    courseDone && Object.keys(courseDone).length < course.length ? (
+      <CourseCard lesson={course[nextLesson(courseDone, course.length) - 1]!} done={Object.keys(courseDone).length} total={course.length} language={learner.language.name} big={learner.profile.simpleMode} />
     ) : null;
   const lang = learner.language;
   // Tutorial: la primera vez que llega al inicio (o bajo demanda con ?tutorial=1).

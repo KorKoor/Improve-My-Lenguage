@@ -256,6 +256,26 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
             <ul className="mt-2 space-y-1 text-sm">{summary.newAchievements.map((a) => <li key={a.id}>{a.icon} {a.title}</li>)}</ul>
           </div>
         ) : null}
+        {summary?.lesson && (
+          <div className={`w-full max-w-md rounded-2xl p-4 text-left animate-pop-in ${summary.lesson.passed ? "bg-success-soft" : "bg-warning-soft"}`} role="status">
+            {summary.lesson.passed ? (
+              <>
+                <p className="font-display text-xl font-extrabold">¡Lección {summary.lesson.n} aprobada! {"⭐".repeat(summary.lesson.stars)}</p>
+                {summary.lesson.next ? <p className="mt-1 text-sm">Siguiente: <strong>{summary.lesson.title}</strong></p> : <p className="mt-1 text-sm">¡Has terminado el Camino guiado! Ya tienes una base A1 sólida.</p>}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {summary.lesson.next && <ButtonLink href={`/app/session?lesson=${summary.lesson.next}`}>Lección {summary.lesson.next} <ArrowRight size={16} aria-hidden /></ButtonLink>}
+                  {summary.lesson.storyId && <ButtonLink href={`/app/stories/${summary.lesson.storyId}`} variant="secondary">📚 Leer una historia</ButtonLink>}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-xl font-extrabold">Casi: repítela una vez más</p>
+                <p className="mt-1 text-sm">Para aprobar hace falta acertar el 60 %. La segunda vez va mucho mejor: ya conoces las palabras.</p>
+                <ButtonLink href={`/app/session?lesson=${summary.lesson.n}&again=${Date.now() % 100000}`} className="mt-3">Repetir la lección {summary.lesson.n}</ButtonLink>
+              </>
+            )}
+          </div>
+        )}
         {summary?.levelAdjusted && (
           <p className="max-w-md rounded-2xl bg-primary-soft px-4 py-3 text-sm animate-pop-in" role="status">
             {summary.levelAdjusted.direction === "down" ? "🌱" : "🚀"} <strong>Hemos ajustado tu nivel a {summary.levelAdjusted.level}</strong> porque {summary.levelAdjusted.reason}.{" "}
