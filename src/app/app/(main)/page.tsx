@@ -29,6 +29,7 @@ import { hasFirstSteps } from "@/lib/content/first-steps";
 import { getCourse } from "@/lib/db/repositories";
 import { nextLesson } from "@/lib/engine/course";
 import { courseFor } from "@/lib/services/learning";
+import { simpleNextStep } from "@/lib/services/next-step";
 import { listUserLanguages } from "@/lib/db/repositories";
 import { languagesOverview } from "@/lib/services/multilang";
 
@@ -80,12 +81,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     />
   );
   if (learner.profile.simpleMode) {
+    const step = await simpleNextStep(learner, d.dueCount);
     return (
       <>
         {tour}
         {cheerBanner && <div className="mx-auto mb-4 max-w-2xl">{cheerBanner}</div>}
-        {firstStepsCard && <div className="mx-auto mb-4 max-w-2xl">{firstStepsCard}</div>}
-        <SimpleHome d={d} languageName={lang.name} dailyMinutes={learner.profile.dailyMinutes} greeting={greeting(learner.profile.timezone)} />
+        <SimpleHome d={d} languageName={lang.name} dailyMinutes={learner.profile.dailyMinutes} greeting={greeting(learner.profile.timezone)} step={step} />
         {board && <div className="mx-auto mt-6 max-w-2xl"><QuestBoard quests={board.quests} xp={xp} /></div>}
       </>
     );

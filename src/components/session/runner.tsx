@@ -434,7 +434,7 @@ function IntroStep({ step, locale, language, rtl, onNext, gentle = false }: { st
   }, [speak, w.lemma, w.audioUrl, gentle]);
   return (
     <div>
-      <p className="text-sm font-semibold text-muted">{step.block === "review" ? "Vuelve a mirarla con calma" : "Palabra nueva"}</p>
+      <p className="text-sm font-semibold text-muted">{step.block === "review" ? "Vuelve a mirarla con calma" : w.pos === "phrase" ? "Frase útil" : "Palabra nueva"}</p>
       <div className="card mt-3 p-6">
         <div className="flex items-start gap-3">
           <div className="flex-1" lang={language} dir={rtl ? "rtl" : "ltr"}>

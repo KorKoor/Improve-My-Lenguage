@@ -1,0 +1,33 @@
+import "server-only";
+import { storiesFor } from "../content/stories";
+import * as repo from "../db/repositories";
+import { nextLesson } from "../engine/course";
+import { nextStep, type NextStep } from "../engine/next-step";
+import { localDay } from "../engine/progress";
+import { courseFor } from "./learning";
+import type { Learner } from "./viewer";
+
+/** Datos para el botón «Seguir aprendiendo» del modo sencillo. */
+export async function simpleNextStep(learner: Learner, dueCount: number): Promise<NextStep> {
+  const now = new Date();
+  const today = localDay(now, learner.profile.timezone);
+  const [done, activity, events] = await Promise.all([
+    repo.getCourse(learner.ul.id),
+    repo.getActivity(learner.userId, today, learner.language.code),
+    repo.eventsSince(learner.userId, new Date(now.getTime() - 36 * 3600_000)),
+  ]);
+  const todays = events.filter((e) => localDay(e.at, learner.profile.timezone) === today);
+  const course = courseFor(learner);
+  const stories = storiesFor(learner.language.code);
+  return nextStep({
+    dueCount,
+    courseDone: Object.keys(done).length,
+    courseTotal: course.length,
+    nextLesson: nextLesson(done, course.length),
+    lessonsToday: todays.filter((e) => e.name === "lesson_passed").length,
+    minutesToday: Math.round(activity.reduce((a, r) => a + r.seconds, 0) / 60),
+    dailyMinutes: learner.profile.dailyMinutes,
+    storyId: stories.length ? stories[Number(today.replaceAll("-", "")) % stories.length]!.id : null,
+    storiesToday: todays.filter((e) => e.name === "story_completed").length,
+  });
+}

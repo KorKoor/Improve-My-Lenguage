@@ -43,3 +43,15 @@ test("camino guiado: aprobar con 60 % y la siguiente es la primera sin aprobar",
   assert.equal(nextLesson({ 1: 2, 2: 1, 4: 3 }), 3);
   assert.equal(nextLesson(Object.fromEntries(Array.from({ length: 30 }, (_, i) => [i + 1, 1]))), 30);
 });
+
+test("seguir aprendiendo: un solo botón que elige bien el siguiente paso", async () => {
+  const { nextStep } = await import("../src/lib/engine/next-step");
+  const base = { dueCount: 0, courseDone: 3, courseTotal: 30, nextLesson: 4, lessonsToday: 0, minutesToday: 0, dailyMinutes: 15, storyId: "cafe", storiesToday: 0 };
+  assert.equal(nextStep(base).kind, "lesson");
+  assert.equal(nextStep(base).href, "/app/session?lesson=4");
+  assert.equal(nextStep({ ...base, dueCount: 12 }).kind, "review");
+  assert.equal(nextStep({ ...base, lessonsToday: 2, minutesToday: 8 }).kind, "story");
+  assert.equal(nextStep({ ...base, lessonsToday: 2, minutesToday: 8, storiesToday: 1 }).kind, "session");
+  assert.equal(nextStep({ ...base, lessonsToday: 2, minutesToday: 20 }).kind, "done");
+  assert.equal(nextStep({ ...base, courseDone: 30, minutesToday: 0 }).kind, "session");
+});

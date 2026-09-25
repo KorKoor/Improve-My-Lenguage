@@ -5,13 +5,16 @@ import { Mascot } from "@/components/mascot";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { DashboardData } from "@/lib/services/insights";
+import type { NextStep } from "@/lib/engine/next-step";
+
+const STEP_EMOJI: Record<NextStep["kind"], string> = { review: "🔁", lesson: "🧭", session: "✨", story: "📚", done: "🌟" };
 
 /**
  * Inicio del modo sencillo: una acción principal enorme, frases claras en
  * lugar de métricas y ninguna decisión obligatoria. Pensado para personas que
  * no usan muchas apps (o que sólo quieren practicar sin pensar).
  */
-export function SimpleHome({ d, languageName, dailyMinutes, greeting }: { d: DashboardData; languageName: string; dailyMinutes: number; greeting: string }) {
+export function SimpleHome({ d, languageName, greeting, step }: { d: DashboardData; languageName: string; dailyMinutes: number; greeting: string; step: NextStep }) {
   const lang = languageName.toLowerCase();
   return (
     <div className="mx-auto max-w-2xl space-y-5">
@@ -25,29 +28,28 @@ export function SimpleHome({ d, languageName, dailyMinutes, greeting }: { d: Das
         </div>
       </header>
 
-      {d.assessed ? (
-        <Card className="p-6 sm:p-8">
-          <p className="text-sm font-bold uppercase tracking-wider text-primary">Tu práctica de hoy</p>
-          <h2 className="mt-2 font-display text-2xl font-extrabold">{dailyMinutes} minutos · ejercicios cortos, uno por uno</h2>
-          <p className="mt-2 text-lg text-muted">La app elige lo que más te conviene. Sólo tienes que tocar el botón.</p>
-          <ButtonLink href={`/app/session?minutes=${dailyMinutes}`} size="lg" className="mt-6 h-16 w-full text-xl">
-            Empezar <ArrowRight size={22} aria-hidden />
-          </ButtonLink>
+      {/* Un solo botón: la app decide qué toca ahora (lección, repaso, práctica o historia). */}
+      <Card className={step.kind === "done" ? "border-2 border-success bg-success-soft/40 p-6 sm:p-8" : "border-2 border-primary p-6 sm:p-8"}>
+        <p className="text-sm font-bold uppercase tracking-wider text-primary">Lo siguiente</p>
+        <div className="mt-2 flex items-center gap-4">
+          <span className="text-5xl" aria-hidden>{STEP_EMOJI[step.kind]}</span>
+          <div>
+            <h2 className="font-display text-3xl font-extrabold">{step.title}</h2>
+            <p className="mt-1 text-lg text-muted">{step.subtitle}</p>
+          </div>
+        </div>
+        <ButtonLink href={step.href} size="lg" className="mt-6 h-20 w-full text-2xl">
+          {step.kind === "done" ? "Un poquito más" : "Seguir aprendiendo"} <ArrowRight size={26} aria-hidden />
+        </ButtonLink>
+        {!d.assessed && step.kind === "lesson" && (
           <p className="mt-4 text-center text-muted">
-            ¿Poco tiempo?{" "}
-            <Link href="/app/session?minutes=5" className="font-semibold text-primary underline-offset-4 hover:underline">Hacer sólo 5 minutos</Link>
+            ¿Ya sabes algo de {lang}?{" "}
+            <Link href="/app/assessment" className="font-semibold text-primary underline-offset-4 hover:underline"><Gauge size={15} className="mr-1 inline" aria-hidden />Hacer el test de nivel</Link>
           </p>
-        </Card>
-      ) : (
-        <Card className="p-6 sm:p-8">
-          <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary"><Gauge size={16} aria-hidden /> Primer paso</p>
-          <h2 className="mt-2 font-display text-2xl font-extrabold">Conozcamos tu nivel de {lang}</h2>
-          <p className="mt-2 text-lg text-muted">Unas preguntas sencillas, unos 5 minutos. Si no sabes una respuesta, no pasa nada: así sabemos por dónde empezar.</p>
-          <ButtonLink href="/app/assessment" size="lg" className="mt-6 h-16 w-full text-xl">Empezar <ArrowRight size={22} aria-hidden /></ButtonLink>
-        </Card>
-      )}
+        )}
+      </Card>
 
-      {d.dueCount > 0 && (
+      {d.dueCount > 0 && step.kind !== "review" && (
         <Card className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
           <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary" aria-hidden><Repeat size={26} /></span>
           <div className="flex-1">
