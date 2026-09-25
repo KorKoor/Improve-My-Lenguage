@@ -9,6 +9,7 @@ import { submitWriting, type WritingResult } from "@/lib/services/writing";
 import { lookupWord, type DictionaryEntry } from "@/lib/reading/dictionary";
 import { answerVerb, finishVerbDrill, startVerbDrill, type VerbFeedback, type VerbQuestion } from "@/lib/services/verbs";
 import { requireLearner } from "@/lib/services/viewer";
+import { logError } from "@/lib/log";
 
 /**
  * Server Actions de las habilidades (lectura, escucha, escritura).
@@ -22,7 +23,7 @@ async function run<T>(name: string, fn: () => Promise<T>): Promise<SkillResult<T
     return { ok: true, data: await fn() };
   } catch (err) {
     if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
-    console.error(`[action:${name}]`, err);
+    logError(`action:${name}`, err);
     const message =
       err instanceof UserFacingError ? err.message
       : err instanceof RateLimitedError ? "Vas muy rápido. Espera unos segundos."

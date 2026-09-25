@@ -2,6 +2,7 @@ import "server-only";
 import { destroySession } from "../auth/session";
 import * as repo from "../db/repositories";
 import { adminAuth } from "../firebase/admin";
+import { logError } from "../log";
 
 export async function exportData(userId: string) {
   await repo.track(userId, "data_exported");
@@ -19,7 +20,7 @@ export async function deleteAccount(userId: string): Promise<{ authDeleted: bool
     await adminAuth().deleteUser(userId);
     authDeleted = true;
   } catch (err) {
-    console.error("[account] no se pudo borrar la identidad en Firebase Auth", err);
+    logError("account:auth-delete", err);
   }
   await destroySession(authDeleted ? null : userId);
   return { authDeleted };

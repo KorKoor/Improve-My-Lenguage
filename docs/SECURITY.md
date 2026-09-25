@@ -44,17 +44,36 @@ Firebase Auth aplica además su propia protección contra fuerza bruta (`auth/to
 - `FIREBASE_SERVICE_ACCOUNT`, `CRON_SECRET` y las claves de IA sólo existen en el servidor. `src/lib/env.ts` y `src/lib/firebase/admin.ts` importan `server-only`, así que el build falla si un componente cliente intenta usarlos.
 - `.env*` y los JSON de cuentas de servicio están en `.gitignore`; `.env.example` documenta cada variable.
 
+### Rotar la clave de la cuenta de servicio (hazlo si alguna vez se ha compartido)
+
+La clave privada del JSON da acceso total a Firestore y Auth. Si se pegó en un chat, un correo o un issue, **rótala**:
+
+1. Google Cloud Console → proyecto `improve-my-lenguages` → *IAM y administración → Cuentas de servicio* → `firebase-adminsdk-…`.
+2. Pestaña *Claves* → *Agregar clave → Crear clave nueva → JSON*. Se descarga el archivo nuevo.
+3. Vercel → *Settings → Environment Variables* → edita `FIREBASE_SERVICE_ACCOUNT` (Production y Preview) y pega el JSON **en una sola línea**:
+   `node -e "process.stdout.write(JSON.stringify(require('./ruta/al/nuevo.json')))"`
+4. *Deployments → Redeploy* del último despliegue y comprueba `https://<tu-dominio>/api/health` → `"database":"ok"`.
+5. En local, sustituye el JSON antiguo por el nuevo (sigue ignorado por git) y actualiza `.env.local` si lo usa.
+6. **Sólo entonces** vuelve a *Claves* y **elimina la clave antigua** (su ID es el `private_key_id` del JSON viejo). Desde ese momento deja de funcionar.
+7. Revisa *Registros → Explorador de registros* (filtro `protoPayload.authenticationInfo.principalEmail="firebase-adminsdk-…"`) por si hubo accesos que no reconoces.
+
+Comprobado: el historial de git **nunca** contuvo la clave (sólo `.env.example` con valores de ejemplo).
+
 ## Base de datos
 
 `firestore.rules` deniega cualquier lectura/escritura desde clientes. Sólo el servidor accede (Admin SDK). Ver DATABASE.md.
+
+`npm run smoke` lo verifica contra el emulador con la API REST: leer o escribir el propio perfil (con y sin token), otra colección o crear documentos debe dar **403**; como control, el token de administrador del emulador sí puede leer (si no, la prueba no sería fiable).
 
 ## Cabeceras HTTP (`next.config.ts`)
 
 `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy` (micrófono sólo en el propio sitio) y HSTS. Además, `poweredByHeader: false`.
 
-## Logging
+## Logging y monitorización
 
-Los errores se registran en el servidor con un prefijo (`[action:…]`, `[auth]`, `[push]`) sin datos personales ni secretos. El usuario ve mensajes útiles ("Algo salió mal… tu progreso está a salvo"), nunca trazas.
+`src/lib/log.ts` (`logError(ámbito, error)`) escribe una línea JSON en los logs de Vercel y cuenta los errores por día y ámbito en `ops/errors-AAAA-MM-DD`. Antes de registrar se eliminan correos y tokens largos y se recorta el mensaje (`log-scrub.ts`); nunca se guarda la entrada del usuario. El usuario ve mensajes útiles ("Algo salió mal… tu progreso está a salvo"), nunca trazas.
+
+`/api/health` es público (estado de Firestore y del contenido; 503 si algo falla, apto para un monitor de disponibilidad externo). Con `Authorization: Bearer <CRON_SECRET>` añade versión desplegada, tiempo de la comprobación y errores de hoy/ayer por ámbito.
 
 ## Privacidad (México / RGPD)
 

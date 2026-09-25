@@ -7,12 +7,13 @@ import { BREAK_ACTIVITIES, type BreakActivity } from "@/lib/engine/focus";
 import { PRIORITY_LABELS, type LanguagePriority } from "@/lib/engine/multilang";
 import { checkAchievements } from "@/lib/services/learning";
 import { requireLearner, requireViewer } from "@/lib/services/viewer";
+import { logError } from "@/lib/log";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 function fail(name: string, err: unknown): { ok: false; error: string } {
   if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
-  console.error(`[action:${name}]`, err);
+  logError(`action:${name}`, err);
   return { ok: false, error: "Algo salió mal. Inténtalo de nuevo." };
 }
 
@@ -20,6 +21,7 @@ function fail(name: string, err: unknown): { ok: false; error: string } {
 export async function setLanguagePriorityAction(code: string, priority: LanguagePriority): Promise<Result<null>> {
   try {
     const viewer = await requireViewer();
+    if (!(await rateLimit(`prio:${viewer.userId}`, 30, 600))) return { ok: false, error: "Vas muy rápido. Espera un poco." };
     if (!(priority in PRIORITY_LABELS)) return { ok: false, error: "Prioridad no válida" };
     const ul = await repo.getUserLanguage(viewer.userId, typeof code === "string" ? code.slice(0, 8) : "");
     if (!ul) return { ok: false, error: "No estudias ese idioma" };
@@ -35,6 +37,7 @@ export async function setLanguagePriorityAction(code: string, priority: Language
 export async function switchLanguageForBlockAction(code: string): Promise<Result<null>> {
   try {
     const viewer = await requireViewer();
+    if (!(await rateLimit(`switch:${viewer.userId}`, 60, 600))) return { ok: false, error: "Vas muy rápido. Espera un poco." };
     const ul = await repo.getUserLanguage(viewer.userId, typeof code === "string" ? code.slice(0, 8) : "");
     if (!ul) return { ok: false, error: "No estudias ese idioma" };
     if (viewer.profile.activeLanguage !== ul.languageCode) {

@@ -4,6 +4,7 @@ import { listPushTokens, prunePushTokens } from "@/lib/db/repositories";
 import { isAdminConfigured, sendPush } from "@/lib/firebase/admin";
 import { isSameOrigin } from "@/lib/http";
 import { getViewer } from "@/lib/services/viewer";
+import { logError } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
     await prunePushTokens(invalid);
     return NextResponse.json({ ok: sent > 0, sent });
   } catch (err) {
-    console.error("[push] fallo en notificación de prueba", err);
+    logError("push:test", err);
     return NextResponse.json({ error: "No se pudo enviar la notificación." }, { status: 502 });
   }
 }

@@ -8,6 +8,7 @@ import { checkAchievements } from "@/lib/services/learning";
 import { AVATARS } from "@/lib/services/profile";
 import { cheer, newGroupCode } from "@/lib/services/group";
 import { requireLearner, requireViewer } from "@/lib/services/viewer";
+import { logError } from "@/lib/log";
 
 /** Server Actions del perfil: test de aprendizaje, avatar y nombre. */
 export type ProfileResult<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -17,7 +18,7 @@ async function run<T>(name: string, fn: () => Promise<T>): Promise<ProfileResult
     return { ok: true, data: await fn() };
   } catch (err) {
     if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
-    console.error(`[action:${name}]`, err);
+    logError(`action:${name}`, err);
     return { ok: false, error: err instanceof Error && err.name === "UserFacing" ? err.message : "Algo salió mal. Inténtalo de nuevo." };
   }
 }

@@ -3,6 +3,7 @@ import { pruneExpired } from "@/lib/db/limits";
 import { prunePushTokens, reminderCandidates } from "@/lib/db/repositories";
 import { isAdminConfigured, sendPush } from "@/lib/firebase/admin";
 import { reminderMessage } from "@/lib/services/reminders";
+import { logError } from "@/lib/log";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -19,7 +20,7 @@ export async function GET(request: Request) {
   if (!isAdminConfigured()) return NextResponse.json({ ok: true, skipped: "Firebase Admin no configurado" });
   // Mantenimiento diario: rate limits y caché de IA caducados.
   const expired = await pruneExpired().catch((err) => {
-    console.error("[cron:reminders] fallo al limpiar caducados", err);
+    logError("cron:reminders.prune", err);
     return 0;
   });
 
@@ -32,7 +33,7 @@ export async function GET(request: Request) {
       sent += r.sent;
       invalid.push(...r.invalid);
     } catch (err) {
-      console.error("[cron:reminders] fallo al enviar", err);
+      logError("cron:reminders.send", err);
     }
   }
   await prunePushTokens(invalid);

@@ -26,3 +26,11 @@ test("URL del sitio: nunca rompe el build aunque la variable esté vacía o sin 
   assert.equal(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "https://korwork.org/" }), "https://korwork.org");
   assert.equal(resolveSiteUrl({ NEXT_PUBLIC_SITE_URL: "http://" , VERCEL_PROJECT_PRODUCTION_URL: "korwork.org" }), "https://korwork.org");
 });
+
+test("registro de errores: sin correos ni tokens y con longitud acotada", async () => {
+  const { scrub } = await import("../src/lib/log-scrub");
+  const out = scrub("fallo para ana.lopez@example.com con token abcdefghijklmnopqrstuvwxyz0123456789ABCD " + "x".repeat(400));
+  assert.ok(!out.includes("ana.lopez"));
+  assert.ok(out.includes("<email>") && out.includes("<token>"));
+  assert.ok(out.length <= 200);
+});

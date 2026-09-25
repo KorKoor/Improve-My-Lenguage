@@ -7,6 +7,7 @@ import { rateLimit } from "@/lib/db/limits";
 import { localDay } from "@/lib/engine/progress";
 import { checkAchievements } from "@/lib/services/learning";
 import { requireLearner } from "@/lib/services/viewer";
+import { logError } from "@/lib/log";
 
 /** Guarda una unidad de «Primeros pasos» terminada (cuenta para la racha y la actividad). */
 export async function completeFirstStepsUnitAction(
@@ -35,7 +36,7 @@ export async function completeFirstStepsUnitAction(
     return { ok: true, data: { stars, newAchievements: fresh.map((a) => ({ title: a.title, icon: a.icon })) } };
   } catch (err) {
     if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
-    console.error("[action:first-steps]", err);
+    logError("action:first-steps", err);
     return { ok: false, error: "No se pudo guardar. Inténtalo de nuevo." };
   }
 }

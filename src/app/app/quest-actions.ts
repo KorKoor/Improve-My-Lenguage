@@ -5,6 +5,7 @@ import { countDue } from "@/lib/db/repositories";
 import { rateLimit } from "@/lib/db/limits";
 import { claimDailyQuest, type XpView } from "@/lib/services/quests";
 import { requireLearner } from "@/lib/services/viewer";
+import { logError } from "@/lib/log";
 
 export type QuestClaimResult =
   | { ok: true; data: { xpGained: number; xp: XpView; leveledUp: boolean; allDone: boolean; freezeEarned: boolean } }
@@ -21,7 +22,7 @@ export async function claimQuestAction(questId: string): Promise<QuestClaimResul
   } catch (err) {
     if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
     const msg = err instanceof Error ? err.message : "";
-    if (!/^(Misión|Aún)/.test(msg)) console.error("[action:quest.claim]", err);
+    if (!/^(Misión|Aún)/.test(msg)) logError("action:quest.claim", err);
     return { ok: false, error: /^(Misión|Aún)/.test(msg) ? msg : "No se pudo reclamar la misión. Inténtalo de nuevo." };
   }
 }

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getLanguage, getVocab, TOPICS } from "@/lib/content";
 import { CEFR_LEVELS, type CefrLevel } from "@/lib/content/types";
 import * as repo from "@/lib/db/repositories";
+import { rateLimit } from "@/lib/db/limits";
 import { AiUnavailableError } from "@/lib/ai/provider";
 import { answerAssessment, startFromZero, startOrResumeAssessment, type AssessmentStep } from "@/lib/services/assessment";
 import { deleteAccount } from "@/lib/services/account";
@@ -12,6 +13,7 @@ import { finishSession, lowerLevel, RateLimitedError, reviseConfidence, startSes
 import { AiQuotaError, endConversation, explainMistake, sendTutorMessage, startConversation } from "@/lib/services/tutor";
 import type { ConversationFeedback } from "@/lib/ai/prompts";
 import { requireLearner, requireViewer } from "@/lib/services/viewer";
+import { logError } from "@/lib/log";
 
 /**
  * Server Actions: la única superficie de escritura de la app.
@@ -28,7 +30,7 @@ async function run<T>(name: string, fn: () => Promise<T>): Promise<ActionResult<
     if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
     if (err instanceof RateLimitedError) return { ok: false, error: "Vas muy rápido. Espera unos segundos." };
     if (err instanceof AiUnavailableError || err instanceof AiQuotaError) return { ok: false, error: err.message };
-    console.error(`[action:${name}]`, err);
+    logError(`action:${name}`, err);
     return { ok: false, error: "Algo salió mal. Tu progreso está a salvo; inténtalo de nuevo." };
   }
 }
@@ -127,7 +129,10 @@ export async function saveOnboarding(input: OnboardingInput): Promise<ActionResu
 // ── Diagnóstico ────────────────────────────────────────────────────────────
 export async function tooHardAction(): Promise<ActionResult<null>> {
   return run("session.too-hard", async () => {
-    await lowerLevel(await requireLearner());
+    const learner = await requireLearner();
+    // Bajar el nivel es barato pero no debe poder repetirse sin control.
+    if (!(await rateLimit(`too-hard:${learner.userId}`, 5, 3600))) throw new RateLimitedError();
+    await lowerLevel(learner);
     revalidatePath("/app", "layout");
     return null;
   });
@@ -135,7 +140,9 @@ export async function tooHardAction(): Promise<ActionResult<null>> {
 
 export async function startFromZeroAction(): Promise<ActionResult<null>> {
   return run("assessment.zero", async () => {
-    await startFromZero(await requireLearner());
+    const learner = await requireLearner();
+    if (!(await rateLimit(`zero:${learner.userId}`, 5, 3600))) throw new RateLimitedError();
+    await startFromZero(learner);
     revalidatePath("/app", "layout");
     return null;
   });

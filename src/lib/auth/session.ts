@@ -2,6 +2,7 @@ import "server-only";
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { cookies } from "next/headers";
 import { adminAuth } from "../firebase/admin";
+import { logError } from "../log";
 
 /**
  * Sesión = cookie httpOnly firmada por Firebase (session cookie), emitida por
@@ -47,7 +48,7 @@ export async function destroySession(uid: string | null): Promise<void> {
     try {
       await adminAuth().revokeRefreshTokens(uid);
     } catch (err) {
-      console.error("[auth] no se pudieron revocar los tokens", err);
+      logError("auth:revoke", err);
     }
   }
   (await cookies()).delete(SESSION_COOKIE);

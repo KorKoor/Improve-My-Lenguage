@@ -8,6 +8,7 @@ import { isAdminConfigured, sendPush } from "../firebase/admin";
 import { overallTheta, thetaToCefr } from "../engine/levels";
 import { computeStreak, localDay } from "../engine/progress";
 import type { Viewer } from "./viewer";
+import { logError } from "../log";
 
 /**
  * Grupo familiar o de estudio: hasta 8 personas que se ven la racha, los
@@ -105,7 +106,7 @@ export async function cheer(viewer: Viewer, toId: string, emoji: string): Promis
       if (invalid.length) await repo.prunePushTokens(invalid);
     }
   } catch (err) {
-    console.error("[group] no se pudo enviar la notificación del ánimo", err);
+    logError("group:cheer-push", err);
   }
 }
 
