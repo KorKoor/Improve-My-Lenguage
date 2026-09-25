@@ -2,7 +2,8 @@ import "server-only";
 import { catalog, errorLabel, grammarFor, grammarForCategory } from "../content";
 import type { Skill } from "../content/types";
 import { ACHIEVEMENT_RULES, newlyUnlocked } from "../engine/achievements";
-import { evaluateChoice, evaluateText, type EvaluationResult } from "../engine/evaluate";
+import { evaluateChoice, evaluateRoman, evaluateText, type EvaluationResult } from "../engine/evaluate";
+import { hasAlphabet } from "../content/alphabets";
 import { buildVocabExercise, canonicalMatchResponse, learnerStage, pickVocabExerciseType, resolveExercise } from "../engine/exercises";
 import { mulberry32 } from "../engine/random";
 import { Fsrs, newCard, ratingFromOutcome, targetRetention, type CardMemory } from "../engine/fsrs";
@@ -250,6 +251,7 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
     result = resolved.accepted.map((a) => evaluateChoice(response, a)).find((r) => r.correct) ?? { correct: false, nearMiss: false };
   } else {
     result = evaluateText(response, resolved.accepted, lang, { typos: resolved.typos });
+    if (!result.correct && resolved.roman?.length && hasAlphabet(lang)) result = evaluateRoman(response, resolved.roman, resolved.accepted[0]!) ?? result;
   }
 
   const timeMs = Math.max(0, Math.min(input.timeMs, 10 * 60_000));

@@ -17,6 +17,8 @@ import { fatigueOnset, planBreak, readFocus, type BreakPlan, type FocusEvent, ty
 import { BreakCoach, formatClock } from "@/components/focus/break-coach";
 import { PlanNext } from "@/components/focus/plan-next";
 import { ReportButton } from "@/components/report-button";
+import { ScriptKeyboard } from "@/components/script-keyboard";
+import { charBreakdown } from "@/lib/content/alphabets";
 import type { SessionStep } from "@/lib/engine/session-builder";
 import type { AnswerFeedback, SessionSummary } from "@/lib/services/learning";
 
@@ -451,6 +453,7 @@ function IntroStep({ step, locale, language, rtl, onNext, gentle = false }: { st
           </div>
           <SpeakButton text={w.lemma} audioUrl={w.audioUrl} locale={locale} size={48} />
         </div>
+        <LetterTiles text={w.lemma} language={language} rtl={rtl} onSay={(t) => speak(t, 0.8)} />
         <p className="mt-4 text-xl font-semibold text-primary">{w.translation.join(", ")}</p>
         {w.friend?.kind === "cognate" && (
           <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success animate-pop-in">
@@ -478,6 +481,25 @@ function IntroStep({ step, locale, language, rtl, onNext, gentle = false }: { st
         <div className="mt-3 flex justify-end"><ReportButton itemId={w.id} /></div>
       </div>
       <Button size="lg" className="mt-6 w-full" onClick={onNext} autoFocus>Entendido <ArrowRight size={18} aria-hidden /></Button>
+    </div>
+  );
+}
+
+/** La palabra letra a letra (escrituras no latinas): cada ficha suena al tocarla. */
+function LetterTiles({ text, language, rtl, onSay }: { text: string; language: string; rtl: boolean; onSay: (t: string) => void }) {
+  const pieces = useMemo(() => charBreakdown(language, text), [language, text]);
+  if (pieces.length < 2 || pieces.length > 14) return null;
+  return (
+    <div className="mt-4">
+      <p className="text-xs font-semibold text-muted">Letra a letra · toca para escuchar</p>
+      <div className="mt-1.5 flex flex-wrap gap-1.5" dir={rtl ? "rtl" : "ltr"}>
+        {pieces.map((p, i) => (
+          <button key={i} type="button" onClick={() => onSay(p.say)} className="flex min-w-11 flex-col items-center rounded-xl border border-border bg-surface px-2 py-1 transition hover:border-primary active:scale-95">
+            <span className="text-xl font-bold" lang={language}>{p.ch}</span>
+            <span className="text-[11px] text-muted" lang="es" dir="ltr">{p.r ?? "·"}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -563,14 +585,17 @@ function ExerciseStep({
       const opt = ex.options?.[n - 1];
       if (opt && !(e.target instanceof HTMLInputElement)) {
         setChosen(opt);
+        if (ex.type !== "meaning_mc" && ex.type !== "listen_mc" && ex.type !== "phrase_listen") speak(opt, gentle ? 0.8 : 1);
         onSubmit(ex, opt);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [ex, disabled, onSubmit]);
+  }, [ex, disabled, onSubmit, speak, gentle]);
 
   const dir = rtl ? "rtl" : "ltr";
+  const optionsInSpanish = ex.type === "meaning_mc" || ex.type === "listen_mc" || ex.type === "phrase_listen";
+  const promptInSpanish = ex.type === "reverse_mc" || ex.type === "recall" || ex.type === "phrase_pick";
 
   return (
     <div>
@@ -597,9 +622,16 @@ function ExerciseStep({
       ) : ex.prompt ? (
         <div className="card mt-3 p-6">
           <div className="flex items-start gap-3">
-            <p className={cn("flex-1 font-display font-extrabold", ex.prompt.length > 40 ? "text-xl leading-snug" : "text-3xl sm:text-4xl")} lang={ex.type === "reverse_mc" || ex.type === "recall" || ex.type === "phrase_pick" ? "es" : language} dir={ex.type === "reverse_mc" || ex.type === "recall" || ex.type === "phrase_pick" ? "ltr" : dir}>
-              {ex.prompt}
-            </p>
+            {promptInSpanish || ex.type === "cloze" || ex.type === "conjugate" || ex.type === "grammar" || ex.type === "rearrange" ? (
+              <p className={cn("flex-1 font-display font-extrabold", ex.prompt.length > 40 ? "text-xl leading-snug" : "text-3xl sm:text-4xl")} lang={promptInSpanish || ex.type === "rearrange" ? "es" : language} dir={promptInSpanish || ex.type === "rearrange" ? "ltr" : dir}>
+                {ex.prompt}
+              </p>
+            ) : (
+              // En el idioma que aprendes: tocar el texto también lo lee en voz alta.
+              <button type="button" onClick={() => speak(ex.audioText ?? ex.prompt, gentle ? 0.8 : 1, ex.audioText ? ex.audioUrl : undefined)} className={cn("flex-1 text-start font-display font-extrabold hover:text-primary", ex.prompt.length > 40 ? "text-xl leading-snug" : "text-3xl sm:text-4xl")} lang={language} dir={dir} title="Toca para escucharlo">
+                {ex.prompt}
+              </button>
+            )}
             {ex.audioText ? <SpeakButton text={ex.audioText} audioUrl={ex.audioUrl} locale={locale} size={46} /> : null}
           </div>
           {ex.context && <p className="mt-2 text-sm text-muted" lang={ex.type === "cloze" || ex.type === "conjugate" ? "es" : language}>{ex.context}</p>}
@@ -617,7 +649,11 @@ function ExerciseStep({
                 key={o}
                 type="button"
                 disabled={disabled}
-                onClick={() => { setChosen(o); onSubmit(ex, o); }}
+                onClick={() => {
+                  setChosen(o);
+                  if (!optionsInSpanish) speak(o, gentle ? 0.8 : 1);
+                  onSubmit(ex, o);
+                }}
                 className={cn(
                   "flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-left text-base font-medium transition",
                   state === "ok" && "border-2 border-success bg-success-soft text-success",
@@ -627,7 +663,7 @@ function ExerciseStep({
                 )}
               >
                 <kbd className="hidden size-6 place-items-center rounded-md border border-border text-[11px] text-muted sm:grid">{i + 1}</kbd>
-                <span className="flex-1" lang={ex.type === "meaning_mc" || ex.type === "listen_mc" || ex.type === "phrase_listen" ? "es" : language}>{o}</span>
+                <span className="flex-1" lang={optionsInSpanish ? "es" : language} dir={optionsInSpanish ? "ltr" : dir}>{o}</span>
                 {state === "ok" && <Check size={18} aria-hidden />}
                 {state === "bad" && <X size={18} aria-hidden />}
               </button>
@@ -656,6 +692,7 @@ function ExerciseStep({
               feedback ? (feedback.correct ? "border-success" : "border-danger") : "border-border",
             )}
           />
+          <ScriptKeyboard lang={language} locale={locale} value={text} onChange={setText} disabled={disabled} romanOk={ex.type === "recall" || ex.type === "cloze" || ex.type === "dictation_word"} />
           {showHint && ex.hint && !feedback && (
             <p className="mt-2 font-mono text-lg tracking-wider text-primary animate-pop-in" lang={language} aria-label="Pista">{ex.hint}</p>
           )}
@@ -694,7 +731,7 @@ function ExerciseStep({
           </div>
           <div className="mt-4 flex flex-wrap gap-2" lang={language} dir={dir}>
             {ex.tokens.map((t, ti) => (
-              <button key={ti} type="button" disabled={disabled || order.includes(ti)} onClick={() => setOrder((o) => [...o, ti])} className={cn("rounded-xl border border-border bg-surface px-3 py-2 font-medium transition", order.includes(ti) && "opacity-30")}>
+              <button key={ti} type="button" disabled={disabled || order.includes(ti)} onClick={() => { setOrder((o) => [...o, ti]); speak(t, gentle ? 0.8 : 1); }} className={cn("rounded-xl border border-border bg-surface px-3 py-2 font-medium transition", order.includes(ti) && "opacity-30")}>
                 {t}
               </button>
             ))}
@@ -707,7 +744,7 @@ function ExerciseStep({
         </div>
       )}
 
-      {ex.input === "match" && ex.pairs && <MatchInput ex={ex} language={language} disabled={disabled} onDone={(pairs) => onSubmit(ex, "", pairs)} />}
+      {ex.input === "match" && ex.pairs && <MatchInput ex={ex} language={language} disabled={disabled} onSay={(t) => speak(t, gentle ? 0.8 : 1)} onDone={(pairs) => onSubmit(ex, "", pairs)} />}
 
       {ex.input === "speech" && <SpeechInput locale={locale} disabled={disabled} onResult={(t) => onSubmit(ex, t)} onSkip={onSkip} />}
     </div>
@@ -786,7 +823,7 @@ function SpeechInput({ locale, disabled, onResult, onSkip }: { locale: string; d
   );
 }
 
-function MatchInput({ ex, language, disabled, onDone }: { ex: Exercise; language: string; disabled: boolean; onDone: (pairs: Record<string, string>) => void }) {
+function MatchInput({ ex, language, disabled, onDone, onSay }: { ex: Exercise; language: string; disabled: boolean; onDone: (pairs: Record<string, string>) => void; onSay: (text: string) => void }) {
   const [left, setLeft] = useState<string | null>(null);
   const [pairs, setPairs] = useState<Record<string, string>>({});
   const used = useMemo(() => new Set(Object.values(pairs)), [pairs]);
@@ -804,7 +841,7 @@ function MatchInput({ ex, language, disabled, onDone }: { ex: Exercise; language
     <div className="mt-5 grid grid-cols-2 gap-3">
       <div className="space-y-2" lang={language}>
         {ex.pairs!.left.map((l) => (
-          <button key={l} type="button" disabled={disabled || l in pairs} aria-pressed={left === l} onClick={() => setLeft(l)} className={cn("w-full rounded-2xl border px-3 py-3 text-left font-medium transition", left === l ? "border-2 border-primary bg-primary-soft" : "border-border bg-surface", l in pairs && "opacity-40")}>
+          <button key={l} type="button" disabled={disabled || l in pairs} aria-pressed={left === l} onClick={() => { setLeft(l); onSay(l); }} className={cn("w-full rounded-2xl border px-3 py-3 text-left font-medium transition", left === l ? "border-2 border-primary bg-primary-soft" : "border-border bg-surface", l in pairs && "opacity-40")}>
             {l}
           </button>
         ))}
@@ -881,7 +918,7 @@ function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain, ex
         </p>
         {!ok && f.expected && <p className="mt-1 text-lg font-semibold">{f.expected}</p>}
         {ok && f.nearMiss && (
-          <p className="mt-1 text-sm">{f.note === "accent" ? "Ojo con los acentos: " : "Pequeña errata. Se escribe: "}<strong>{f.expected}</strong></p>
+          <p className="mt-1 text-sm">{f.note === "accent" ? "Ojo con los acentos: " : f.note === "roman" ? "Bien, lo escribiste en letras latinas. En su escritura es: " : "Pequeña errata. Se escribe: "}<strong>{f.expected}</strong></p>
         )}
         {f.explanation && <p className="mt-2 text-sm leading-relaxed">{f.explanation}</p>}
         {!ok && f.errorLabel && <p className="mt-2 text-xs text-muted">Registrado como: {f.errorLabel}. Lo tendremos en cuenta en tus próximas sesiones.</p>}

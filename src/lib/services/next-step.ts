@@ -1,4 +1,5 @@
 import "server-only";
+import { alphabetFor } from "../content/alphabets";
 import { storiesFor } from "../content/stories";
 import * as repo from "../db/repositories";
 import { nextLesson } from "../engine/course";
@@ -11,10 +12,12 @@ import type { Learner } from "./viewer";
 export async function simpleNextStep(learner: Learner, dueCount: number): Promise<NextStep> {
   const now = new Date();
   const today = localDay(now, learner.profile.timezone);
-  const [done, activity, events] = await Promise.all([
+  const abc = alphabetFor(learner.language.code);
+  const [done, activity, events, letters] = await Promise.all([
     repo.getCourse(learner.ul.id),
     repo.getActivity(learner.userId, today, learner.language.code),
     repo.eventsSince(learner.userId, new Date(now.getTime() - 36 * 3600_000)),
+    abc ? repo.getAlphabet(learner.ul.id) : Promise.resolve({} as Record<string, number>),
   ]);
   const todays = events.filter((e) => localDay(e.at, learner.profile.timezone) === today);
   const course = courseFor(learner);
@@ -29,5 +32,6 @@ export async function simpleNextStep(learner: Learner, dueCount: number): Promis
     dailyMinutes: learner.profile.dailyMinutes,
     storyId: stories.length ? stories[Number(today.replaceAll("-", "")) % stories.length]!.id : null,
     storiesToday: todays.filter((e) => e.name === "story_completed").length,
+    alphabet: abc ? { done: abc.groups.filter((g) => letters[g.id]).length, total: abc.groups.length } : undefined,
   });
 }

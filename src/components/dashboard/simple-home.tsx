@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import type { DashboardData } from "@/lib/services/insights";
 import type { NextStep } from "@/lib/engine/next-step";
 
-const STEP_EMOJI: Record<NextStep["kind"], string> = { review: "🔁", lesson: "🧭", session: "✨", story: "📚", done: "🌟" };
+const STEP_EMOJI: Record<NextStep["kind"], string> = { review: "🔁", alphabet: "🔤", lesson: "🧭", session: "✨", story: "📚", done: "🌟" };
 
 /**
  * Inicio del modo sencillo: una acción principal enorme, frases claras en
@@ -41,7 +41,7 @@ export function SimpleHome({ d, languageName, greeting, step }: { d: DashboardDa
         <ButtonLink href={step.href} size="lg" className="mt-6 h-20 w-full text-2xl">
           {step.kind === "done" ? "Un poquito más" : "Seguir aprendiendo"} <ArrowRight size={26} aria-hidden />
         </ButtonLink>
-        {!d.assessed && step.kind === "lesson" && (
+        {!d.assessed && (step.kind === "lesson" || step.kind === "alphabet") && (
           <p className="mt-4 text-center text-muted">
             ¿Ya sabes algo de {lang}?{" "}
             <Link href="/app/assessment" className="font-semibold text-primary underline-offset-4 hover:underline"><Gauge size={15} className="mr-1 inline" aria-hidden />Hacer el test de nivel</Link>

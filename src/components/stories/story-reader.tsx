@@ -107,7 +107,7 @@ export function StoryReader({ story, tokens, locale, language, languageName, rtl
       </div>
       <VoiceWarning locale={locale} languageName={languageName} />
       <h1 className="mt-6 font-display text-2xl font-extrabold" lang={language} dir={dir}>{story.title}</h1>
-      <p className="text-sm text-muted">Toca una palabra para ver qué significa, o <Eye size={13} className="inline" aria-label="el ojo" /> para traducir la frase entera.</p>
+      <p className="text-sm text-muted">Toca una palabra para oírla y ver qué significa, o <Eye size={13} className="inline" aria-label="el ojo" /> para traducir la frase entera.</p>
       <ol className="mt-4 space-y-3">
         {story.lines.slice(0, shown).map((l, i) => (
           <li key={i} className={cn("card p-4 animate-rise", i === shown - 1 && "border-primary")}>
@@ -115,7 +115,11 @@ export function StoryReader({ story, tokens, locale, language, languageName, rtl
               <p className="flex-1 text-lg leading-relaxed" lang={language} dir={dir}>
                 {(tokens[i] ?? [{ t: l.t }]).map((tk, k) =>
                   tk.id ? (
-                    <button key={k} type="button" onClick={() => setWord(word?.line === i && word.k === k ? null : { line: i, k })} className={cn("rounded px-0.5 underline decoration-dotted decoration-primary/40 underline-offset-4 hover:bg-primary-soft", word?.line === i && word.k === k && "bg-primary-soft")}>
+                    <button key={k} type="button" onClick={() => {
+                      const same = word?.line === i && word.k === k;
+                      setWord(same ? null : { line: i, k });
+                      if (!same) speak(tk.t, 0.8);
+                    }} className={cn("rounded px-0.5 underline decoration-dotted decoration-primary/40 underline-offset-4 hover:bg-primary-soft", word?.line === i && word.k === k && "bg-primary-soft")}>
                       {tk.t}
                     </button>
                   ) : (

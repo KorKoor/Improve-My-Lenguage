@@ -229,7 +229,7 @@ export function FirstStepsRunner({
             </div>
             <div className="mt-4 flex flex-wrap gap-2" lang={language} dir={dir}>
               {task.tokens.map((t, ti) => (
-                <button key={ti} type="button" disabled={!!answer || order.includes(ti)} onClick={() => setOrder((o) => [...o, ti])} className={cn("rounded-xl border border-border bg-surface px-3 py-2 font-medium", order.includes(ti) && "opacity-30")}>{t}</button>
+                <button key={ti} type="button" disabled={!!answer || order.includes(ti)} onClick={() => { setOrder((o) => [...o, ti]); say(t, false); }} className={cn("rounded-xl border border-border bg-surface px-3 py-2 font-medium", order.includes(ti) && "opacity-30")}>{t}</button>
               ))}
             </div>
             {!answer && <Button size="lg" className="mt-5 w-full" disabled={order.length !== task.tokens.length} onClick={() => check(order.map((i) => task.tokens[i]).join(" "))}>Comprobar</Button>}

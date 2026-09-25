@@ -9,6 +9,7 @@
 import { pronouns, tenseLabel, TENSE_ORDER, withPronoun } from "../content/conjugation";
 import type { GrammarConcept, LanguageCode, Skill, TenseKey, VocabItem } from "../content/types";
 import { CEFR_CENTER, itemTheta } from "./levels";
+import { romanForms } from "../content/alphabets";
 import { FIRST_STEPS, unitPhrases } from "../content/first-steps";
 import { hashString, mulberry32, sample, shuffle } from "./random";
 
@@ -66,6 +67,8 @@ export interface ResolvedAnswer {
   mode: "text" | "choice" | "match" | "speech";
   /** ¿Se toleran erratas? (no en gramática ni orden de palabras). */
   typos: boolean;
+  /** Transcripciones latinas aceptadas (escrituras no latinas: quien aún no tiene el teclado). */
+  roman?: string[];
 }
 
 export interface Catalog {
@@ -552,7 +555,7 @@ export function resolveExercise(
     case "listen_pick":
       return { accepted: [item.lemma], display: `${item.lemma} = ${tr.join(", ")}`, explanation: usage, errorCategory: "listening", mode: "choice", typos: false };
     case "dictation_word":
-      return { accepted: [item.lemma, ...(item.acceptedForms ?? [])], display: `${item.lemma} = ${tr.join(", ")}`, errorCategory: "listening", mode: "text", typos: true };
+      return { accepted: [item.lemma, ...(item.acceptedForms ?? [])], display: `${item.lemma}${item.reading ? ` (${item.reading})` : ""} = ${tr.join(", ")}`, errorCategory: "listening", mode: "text", typos: true, roman: romanForms(item.reading) };
     case "recall":
     case "cloze":
       return {
@@ -562,6 +565,7 @@ export function resolveExercise(
         errorCategory: type === "recall" ? "vocabulary" : "vocabulary-in-context",
         mode: "text",
         typos: true,
+        roman: romanForms(item.reading),
       };
     case "dictation": {
       const ex = item.examples[Number(variant)];

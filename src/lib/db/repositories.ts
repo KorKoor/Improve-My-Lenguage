@@ -1152,6 +1152,24 @@ export async function saveFirstStepsUnit(ulId: string, unitId: string, score: nu
   });
 }
 
+// ── Alfabeto (mejor puntuación por grupo de letras, en el documento del idioma) ─
+export async function getAlphabet(ulId: string): Promise<Record<string, number>> {
+  const v = (await ulRef(ulId).get()).get("alphabet");
+  const out: Record<string, number> = {};
+  if (v && typeof v === "object") for (const [k, n] of Object.entries(v as Record<string, unknown>)) if (typeof n === "number") out[k] = n;
+  return out;
+}
+
+export async function saveAlphabetGroup(ulId: string, groupId: string, stars: number): Promise<void> {
+  await db().runTransaction(async (tx) => {
+    const ref = ulRef(ulId);
+    const snap = await tx.get(ref);
+    const prev = (snap.get("alphabet") ?? {}) as Record<string, number>;
+    if ((prev[groupId] ?? -1) >= stars) return;
+    tx.set(ref, { alphabet: { [groupId]: stars } }, { merge: true });
+  });
+}
+
 export async function countEvents(userId: string, name: string): Promise<number> {
   const agg = await userRef(userId).collection("events").where("name", "==", name).count().get();
   return agg.data().count;

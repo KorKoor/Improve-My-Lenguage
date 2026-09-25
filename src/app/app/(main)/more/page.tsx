@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Settings } from "lucide-react";
 import { navItems } from "@/components/app/nav-items";
+import { hasAlphabet } from "@/lib/content/alphabets";
 import { countDue } from "@/lib/db/repositories";
 import { requireLearner } from "@/lib/services/viewer";
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = { title: "Más" };
 export default async function MorePage() {
   const learner = await requireLearner();
   const due = await countDue(learner.ul.id, new Date());
-  const items = navItems(due, learner.profile.simpleMode);
+  const items = navItems(due, learner.profile.simpleMode, hasAlphabet(learner.language.code));
   return (
     <div className="space-y-6">
       <header className="animate-rise">

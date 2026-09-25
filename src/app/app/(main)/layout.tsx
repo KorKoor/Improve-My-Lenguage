@@ -8,6 +8,7 @@ import { viewerAttentionSpan } from "@/lib/services/multilang";
 import { Logo } from "@/components/logo";
 import { LanguageMark } from "@/components/language-mark";
 import { getLanguage } from "@/lib/content";
+import { hasAlphabet } from "@/lib/content/alphabets";
 import { overallTheta, thetaToCefr } from "@/lib/engine/levels";
 import { countDue, getSkillEstimates, listUserLanguages } from "@/lib/db/repositories";
 import { requireLearner } from "@/lib/services/viewer";
@@ -30,7 +31,7 @@ export default async function AppShell({ children }: { children: React.ReactNode
       <ComfortSync textSize={learner.profile.textSize} slowAudio={learner.profile.slowAudio} />
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-6 border-r border-border bg-surface/60 px-4 py-6 lg:flex">
         <div className="px-1"><Logo href="/app" /></div>
-        <SidebarNav due={due} simple={learner.profile.simpleMode} />
+        <SidebarNav due={due} simple={learner.profile.simpleMode} alphabet={hasAlphabet(learner.language.code)} />
         <div className="mt-auto space-y-3">
           <LanguageSwitcher options={options} active={learner.language.code} />
           <form action="/auth/signout" method="post">
