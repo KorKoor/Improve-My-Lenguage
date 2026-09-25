@@ -22,6 +22,7 @@ export function navItems(due: number, simple = false): NavItem[] {
       { href: "/app/vocabulary", label: "Mis palabras", icon: BookOpen },
       { href: "/app/read", label: "Leer", icon: Newspaper },
       { href: "/app/listen", label: "Escuchar", icon: Headphones },
+      { href: "/app/speak", label: "Hablar", icon: Mic },
       { href: "/app/progress", label: "Mi progreso", icon: BarChart3 },
     ];
   }

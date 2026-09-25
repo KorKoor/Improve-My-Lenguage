@@ -80,6 +80,27 @@ export function SimpleHome({ d, languageName, dailyMinutes, greeting }: { d: Das
         </div>
       </Card>
 
+      {d.wordOfDay && (
+        <Card className="p-6">
+          <p className="text-sm font-bold uppercase tracking-wide text-muted">Palabra del día</p>
+          <p className="mt-1 font-display text-3xl font-extrabold">{d.wordOfDay.lemma}</p>
+          <p className="text-xl">{d.wordOfDay.translation.slice(0, 2).join(", ")}</p>
+          {d.wordOfDay.example?.translation && <p className="mt-2 text-lg text-muted">«{d.wordOfDay.example.text}» — {d.wordOfDay.example.translation}</p>}
+        </Card>
+      )}
+
+      <nav aria-label="Otras formas de practicar" className="grid gap-3 sm:grid-cols-3">
+        <Link href="/app/read" className="card lift flex items-center gap-3 p-5 text-lg font-semibold hover:border-primary">
+          <span className="text-2xl" aria-hidden>📖</span> Leer
+        </Link>
+        <Link href="/app/listen" className="card lift flex items-center gap-3 p-5 text-lg font-semibold hover:border-primary">
+          <span className="text-2xl" aria-hidden>🎧</span> Escuchar
+        </Link>
+        <Link href="/app/speak" className="card lift flex items-center gap-3 p-5 text-lg font-semibold hover:border-primary">
+          <span className="text-2xl" aria-hidden>🎙️</span> Hablar
+        </Link>
+      </nav>
+
       <nav aria-label="Más opciones" className="grid gap-3 sm:grid-cols-2">
         <Link href="/app/vocabulary" className="card flex items-center gap-3 p-5 text-lg font-semibold hover:border-primary">
           <BookOpen size={22} className="text-primary" aria-hidden /> Ver mis palabras

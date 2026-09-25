@@ -131,6 +131,25 @@ function buildSteps(name: string | null, language: string, simple: boolean): Ste
       ),
     },
     {
+      icon: Sparkles,
+      color: "var(--skill-reading)",
+      title: "Lee, escucha, habla y escribe",
+      body: simple
+        ? "En «Leer» hay noticias y artículos reales: toca cualquier palabra y verás qué significa. En «Escuchar» y «Hablar» entrenas el oído y la voz, a tu ritmo."
+        : "Lecturas reales de Wikipedia (toca una palabra y la entiendes), escucha con dictado, pronunciación en voz alta y un editor que corrige lo que escribes. Y en tu perfil, un test de 2 minutos adapta los ejercicios a tu forma de aprender.",
+      preview: (
+        <Preview>
+          <p className="text-sm leading-relaxed">
+            The <span className="rounded bg-primary-soft px-1 font-semibold text-primary">harbour</span> was quiet that morning…
+          </p>
+          <p className="mt-2 rounded-lg bg-surface px-2 py-1 text-xs shadow-sm">harbour → <strong>puerto</strong></p>
+          <div className="mt-3 flex gap-1.5 text-xs font-semibold">
+            {["📖 Leer", "🎧 Escuchar", "🎙️ Hablar", "🖋️ Escribir"].map((x) => <span key={x} className="rounded-full bg-surface-muted px-2.5 py-1 text-muted">{x}</span>)}
+          </div>
+        </Preview>
+      ),
+    },
+    {
       icon: BarChart3,
       color: "var(--skill-grammar)",
       title: "Mira cómo avanzas",
