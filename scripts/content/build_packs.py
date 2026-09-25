@@ -33,6 +33,7 @@ import bz2
 import gzip
 import json
 import math
+import os
 import re
 import sys
 import time
@@ -570,7 +571,10 @@ def load_en_kaikki(lang: str, surface: set[str]):
     """Dos pasadas: (1) formas flexionadas → lema, (2) datos de los lemas necesarios."""
     L = LANGS[lang]
     path = fetch(EN_KAIKKI.format(name=L.en_name), f"enwiktionary-{L.en_name}.jsonl.gz")
-    want = surface | {s.capitalize() for s in surface} if L.spaced else surface
+    want = surface | {s.capitalize() for s in surface} if L.spaced else set(surface)
+    if lang == "ko":
+        # wordfreq separa la raíz verbal (있, 좋, 만들): cargamos también su infinitivo (있다…).
+        want |= {w + "다" for w in surface if len(w) <= 2}
     form_to_lemma: dict[str, list[str]] = defaultdict(list)
     lemma_entries: dict[str, list[EnEntry]] = defaultdict(list)
     # «was»: su primera acepción es «pasado de be» y sólo tiene una coloquial
@@ -641,6 +645,7 @@ def load_en_kaikki(lang: str, surface: set[str]):
                 links = [fo.get("word") for fo in (s.get("form_of") or []) + (s.get("alt_of") or [])]
                 if not links and tags & {"form-of", "alt-of"}:
                     links = [gloss_form_of(g) for g in s.get("glosses", [])[:1]]
+                links = [normalize_link(lang, l) for l in links if l]
                 links = [l for l in links if l and l != w and " " not in l]
                 if links and si == 0:
                     form_first.add(w)
@@ -765,9 +770,51 @@ KO_ENDINGS = sorted(
 )
 
 
+AR_HARAKAT = re.compile("[\u064B-\u0652\u0670\u0640]")
+
+
+def normalize_link(lang: str, w: str) -> str:
+    """El destino de «form_of» viene vocalizado (هٰذَا, бы́ть); las entradas no."""
+    if lang == "ar":
+        # Sólo harakat, alif superíndice y tatweel: la hamza (أ, إ, ؤ) es parte de la letra.
+        return AR_HARAKAT.sub("", w).replace("\u0671", "\u0627")  # alif wasla → alif
+    if lang in ("ru", "uk"):
+        return w.replace("\u0301", "").replace("\u0300", "")
+    return w
+
+
+AR_PREFIXES = ["وبال", "وال", "بال", "فال", "كال", "ولل", "لل", "ال", "و", "ف", "ب", "ل", "ك", "س"]
+AR_SUFFIXES = ["هما", "كما", "هم", "هن", "كم", "كن", "نا", "ها", "ني", "ون", "ين", "ات", "وا", "تم", "ه", "ك", "ي", "ت", "ة"]
+
+
+def ar_candidates(w: str) -> list[str]:
+    """والكتاب → كتاب · بها → ب+ها · كانت → كان (se valida después contra el diccionario)."""
+    stems = [w]
+    for p in AR_PREFIXES:
+        if w.startswith(p) and len(w) - len(p) >= 2:
+            stems.append(w[len(p):])
+    out: list[str] = []
+    for st in stems:
+        out.append(st)
+        for s_ in AR_SUFFIXES:
+            if st.endswith(s_) and len(st) - len(s_) >= 2:
+                base = st[: -len(s_)]
+                out.append(base)
+                if s_ == "ة":
+                    continue
+                if s_ in ("ت",) and not base.endswith("ة"):
+                    out.append(base + "ة")  # مدرستي → مدرسة
+    seen, uniq = set(), []
+    for c in out[1:]:
+        if c not in seen:
+            seen.add(c)
+            uniq.append(c)
+    return uniq
+
+
 def ko_candidates(w: str) -> list[str]:
     """학교에 → 학교 · 먹었어요 → 먹다 · 했어요 → 하다 (se valida después contra el diccionario)."""
-    out = []
+    out = [w + "다"]
     for p in KO_PARTICLES:
         if w.endswith(p) and len(w) > len(p):
             out.append(w[: -len(p)])
@@ -847,6 +894,9 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
     def resolve(w: str) -> list[str]:
         if w in forced_forms:
             return [forced_forms[w]]
+        # Una corrección revisada a mano define la palabra aunque Wiktionary no la tenga como lema.
+        if isinstance(overrides.get(w), list) and w in pos_override:
+            return [w]
         if lang == "de" and w.capitalize() != w:
             cap, low = w.capitalize(), w
             cap_noun = any(e.pos == "noun" for e in en_lemmas.get(cap, []))
@@ -856,10 +906,19 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
                 return [cap] + ([low] if low_ok else [])
             if cap_noun and is_lemma(low) and low_c > 0 and cap_c >= 0.25 * low_c and any(e.pos == "verb" for e in en_lemmas.get(low, [])):
                 return [low, cap]  # leben / das Leben, essen / das Essen
+        if lang == "ko" and len(w) == 1 and is_lemma(w + "다") and w not in overrides and not any(e.pos == "noun" for e in en_lemmas.get(w, [])):
+            return [w + "다"]  # wordfreq separa la raíz: 있 → 있다, 좋 → 좋다
         if lang == "ko" and not is_lemma(w) and not form_to_lemma.get(w):
             base = next((c for c in ko_candidates(w) if is_lemma(c)), None)
             if base:
                 return [base]
+        if lang == "ar" and not is_lemma(w) and not form_to_lemma.get(w):
+            for c in ar_candidates(w):
+                if is_lemma(c):
+                    return [c]
+                via = next((f for f in form_to_lemma.get(c) or [] if is_lemma(f)), None)
+                if via:
+                    return [via]
         if len(w) == 1 and L.spaced and any(e.pos == "pronoun" for e in en_lemmas.get(w.upper(), [])):
             return [w.upper()]  # «i» → «I»: la entrada en minúscula es la letra
         for v in variants(w):
@@ -874,8 +933,11 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
         return []
 
     surface_rank: dict[str, int] = {}  # forma → rango de su lema (para medir la dificultad de las frases)
+    debug = set(filter(None, (os.environ.get("DEBUG_WORDS") or "").split(",")))  # DEBUG_WORDS=الذي,있 …
     for i, w in enumerate(freq[:SURFACE_LIMIT]):
         cands = resolve(w)
+        if w in debug:
+            log(f"[{lang}] DEBUG {w!r}: resolve → {cands} · lema={is_lemma(w)} · formas→{form_to_lemma.get(w)}")
         for lem in cands:
             lemma_forms[lem].add(w)
             lemma_forms[lem].add(strip_marks(lem.lower()))
@@ -960,7 +1022,7 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
         pos = pos_override.get(lemma) or (en.pos if en else (POS.get(es.pos) if es else None))
         if not pos:
             continue
-        if lang not in ("ja", "zh") and len(lemma) == 1 and pos not in ("preposition", "conjunction", "pronoun", "determiner"):
+        if lang not in ("ja", "zh", "ko") and len(lemma) == 1 and pos not in ("preposition", "conjunction", "pronoun", "determiner"):
             continue
         if lemma in overrides and overrides[lemma] is None:
             stats["descartadas"] += 1  # ruido del corpus, nombre propio o forma flexionada (revisado)
@@ -1057,8 +1119,9 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
             if t:
                 ex_out.append([t, None, "wiktionary"])
         if not ex_out:
+            # Sin frase de ejemplo la palabra sigue siendo útil (significado, recuerdo, lectura):
+            # en idiomas con poco Tatoeba (coreano, árabe) descartarla vaciaba los niveles altos.
             stats["sin_ejemplo"] += 1
-            continue
 
         stats[source] += 1
         ipa = (es.ipa if es and es.ipa else en.ipa if en else None)
@@ -1086,7 +1149,7 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
             entry["cj"] = conj
         # Formas flexionadas vistas en el corpus: permiten traducir al tocar
         # cualquier forma en el lector ("geht" → "gehen").
-        forms = sorted({f for f in lemma_forms[lemma] if f and f != lemma.lower() and f != lemma}, key=lambda f: freq_pos.get(f, 10**9))[:15]
+        forms = sorted({f for f in lemma_forms[lemma] if f and f != lemma.lower() and f != lemma}, key=lambda f: freq_pos.get(f, 10**9))[: 25 if lang in ("ar", "ru", "de", "fr", "it", "pt") else 15]
         if forms:
             entry["f"] = forms
         note = gender_note(lang, lemma, gender) if pos == "noun" else None

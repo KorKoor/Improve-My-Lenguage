@@ -141,10 +141,197 @@
   "수": [
     "posibilidad (-ㄹ 수 있다)"
   ],
-  "것": [
-    "cosa, lo que"
-  ],
+  "것": {
+    "t": [
+      "cosa",
+      "lo que"
+    ],
+    "p": "noun"
+  },
   "거": [
     "cosa (coloquial)"
-  ]
+  ],
+  "을": {
+    "t": [
+      "(marca de objeto directo)"
+    ],
+    "p": "particle"
+  },
+  "를": {
+    "t": [
+      "(marca de objeto directo)"
+    ],
+    "p": "particle"
+  },
+  "은": {
+    "t": [
+      "(marca de tema)"
+    ],
+    "p": "particle"
+  },
+  "는": {
+    "t": [
+      "(marca de tema)"
+    ],
+    "p": "particle"
+  },
+  "가": {
+    "t": [
+      "(marca de sujeto)"
+    ],
+    "p": "particle"
+  },
+  "에": {
+    "t": [
+      "en",
+      "a (lugar, tiempo)"
+    ],
+    "p": "particle"
+  },
+  "에서": {
+    "t": [
+      "en (donde ocurre algo)",
+      "desde"
+    ],
+    "p": "particle"
+  },
+  "으로": {
+    "t": [
+      "hacia",
+      "con (medio)"
+    ],
+    "p": "particle"
+  },
+  "로": {
+    "t": [
+      "hacia",
+      "con (medio)"
+    ],
+    "p": "particle"
+  },
+  "에게": {
+    "t": [
+      "a (una persona)"
+    ],
+    "p": "particle"
+  },
+  "한테": {
+    "t": [
+      "a (una persona, coloquial)"
+    ],
+    "p": "particle"
+  },
+  "까지": {
+    "t": [
+      "hasta"
+    ],
+    "p": "particle"
+  },
+  "부터": {
+    "t": [
+      "desde"
+    ],
+    "p": "particle"
+  },
+  "처럼": {
+    "t": [
+      "como"
+    ],
+    "p": "particle"
+  },
+  "랑": {
+    "t": [
+      "con",
+      "y"
+    ],
+    "p": "particle"
+  },
+  "도": {
+    "t": [
+      "también"
+    ],
+    "p": "particle"
+  },
+  "만": {
+    "t": [
+      "solo"
+    ],
+    "p": "particle"
+  },
+  "의": {
+    "t": [
+      "de (posesión)"
+    ],
+    "p": "particle"
+  },
+  "과": {
+    "t": [
+      "y",
+      "con"
+    ],
+    "p": "particle"
+  },
+  "와": {
+    "t": [
+      "y",
+      "con"
+    ],
+    "p": "particle"
+  },
+  "때문": {
+    "t": [
+      "causa",
+      "por (culpa de)"
+    ],
+    "p": "noun"
+  },
+  "일": {
+    "t": [
+      "trabajo",
+      "día",
+      "uno"
+    ],
+    "p": "noun"
+  },
+  "말": {
+    "t": [
+      "palabra",
+      "habla",
+      "caballo"
+    ],
+    "p": "noun"
+  },
+  "년": {
+    "t": [
+      "año"
+    ],
+    "p": "noun"
+  },
+  "월": {
+    "t": [
+      "mes"
+    ],
+    "p": "noun"
+  },
+  "때": {
+    "t": [
+      "momento",
+      "cuando"
+    ],
+    "p": "noun"
+  },
+  "중": {
+    "t": [
+      "en medio de",
+      "durante"
+    ],
+    "p": "noun"
+  },
+  "등": {
+    "t": [
+      "etcétera",
+      "espalda"
+    ],
+    "p": "noun"
+  }
 }

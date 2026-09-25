@@ -44,14 +44,19 @@ Un `GrammarConcept` incluye: resumen, cuándo usarlo, formación, errores comune
 
 ## Vocabulario desde datos públicos (A1 → C1)
 
-`scripts/content/build_packs.py` genera `data/packs/<código>.json.gz` para 12 idiomas (≈ 4 000–9 500 palabras cada uno):
+`scripts/content/build_packs.py` genera `data/packs/<código>.json.gz` para 12 idiomas (≈ 5 500–9 700 palabras cada uno, con tablas de conjugación en FR, DE, IT, PT, NL, RU y AR):
 
 1. **Frecuencia (wordfreq, CC BY-SA)** → orden de aprendizaje. El rango se cuenta entre lemas (no formas flexionadas) y define el nivel: θ = −2,5 + 1,27·ln(rango/300); A1 ≤ 445, A2 ≤ 978, B1 ≤ 2 150, B2 ≤ 4 730, C1 ≤ 10 400 palabras.
 2. **Lemas y formas (Wiktionary en inglés, CC BY-SA)** → «geht» → «gehen»; lecturas (kana, pinyin, transliteración), IPA, género y audio grabado (Wikimedia Commons).
 3. **Traducción al español por votación** de tres fuentes: Wiktionary en español (directa), tablas de traducción de palabras españolas (inversa, acepción principal) y triangulación por acepción en las tablas del Wiktionary inglés. Gana lo que coincide en varias.
 4. **Ejemplos reales (Tatoeba, CC BY 2.0 FR)** con traducción humana, elegidos por longitud y porque el resto de palabras de la frase sean más fáciles que la palabra nueva.
-5. **Correcciones revisadas** en `scripts/content/overrides/<código>.json` para las palabras más frecuentes (partículas, pronombres, polisemia); `null` descarta ruido del corpus y nombres propios.
-6. Si una palabra no tiene traducción fiable ni ejemplo, **no entra**.
+5. **Correcciones revisadas** en `scripts/content/overrides/<código>.json` para las palabras más frecuentes (partículas, pronombres, polisemia); `null` descarta ruido del corpus y nombres propios; `{"t": […], "p": "noun"}` fija traducción y categoría (y crea el lema aunque Wiktionary no lo tenga); `"_forms": {"est": "être"}` fuerza forma → lema en homógrafos.
+6. Si una palabra no tiene traducción fiable, **no entra**. Sin ejemplo sí entra (en coreano o árabe Tatoeba es pequeño y descartarlas vaciaba los niveles altos); la ficha lo indica.
+7. **Conjugación**: de las tablas etiquetadas de Wiktionary (persona, número, tiempo, modo) se extrae una tabla compacta por verbo hasta B2 (`cj`), limpiando marcas de pronunciación (acento tónico ruso, tildes italianas no ortográficas).
+8. **Limpieza de traducciones**: anotaciones de Wiktionary como «pertenecer [with a]», «[el] ala» o «mermar[se]» se convierten en texto natural.
+9. **Resolución de lemas por idioma**: árabe (prefijos و ف ب ل ال, sufijos pronominales, enlaces vocalizados normalizados), coreano (partículas, terminaciones y raíces sueltas de wordfreq → verbo en -다), alemán (mayúsculas por uso real), chino (tradicional → simplificado).
+
+Depuración: `DEBUG_WORDS=الذي,있 python scripts/content/build_packs.py --lang ar ko` muestra cómo se resuelve cada palabra. Pruebas: `npm run test:content`.
 
 ```bash
 pip install -r scripts/content/requirements.txt
@@ -65,10 +70,10 @@ La app carga cada paquete bajo demanda en el servidor (`src/lib/content/packs.ts
 
 1. Crea `src/lib/content/<código>/index.ts` usando `wordsFor("<código>")` de `src/lib/content/pack.ts`: cada palabra con IPA, traducción, al menos un ejemplo traducido y, si aplica, una nota (género, falsos amigos para hispanohablantes).
 2. Añade al menos 2 conceptos de gramática con errores comunes, contrastes y ejercicios, y sus categorías en `error-categories.ts`.
-3. Regístralo en `content/index.ts` y cambia su `status` a `"beta"` en `languages.ts`.
+3. Regístralo en `content/index.ts` y cambia su `status` a `"available"` en `languages.ts`.
 4. `npm test` valida automáticamente cada idioma disponible: IDs, ejemplos, ≥ 30 palabras, ≥ 2 conceptos, banco de diagnóstico ≥ 12 ítems, temas válidos y que cada ejercicio sea resoluble.
 
-Estado actual: 12 idiomas con vocabulario hasta C1 desde datos públicos y gramática A1–C1 (8–13 lecciones por idioma). Inglés marcado como disponible; el resto en beta (revisión humana recomendada).
+Estado actual: 12 idiomas disponibles con vocabulario hasta C1 desde datos públicos, gramática A1–C1 (8–13 lecciones por idioma) y tablas de conjugación en los idiomas flexivos. Se recomienda revisión humana continua de las traducciones más frecuentes.
 
 ## Fase 3: contenido real de internet (diseño)
 

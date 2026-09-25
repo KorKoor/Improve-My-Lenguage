@@ -100,13 +100,19 @@
   "هي": [
     "ella"
   ],
-  "في": [
-    "en"
-  ],
-  "على": [
-    "sobre",
-    "en"
-  ],
+  "في": {
+    "t": [
+      "en"
+    ],
+    "p": "preposition"
+  },
+  "على": {
+    "t": [
+      "sobre",
+      "en"
+    ],
+    "p": "preposition"
+  },
   "لا": [
     "no"
   ],
@@ -129,5 +135,45 @@
   ],
   "كل": [
     "todo, cada"
-  ]
+  ],
+  "الذي": {
+    "t": [
+      "que",
+      "el que",
+      "el cual"
+    ],
+    "p": "pronoun"
+  },
+  "اليوم": {
+    "t": [
+      "hoy"
+    ],
+    "p": "adverb"
+  },
+  "لكن": {
+    "t": [
+      "pero"
+    ],
+    "p": "conjunction"
+  },
+  "الله": {
+    "t": [
+      "Dios"
+    ],
+    "p": "noun"
+  },
+  "بسبب": {
+    "t": [
+      "por",
+      "a causa de"
+    ],
+    "p": "preposition"
+  },
+  "يجب": {
+    "t": [
+      "hay que",
+      "deber"
+    ],
+    "p": "verb"
+  }
 }

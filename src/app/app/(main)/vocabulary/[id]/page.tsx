@@ -75,6 +75,9 @@ export default async function WordPage({ params }: { params: Promise<{ id: strin
 
       <Card>
         <h2 className="font-display text-lg font-extrabold">En contexto</h2>
+        {v.examples.length === 0 && (
+          <p className="mt-3 text-sm text-muted">Aún no tenemos una frase de ejemplo revisada para esta palabra. Búscala en Lecturas: verla en un texto real es la mejor forma de fijarla.</p>
+        )}
         <ul className="mt-4 space-y-4">
           {v.examples.map((e) => (
             <li key={e.text} className="flex items-start gap-3 rounded-2xl bg-surface-muted p-4">

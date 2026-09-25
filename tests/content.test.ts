@@ -28,7 +28,8 @@ test("IDs únicos y bien formados", () => {
       assert.ok(v.id.startsWith(`${lang}:w:`), v.id);
       assert.ok(!ids.has(v.id), `duplicado ${v.id}`);
       ids.add(v.id);
-      assert.ok(v.examples.length >= 1, `${v.id} sin ejemplos`);
+      // Las palabras curadas llevan siempre ejemplo; las de los paquetes, cuando existe en Tatoeba/Wiktionary.
+      if (!v.sources?.includes("wordfreq")) assert.ok(v.examples.length >= 1, `${v.id} sin ejemplos`);
       assert.ok(v.translations.es?.length, `${v.id} sin traducción`);
       assert.ok(!v.id.includes("|") && !v.id.includes(","), v.id);
     }
