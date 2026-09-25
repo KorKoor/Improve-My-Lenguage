@@ -195,6 +195,41 @@ export function interferenceTips(codes: string[], native: string, names: (c: str
   return tips.sort((x, y) => y.level - x.level);
 }
 
+/**
+ * Minutos por semana (lunes) e idioma para las últimas `weeks` semanas hasta
+ * `today` (incluida la actual), de la más antigua a la más reciente.
+ */
+export function weeklyByLanguage(
+  rows: { day: string; languageCode: string; seconds: number }[],
+  today: string,
+  weeks = 8,
+): { week: string; minutes: Record<string, number> }[] {
+  const monday = (day: string) => {
+    const d = new Date(`${day}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7));
+    return d.toISOString().slice(0, 10);
+  };
+  const last = monday(today);
+  const out = Array.from({ length: weeks }, (_, i) => {
+    const d = new Date(`${last}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() - 7 * (weeks - 1 - i));
+    return { week: d.toISOString().slice(0, 10), minutes: {} as Record<string, number> };
+  });
+  const idx = new Map(out.map((w, i) => [w.week, i]));
+  const secs = new Map<string, number>();
+  for (const r of rows) {
+    const i = idx.get(monday(r.day));
+    if (i === undefined) continue;
+    const k = `${i}|${r.languageCode}`;
+    secs.set(k, (secs.get(k) ?? 0) + r.seconds);
+  }
+  for (const [k, s] of secs) {
+    const [i, code] = k.split("|");
+    out[Number(i)]!.minutes[code!] = Math.round(s / 60);
+  }
+  return out;
+}
+
 /** ¿Estudió al menos `n` idiomas distintos el mismo día? (logro «Políglota»). */
 export function polyglotDays(rows: { day: string; languageCode: string; exercises: number }[], n = 2): string[] {
   const byDay = new Map<string, Set<string>>();

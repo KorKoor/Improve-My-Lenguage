@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { allocateTime, interference, interferenceTips, orderForInterference, polyglotDays, reviewMinutes, type LanguageStat } from "../src/lib/engine/multilang";
+import { allocateTime, weeklyByLanguage, interference, interferenceTips, orderForInterference, polyglotDays, reviewMinutes, type LanguageStat } from "../src/lib/engine/multilang";
 import { attentionSpan, bestStudyTime, fatigueOnset, planBreak, readFocus, type FocusEvent } from "../src/lib/engine/focus";
 import { buildStudyPlan } from "../src/lib/engine/study-plan";
 
@@ -118,4 +118,20 @@ test("plan de estudio: suma el total, descansos entre bloques y separa cercanos"
   const short = buildStudyPlan([lang("en")], { total: 10, span: 15 });
   assert.ok(short.blocks.every((b) => b.kind === "study"));
   assert.equal(short.studyMinutes, 10);
+});
+
+test("semanas por idioma: agrupa por lunes y descarta lo antiguo", () => {
+  const rows = [
+    { day: "2026-09-21", languageCode: "en", seconds: 600 }, // lunes de esta semana
+    { day: "2026-09-25", languageCode: "en", seconds: 300 },
+    { day: "2026-09-24", languageCode: "fr", seconds: 120 },
+    { day: "2026-09-20", languageCode: "fr", seconds: 240 }, // domingo: semana anterior
+    { day: "2025-01-01", languageCode: "fr", seconds: 9999 },
+  ];
+  const w = weeklyByLanguage(rows, "2026-09-25", 4);
+  assert.equal(w.length, 4);
+  assert.equal(w.at(-1)!.week, "2026-09-21");
+  assert.deepEqual(w.at(-1)!.minutes, { en: 15, fr: 2 });
+  assert.deepEqual(w.at(-2)!.minutes, { fr: 4 });
+  assert.deepEqual(w[0]!.minutes, {});
 });

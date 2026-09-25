@@ -13,13 +13,19 @@ import { localDay } from "@/lib/engine/progress";
 import { getProgress } from "@/lib/services/insights";
 import { requireLearner } from "@/lib/services/viewer";
 import { studyTimeInsight, viewerAttentionSpan } from "@/lib/services/multilang";
+import { weeklyByLanguage } from "@/lib/engine/multilang";
+import { addDays } from "@/lib/engine/progress";
+import { getActivityByLanguage, listUserLanguages } from "@/lib/db/repositories";
+import { getLanguage } from "@/lib/content";
 import { peakLabel } from "@/lib/engine/focus";
 
 export const metadata: Metadata = { title: "Progreso" };
 
 export default async function ProgressPage() {
   const learner = await requireLearner();
-  const [p, best] = await Promise.all([getProgress(learner), studyTimeInsight(learner)]);
+  const [p, best, langs] = await Promise.all([getProgress(learner), studyTimeInsight(learner), listUserLanguages(learner.userId)]);
+  const todayStr = localDay(new Date(), learner.profile.timezone);
+  const langWeeks = langs.length > 1 ? weeklyByLanguage(await getActivityByLanguage(learner.userId, addDays(todayStr, -63)), todayStr, 8) : null;
   const span = viewerAttentionSpan(learner);
   const fh = learner.profile.focusHistory;
   const focusedShare = fh.length ? Math.round((fh.filter((h) => h.onsetMin === null).length / fh.length) * 100) : null;
@@ -50,6 +56,8 @@ export default async function ProgressPage() {
       </section>
 
       <WeekCard week={p.week} />
+
+      {langWeeks && <LanguageWeeks weeks={langWeeks} codes={langs.map((l) => l.languageCode)} />}
 
       <section aria-labelledby="rhythm-title" className="card p-5 sm:p-6">
         <div className="flex flex-wrap items-center gap-2">
@@ -222,6 +230,44 @@ function WeekCard({ week }: { week: import("@/lib/engine/insights").WeekReport }
           ))}
         </div>
       </div>
+    </section>
+  );
+}
+
+const LANG_COLORS = ["var(--primary)", "var(--skill-listening)", "var(--skill-writing)", "var(--skill-grammar)", "var(--skill-speaking)", "var(--skill-reading)"];
+
+/** Minutos por semana, apilados por idioma (sólo si estudias varios). */
+function LanguageWeeks({ weeks, codes }: { weeks: { week: string; minutes: Record<string, number> }[]; codes: string[] }) {
+  const totals = weeks.map((w) => Object.values(w.minutes).reduce((a, b) => a + b, 0));
+  const max = Math.max(30, ...totals);
+  const sums = codes.map((c) => weeks.reduce((a, w) => a + (w.minutes[c] ?? 0), 0));
+  const all = sums.reduce((a, b) => a + b, 0) || 1;
+  return (
+    <section className="card p-5 sm:p-6" aria-labelledby="lw-title">
+      <h2 id="lw-title" className="font-display text-xl font-bold">Tus idiomas, semana a semana</h2>
+      <p className="mt-1 text-sm text-muted">Minutos por semana en cada idioma (últimas 8 semanas).</p>
+      <div className="mt-4 flex h-40 items-end gap-2" role="img" aria-label={`Minutos por semana: ${totals.join(", ")}`}>
+        {weeks.map((w, i) => (
+          <div key={w.week} className="flex h-full flex-1 flex-col justify-end">
+            <span className="mb-1 text-center text-[11px] font-semibold tabular-nums text-muted">{totals[i] || ""}</span>
+            <div className="flex flex-col-reverse overflow-hidden rounded-md" style={{ height: `${(totals[i]! / max) * 100}%`, minHeight: totals[i] ? 4 : 0 }}>
+              {codes.map((c, j) => (w.minutes[c] ? <div key={c} style={{ flex: w.minutes[c], background: LANG_COLORS[j % LANG_COLORS.length] }} /> : null))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-1 flex gap-2 text-center text-[10px] text-muted" aria-hidden>
+        {weeks.map((w, i) => <span key={w.week} className="flex-1">{i === weeks.length - 1 ? "esta" : `${Number(w.week.slice(8))}/${Number(w.week.slice(5, 7))}`}</span>)}
+      </div>
+      <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+        {codes.map((c, j) => (
+          <li key={c} className="flex items-center gap-2">
+            <span className="size-3 rounded-sm" style={{ background: LANG_COLORS[j % LANG_COLORS.length] }} aria-hidden />
+            <span className="font-semibold">{getLanguage(c)?.name ?? c}</span>
+            <span className="text-muted tabular-nums">{sums[j]} min · {Math.round((sums[j]! / all) * 100)} %</span>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
