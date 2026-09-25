@@ -5,7 +5,7 @@ import { requireLearner } from "@/lib/services/viewer";
 
 export const metadata: Metadata = { title: "Modo estudio" };
 
-export default async function StudyPage({ searchParams }: { searchParams: Promise<{ done?: string }> }) {
+export default async function StudyPage({ searchParams }: { searchParams: Promise<{ done?: string; ach?: string }> }) {
   const learner = await requireLearner();
   const [data, sp] = await Promise.all([studyModeData(learner), searchParams]);
   return (
@@ -24,6 +24,7 @@ export default async function StudyPage({ searchParams }: { searchParams: Promis
         defaultMinutes={learner.profile.dailyMinutes}
         reasons={data.overview.allocation}
         done={sp.done === "1"}
+        achievements={sp.done === "1" && sp.ach ? sp.ach.split("|").slice(0, 5).map((a) => a.slice(0, 60)) : []}
       />
     </div>
   );

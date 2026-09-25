@@ -5,7 +5,8 @@ import * as repo from "@/lib/db/repositories";
 import { rateLimit } from "@/lib/db/limits";
 import { BREAK_ACTIVITIES, type BreakActivity } from "@/lib/engine/focus";
 import { PRIORITY_LABELS, type LanguagePriority } from "@/lib/engine/multilang";
-import { requireViewer } from "@/lib/services/viewer";
+import { checkAchievements } from "@/lib/services/learning";
+import { requireLearner, requireViewer } from "@/lib/services/viewer";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -60,13 +61,14 @@ export async function recordBreakAction(activity: BreakActivity, seconds: number
   }
 }
 
-/** Registra un plan del modo estudio completado. */
-export async function recordStudyPlanAction(minutes: number, languages: number): Promise<Result<null>> {
+/** Registra un plan del modo estudio completado (y comprueba sus logros). */
+export async function recordStudyPlanAction(minutes: number, languages: number): Promise<Result<{ title: string; icon: string }[]>> {
   try {
-    const viewer = await requireViewer();
-    if (!(await rateLimit(`plan:${viewer.userId}`, 20, 3600))) return { ok: true, data: null };
+    const viewer = await requireLearner();
+    if (!(await rateLimit(`plan:${viewer.userId}`, 20, 3600))) return { ok: true, data: [] };
     await repo.track(viewer.userId, "study_plan_completed", { minutes: Math.max(0, Math.min(240, Math.round(Number(minutes) || 0))), languages: Math.max(1, Math.min(12, Math.round(Number(languages) || 1))) });
-    return { ok: true, data: null };
+    const fresh = await checkAchievements(viewer);
+    return { ok: true, data: fresh.map((a) => ({ title: a.title, icon: a.icon })) };
   } catch (err) {
     return fail("study.plan", err);
   }

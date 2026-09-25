@@ -24,6 +24,7 @@ export function StudyPlanner({
   defaultMinutes,
   reasons,
   done,
+  achievements = [],
 }: {
   plans: Record<number, StudyPlan>;
   names: Record<string, { name: string; flag: string }>;
@@ -32,6 +33,7 @@ export function StudyPlanner({
   defaultMinutes: number;
   reasons: Allocation[];
   done: boolean;
+  achievements?: string[];
 }) {
   const durations = Object.keys(plans).map(Number).sort((a, b) => a - b);
   const [minutes, setMinutes] = useState(durations.includes(defaultMinutes) ? defaultMinutes : durations[0]!);
@@ -59,6 +61,11 @@ export function StudyPlanner({
           <p className="text-4xl" aria-hidden>🏁</p>
           <h2 className="mt-2 font-display text-2xl font-extrabold">¡Plan completado!</h2>
           <p className="mt-1 text-muted">Estudio con pausas en el momento justo: así se aprende más con el mismo tiempo. Mañana te espera otro plan a tu medida.</p>
+          {achievements.length > 0 && (
+            <ul className="mt-4 flex flex-wrap justify-center gap-2" aria-label="Nuevos logros">
+              {achievements.map((a) => <li key={a} className="rounded-full bg-warning-soft px-3 py-1 text-sm font-semibold">{a}</li>)}
+            </ul>
+          )}
         </div>
       )}
 

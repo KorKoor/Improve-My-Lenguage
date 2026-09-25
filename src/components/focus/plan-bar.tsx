@@ -20,11 +20,13 @@ export async function nextBlock(push: (href: string) => void) {
   const before = currentPlan();
   const p = advancePlan();
   if (p) return goToCurrentBlock(p, push);
+  let ach = "";
   if (before) {
     const langs = new Set(before.blocks.flatMap((b) => (b.kind === "study" ? [b.code] : []))).size;
-    void recordStudyPlanAction(Math.round((Date.now() - before.startedAt) / 60000), langs);
+    const r = await recordStudyPlanAction(Math.round((Date.now() - before.startedAt) / 60000), langs);
+    if (r.ok && r.data.length) ach = `&ach=${encodeURIComponent(r.data.map((a) => `${a.icon} ${a.title}`).join("|"))}`;
   }
-  push("/app/study?done=1");
+  push(`/app/study?done=1${ach}`);
 }
 
 function useNow(active: boolean) {
