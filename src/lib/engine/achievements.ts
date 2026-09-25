@@ -17,6 +17,8 @@ export interface AchievementStats {
   writingsCompleted?: number;
   /** Sesiones de escucha terminadas. */
   listeningSessions?: number;
+  /** Sesiones de pronunciación terminadas. */
+  speakingSessions?: number;
   /** Hizo el cuestionario «¿Cómo aprendes mejor?». */
   personalityDone?: boolean;
 }
@@ -42,6 +44,7 @@ export const ACHIEVEMENT_RULES: AchievementRule[] = [
   { id: "reader-10", title: "Lector constante", description: "10 textos reales leídos.", icon: "📖", unlocked: (s) => (s.readingsCompleted ?? 0) >= 10 },
   { id: "first-writing", title: "Primera redacción", description: "Escribiste y corregiste tu primer texto.", icon: "🖋️", unlocked: (s) => (s.writingsCompleted ?? 0) >= 1 },
   { id: "first-listening", title: "Buen oído", description: "Completaste tu primera sesión de escucha.", icon: "🎧", unlocked: (s) => (s.listeningSessions ?? 0) >= 1 },
+  { id: "first-speaking", title: "Primera voz", description: "Leíste frases en voz alta y te entendimos.", icon: "🎙️", unlocked: (s) => (s.speakingSessions ?? 0) >= 1 },
   { id: "self-aware", title: "Te conoces", description: "Descubriste cómo aprendes mejor.", icon: "🪞", unlocked: (s) => Boolean(s.personalityDone) },
   { id: "polyglot", title: "Políglota en progreso", description: "Empezaste a estudiar un segundo idioma.", icon: "🌍", unlocked: (s) => s.languagesStarted >= 2 },
 ];

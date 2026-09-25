@@ -37,7 +37,7 @@ interface Candidate {
 }
 
 const indexes = new Map<string, LookupIndex>();
-function lookup(lang: string): LookupIndex {
+export function lookup(lang: string): LookupIndex {
   let idx = indexes.get(lang);
   if (!idx) indexes.set(lang, (idx = buildLookupIndex(lang, vocabFor(lang))));
   return idx;
@@ -49,7 +49,7 @@ async function listeningRank(learner: Learner): Promise<number> {
   return knownRankForTheta(skills.get("listening")!.theta * 0.6 + skills.get("vocabulary")!.theta * 0.4);
 }
 
-function candidates(learner: Learner, rank: number, minCoverage: number, rankFactor: number): Candidate[] {
+export function candidates(learner: Learner, rank: number, minCoverage: number, rankFactor: number): Candidate[] {
   const lang = learner.language.code;
   const idx = lookup(lang);
   const out: Candidate[] = [];

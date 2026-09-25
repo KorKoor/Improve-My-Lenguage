@@ -5,6 +5,7 @@ const FAVORITE_LABEL: Record<string, string> = {
   listen: "🎧 Escucha",
   write: "🖋️ Escritura",
   tutor: "💬 Tutor",
+  speak: "🎙️ Pronunciación",
   vocabulary: "📚 Vocabulario",
   grammar: "🧩 Gramática",
 };

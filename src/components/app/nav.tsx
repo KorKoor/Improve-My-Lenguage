@@ -1,5 +1,5 @@
 "use client";
-import { BarChart3, BookOpen, CircleHelp, Headphones, Home, LayoutGrid, Layers, MessageCircle, Newspaper, PenLine, Play, Repeat, Settings, UserRound, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, CircleHelp, Headphones, Home, LayoutGrid, Layers, MessageCircle, Mic, Newspaper, PenLine, Play, Repeat, Settings, UserRound, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
@@ -33,6 +33,7 @@ export function navItems(due: number, simple = false): NavItem[] {
     { href: "/app/grammar", label: "Gramática", icon: Layers },
     { href: "/app/read", label: "Lecturas", icon: Newspaper },
     { href: "/app/listen", label: "Escucha", icon: Headphones },
+    { href: "/app/speak", label: "Pronunciación", icon: Mic },
     { href: "/app/write", label: "Escritura", icon: PenLine },
     { href: "/app/tutor", label: "Tutor", icon: MessageCircle },
     { href: "/app/progress", label: "Progreso", icon: BarChart3 },

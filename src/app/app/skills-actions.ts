@@ -4,6 +4,7 @@ import { rateLimit } from "@/lib/db/limits";
 import { RateLimitedError } from "@/lib/services/learning";
 import { answerListening, buildListening, finishListening, type ListeningFeedback, type ListeningItem } from "@/lib/services/listening";
 import { completeReading, readerForOwnText, type ReaderData } from "@/lib/services/reading";
+import { answerSpeaking, buildSpeaking, finishSpeaking, type SpeakingFeedback, type SpeakingItem } from "@/lib/services/speaking";
 import { submitWriting, type WritingResult } from "@/lib/services/writing";
 import { requireLearner } from "@/lib/services/viewer";
 
@@ -99,5 +100,24 @@ export async function submitWritingAction(promptId: string, text: string, useAi:
     const clean = str(text, 4000);
     if (clean.length < 10) throw new UserFacingError("Escribe al menos una frase.");
     return submitWriting(await requireLearner(), str(promptId, 40), clean, useAi === true);
+  });
+}
+
+// ── Pronunciación ───────────────────────────────────────────────────────────
+export async function startSpeakingAction(): Promise<SkillResult<{ items: SpeakingItem[]; locale: string }>> {
+  return run("speaking.start", async () => buildSpeaking(await requireLearner()));
+}
+
+export async function answerSpeakingAction(key: string, alternatives: string[], timeMs: number): Promise<SkillResult<SpeakingFeedback>> {
+  return run("speaking.answer", async () => {
+    const alts = Array.isArray(alternatives) ? alternatives.map((a) => str(a, 300)).filter(Boolean).slice(0, 5) : [];
+    return answerSpeaking(await requireLearner(), str(key, 300), alts, int(timeMs, 0, 600_000, 0));
+  });
+}
+
+export async function finishSpeakingAction(correct: number, total: number): Promise<SkillResult<{ newAchievements: { id: string; title: string; icon: string }[] }>> {
+  return run("speaking.finish", async () => {
+    const t = int(total, 0, 50, 0);
+    return finishSpeaking(await requireLearner(), int(correct, 0, t, 0), t);
   });
 }

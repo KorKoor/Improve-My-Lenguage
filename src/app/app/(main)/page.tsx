@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, Clock, Flame, Gauge, Headphones, MessageCircle, Newspaper, PenLine, Repeat, Sparkles, Target } from "lucide-react";
+import { ArrowRight, BookOpen, Clock, Flame, Gauge, Headphones, MessageCircle, Mic, Newspaper, PenLine, Repeat, Sparkles, Target } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BLOCK_META, SKILL_META, formatMinutes, greeting } from "@/components/app/labels";
@@ -28,6 +28,7 @@ const PRACTICE_META = {
   listen: { icon: Headphones, color: "var(--skill-listening)" },
   write: { icon: PenLine, color: "var(--skill-writing)" },
   tutor: { icon: MessageCircle, color: "var(--skill-speaking)" },
+  speak: { icon: Mic, color: "var(--skill-pronunciation)" },
 } as const;
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ tutorial?: string }> }) {

@@ -131,7 +131,7 @@ export interface Tuning {
   /** Duración de sesión sugerida (minutos). */
   suggestedMinutes: number;
   /** Actividades destacadas en el inicio. */
-  favorites: ("read" | "listen" | "write" | "tutor" | "vocabulary" | "grammar")[];
+  favorites: ("read" | "listen" | "write" | "tutor" | "speak" | "vocabulary" | "grammar")[];
 }
 
 export interface PersonalityResult {
@@ -182,7 +182,7 @@ export function tuningFor(dims: Record<Dimension, number>): Tuning {
   const favorites: Tuning["favorites"] = [];
   if (dims.ear > 0.2) favorites.push("listen");
   if (dims.ear < -0.2 || dims.words > 0.3) favorites.push("read");
-  if (dims.words < -0.2) favorites.push("tutor", "write");
+  if (dims.words < -0.2) favorites.push("speak", "tutor", "write");
   if (dims.depth > 0.3) favorites.push("grammar");
   if (dims.words > 0.3) favorites.push("vocabulary");
   if (favorites.length === 0) favorites.push("read", "listen");

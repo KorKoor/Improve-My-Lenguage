@@ -367,10 +367,11 @@ export async function checkAchievements(learner: Learner) {
     repo.listUserLanguages(learner.userId),
     repo.getAllKnowledge(learner.ul.id),
   ]);
-  const [readings, writings, listening] = await Promise.all([
+  const [readings, writings, listening, speaking] = await Promise.all([
     repo.countReadings(learner.userId),
     repo.countWritings(learner.userId),
     repo.countEvents(learner.userId, "listening_completed"),
+    repo.countEvents(learner.userId, "speaking_completed"),
   ]);
   const vocab = summarizeVocabulary(
     knowledge.map((k) => ({ ...knowledgeToCard(k, now), itemId: k.itemId, itemType: k.itemType })),
@@ -389,6 +390,7 @@ export async function checkAchievements(learner: Learner) {
       readingsCompleted: readings,
       writingsCompleted: writings,
       listeningSessions: listening,
+      speakingSessions: speaking,
       personalityDone: Boolean(learner.profile.personality),
     },
     new Set(unlocked.map((u) => u.achievementId)),

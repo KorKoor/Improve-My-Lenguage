@@ -1,4 +1,4 @@
-import { BookOpen, Headphones, Layers, MessageCircle, Newspaper, PenLine, Play, Repeat, type LucideIcon } from "lucide-react";
+import { BookOpen, Headphones, Mic, Layers, MessageCircle, Newspaper, PenLine, Play, Repeat, type LucideIcon } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ARCHETYPES } from "@/lib/engine/personality";
@@ -25,6 +25,7 @@ const ACTIVITIES: Activity[] = [
   { href: "/app/review", title: "Repaso", text: "Las palabras que estás a punto de olvidar.", icon: Repeat, color: "var(--skill-reading)", skill: "vocabulary" },
   { href: "/app/read", title: "Lecturas", text: "Artículos reales a tu nivel. Toca una palabra y la entiendes.", icon: Newspaper, color: "var(--skill-reading)", skill: "reading" },
   { href: "/app/listen", title: "Escucha", text: "Frases reales a la velocidad que elijas, con dictado.", icon: Headphones, color: "var(--skill-listening)", skill: "listening" },
+  { href: "/app/speak", title: "Pronunciación", text: "Lee en voz alta y mira qué palabras se entienden.", icon: Mic, color: "var(--skill-pronunciation)", skill: "pronunciation" },
   { href: "/app/write", title: "Escritura", text: "Escribe y recibe correcciones y consejos.", icon: PenLine, color: "var(--skill-writing)", skill: "writing" },
   { href: "/app/tutor", title: "Conversación", text: "Habla con tu tutor sobre lo que te interesa.", icon: MessageCircle, color: "var(--skill-speaking)", skill: "speaking" },
   { href: "/app/grammar", title: "Gramática", text: "Lecciones claras de A1 a C1 con ejercicios.", icon: Layers, color: "var(--skill-grammar)", skill: "grammar" },

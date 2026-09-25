@@ -47,6 +47,7 @@ const SKILL_ES: Partial<Record<Skill, string>> = {
   speaking: "conversación",
   reading: "lectura",
   writing: "escritura",
+  pronunciation: "pronunciación",
 };
 
 export function recommend(input: RecommenderInput): Recommendation {
@@ -125,7 +126,7 @@ export function recommend(input: RecommenderInput): Recommendation {
 }
 
 // ── Prácticas sugeridas (lectura, escucha, escritura, tutor) ─────────────────
-export type PracticeKind = "read" | "listen" | "write" | "tutor";
+export type PracticeKind = "read" | "listen" | "write" | "tutor" | "speak";
 
 export interface PracticePick {
   kind: PracticeKind;
@@ -139,6 +140,7 @@ const PRACTICE: Record<PracticeKind, { skill: Skill; title: string; href: string
   listen: { skill: "listening", title: "Entrena el oído", href: "/app/listen", fav: "Aprendes muy bien escuchando." },
   write: { skill: "writing", title: "Escribe un texto corto", href: "/app/write", fav: "Quieres comunicarte: escribir fija lo que sabes." },
   tutor: { skill: "speaking", title: "Conversa con tu tutor", href: "/app/tutor", fav: "Tu objetivo es conversar." },
+  speak: { skill: "pronunciation", title: "Lee en voz alta", href: "/app/speak", fav: "Quieres hablar: la pronunciación da seguridad." },
 };
 
 /**
