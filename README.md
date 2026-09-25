@@ -250,6 +250,8 @@ npm run test
 npm run build
 npm run dev:emulated                 # Firebase emulators + seeded demo user
 npm run dev:emulated -- --mock-ai    # same, plus a local OpenAI-compatible AI simulator
+npm run smoke                        # signs in to the emulators and checks every page renders
+npm run test:content                 # Python unit tests for the content pipeline
 ```
 
 `--mock-ai` starts `scripts/mock-ai.mjs`, a deterministic fake LLM that honours every AI contract of the app (tutor chat, role-play goal markers, conversation feedback JSON, writing correction JSON). It lets you exercise and test all AI flows offline, with no keys and no cost.

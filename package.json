@@ -14,7 +14,8 @@
     "test": "tsx --test \"tests/*.test.ts\"",
     "check": "npm run typecheck && npm test",
     "dev:emulated": "node scripts/dev-emulated.mjs",
-    "test:content": "python -m unittest scripts/content/test_build_packs.py"
+    "test:content": "python -m unittest scripts/content/test_build_packs.py",
+    "smoke": "node scripts/smoke.mjs"
   },
   "dependencies": {
     "firebase": "^12.19.0",
