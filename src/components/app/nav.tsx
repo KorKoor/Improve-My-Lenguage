@@ -1,51 +1,11 @@
 "use client";
-import { BarChart3, BookOpen, CircleHelp, Headphones, Home, LayoutGrid, Layers, MessageCircle, Mic, Newspaper, PenLine, Play, Repeat, Route, Settings, Sparkles, Type, UserRound, Users, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, CircleHelp, Home, LayoutGrid, MoreHorizontal, Play, Repeat, Settings } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
-export interface NavItem {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  badge?: string | number | null;
-  soon?: boolean;
-}
-
-export function navItems(due: number, simple = false): NavItem[] {
-  if (simple) {
-    // Modo sencillo: sólo lo esencial, con nombres cotidianos.
-    return [
-      { href: "/app", label: "Inicio", icon: Home },
-      { href: "/app/session", label: "Practicar", icon: Play },
-      { href: "/app/review", label: "Repasar", icon: Repeat, badge: due > 0 ? due : null },
-      { href: "/app/vocabulary", label: "Mis palabras", icon: BookOpen },
-      { href: "/app/read", label: "Leer", icon: Newspaper },
-      { href: "/app/listen", label: "Escuchar", icon: Headphones },
-      { href: "/app/speak", label: "Hablar", icon: Mic },
-      { href: "/app/progress", label: "Mi progreso", icon: BarChart3 },
-      { href: "/app/group", label: "Mi familia", icon: Users },
-    ];
-  }
-  return [
-    { href: "/app", label: "Inicio", icon: Home },
-    { href: "/app/session", label: "Sesión de hoy", icon: Play },
-    { href: "/app/review", label: "Repaso", icon: Repeat, badge: due > 0 ? due : null },
-    { href: "/app/vocabulary", label: "Vocabulario", icon: BookOpen },
-    { href: "/app/grammar", label: "Gramática", icon: Layers },
-    { href: "/app/verbs", label: "Verbos", icon: Type },
-    { href: "/app/read", label: "Lecturas", icon: Newspaper },
-    { href: "/app/listen", label: "Escucha", icon: Headphones },
-    { href: "/app/speak", label: "Pronunciación", icon: Mic },
-    { href: "/app/write", label: "Escritura", icon: PenLine },
-    { href: "/app/tutor", label: "Tutor", icon: MessageCircle },
-    { href: "/app/progress", label: "Progreso", icon: BarChart3 },
-    { href: "/app/path", label: "Camino a C1", icon: Route },
-    { href: "/app/group", label: "Familia y amigos", icon: Users },
-    { href: "/app/novedades", label: "Novedades", icon: Sparkles },
-    { href: "/app/profile", label: "Mi perfil", icon: UserRound },
-  ];
-}
+export { navItems, type NavItem } from "./nav-items";
+import { navItems } from "./nav-items";
 
 function isActive(path: string, href: string) {
   return href === "/app" ? path === "/app" : path === href || path.startsWith(href + "/");
@@ -102,14 +62,14 @@ export function TabBar({ due, simple = false }: { due: number; simple?: boolean 
         { href: "/app/session", label: "Practicar", icon: Play },
         { href: "/app/review", label: "Repasar", icon: Repeat, badge: due },
         { href: "/app/vocabulary", label: "Palabras", icon: BookOpen },
-        { href: "/app/settings", label: "Ajustes", icon: Settings },
+        { href: "/app/more", label: "Más", icon: MoreHorizontal },
       ]
     : [
         { href: "/app", label: "Inicio", icon: Home },
         { href: "/app/explore", label: "Practicar", icon: LayoutGrid },
         { href: "/app/review", label: "Repaso", icon: Repeat, badge: due },
-        { href: "/app/tutor", label: "Tutor", icon: MessageCircle },
         { href: "/app/progress", label: "Progreso", icon: BarChart3 },
+        { href: "/app/more", label: "Más", icon: MoreHorizontal },
       ];
   return (
     <nav aria-label="Aplicación" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur lg:hidden">
