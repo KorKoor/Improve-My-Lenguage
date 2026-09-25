@@ -1,8 +1,8 @@
 /**
  * «Primeros pasos»: frases de supervivencia para quien empieza de cero.
  *
- * Seis unidades cortas (saludos, presentarse, cuando no entiendes, números,
- * en la cafetería, orientarse). Cada frase trae su traducción en los 12
+ * Diez unidades cortas (saludos, presentarse, cuando no entiendes, números,
+ * cafetería, orientarse, familia, compras, días y horas, emergencias). Cada frase trae su traducción en los 12
  * idiomas y, en los de otra escritura, una transcripción latina para poder
  * leerla desde el primer día. Contenido escrito y revisado a mano.
  */
@@ -123,6 +123,70 @@ export const FIRST_STEPS: FirstUnit[] = [
       p("Está cerca", { en: "It's close", fr: "C'est près", de: "Es ist nah", it: "È vicino", pt: "É perto", nl: "Het is dichtbij", sv: "Det är nära", ru: "Это близко", ja: "近いです", ko: "가까워요", zh: "很近", ar: "إنه قريب" }, { ru: "éto blízko", ja: "chikai desu", ko: "gakkawoyo", zh: "hěn jìn", ar: "innahu qarīb" }),
       p("Está lejos", { en: "It's far", fr: "C'est loin", de: "Es ist weit", it: "È lontano", pt: "É longe", nl: "Het is ver", sv: "Det är långt", ru: "Это далеко", ja: "遠いです", ko: "멀어요", zh: "很远", ar: "إنه بعيد" }, { ru: "éto dalekó", ja: "tōi desu", ko: "meoreoyo", zh: "hěn yuǎn", ar: "innahu baʿīd" }),
       p("Aquí", { en: "Here", fr: "Ici", de: "Hier", it: "Qui", pt: "Aqui", nl: "Hier", sv: "Här", ru: "Здесь", ja: "ここ", ko: "여기", zh: "这里", ar: "هنا" }, { ru: "zdes'", ja: "koko", ko: "yeogi", zh: "zhèlǐ", ar: "hunā" }),
+    ],
+  },
+  {
+    id: "family",
+    emoji: "👨‍👩‍👧",
+    title: "La familia",
+    goal: "Hablar de tu familia y de las personas cercanas.",
+    phrases: [
+      p("mi madre", { en: "my mother", fr: "ma mère", de: "meine Mutter", it: "mia madre", pt: "minha mãe", nl: "mijn moeder", sv: "min mamma", ru: "моя мама", ja: "私の母", ko: "우리 엄마", zh: "我妈妈", ar: "أمي" }, { ru: "moyá máma", ja: "watashi no haha", ko: "uri eomma", zh: "wǒ māma", ar: "ummī" }),
+      p("mi padre", { en: "my father", fr: "mon père", de: "mein Vater", it: "mio padre", pt: "meu pai", nl: "mijn vader", sv: "min pappa", ru: "мой папа", ja: "私の父", ko: "우리 아빠", zh: "我爸爸", ar: "أبي" }, { ru: "moy pápa", ja: "watashi no chichi", ko: "uri appa", zh: "wǒ bàba", ar: "abī" }),
+      p("Tengo un hermano", { en: "I have a brother", fr: "J'ai un frère", de: "Ich habe einen Bruder", it: "Ho un fratello", pt: "Tenho um irmão", nl: "Ik heb een broer", sv: "Jag har en bror", ru: "У меня есть брат", ja: "兄弟が一人います", ko: "형제가 한 명 있어요", zh: "我有一个哥哥", ar: "عندي أخ" }, { ru: "u menyá yest' brat", ja: "kyōdai ga hitori imasu", ko: "hyeongjega han myeong isseoyo", zh: "wǒ yǒu yí ge gēge", ar: "ʿindī akh" }),
+      p("Tengo una hermana", { en: "I have a sister", fr: "J'ai une sœur", de: "Ich habe eine Schwester", it: "Ho una sorella", pt: "Tenho uma irmã", nl: "Ik heb een zus", sv: "Jag har en syster", ru: "У меня есть сестра", ja: "姉妹が一人います", ko: "자매가 한 명 있어요", zh: "我有一个姐姐", ar: "عندي أخت" }, { ru: "u menyá yest' sestrá", ja: "shimai ga hitori imasu", ko: "jamaega han myeong isseoyo", zh: "wǒ yǒu yí ge jiějie", ar: "ʿindī ukht" }),
+      p("Estoy casado", { en: "I'm married", fr: "Je suis marié", de: "Ich bin verheiratet", it: "Sono sposato", pt: "Sou casado", nl: "Ik ben getrouwd", sv: "Jag är gift", ru: "Я женат", ja: "結婚しています", ko: "결혼했어요", zh: "我结婚了", ar: "أنا متزوج" }, { ru: "ya zhenát", ja: "kekkon shite imasu", ko: "gyeolhonhaesseoyo", zh: "wǒ jiéhūn le", ar: "anā mutazawwij" }),
+      p("Tengo dos hijos", { en: "I have two children", fr: "J'ai deux enfants", de: "Ich habe zwei Kinder", it: "Ho due figli", pt: "Tenho dois filhos", nl: "Ik heb twee kinderen", sv: "Jag har två barn", ru: "У меня двое детей", ja: "子どもが二人います", ko: "아이가 두 명 있어요", zh: "我有两个孩子", ar: "عندي طفلان" }, { ru: "u menyá dvóye detéy", ja: "kodomo ga futari imasu", ko: "aiga du myeong isseoyo", zh: "wǒ yǒu liǎng ge háizi", ar: "ʿindī ṭiflān" }),
+      p("Este es mi amigo", { en: "This is my friend", fr: "C'est mon ami", de: "Das ist mein Freund", it: "Questo è il mio amico", pt: "Este é o meu amigo", nl: "Dit is mijn vriend", sv: "Det här är min vän", ru: "Это мой друг", ja: "こちらは私の友だちです", ko: "이쪽은 제 친구예요", zh: "这是我的朋友", ar: "هذا صديقي" }, { ru: "éto moy drug", ja: "kochira wa watashi no tomodachi desu", ko: "ijjogeun je chinguyeyo", zh: "zhè shì wǒ de péngyou", ar: "hādhā ṣadīqī" }),
+      p("Vivo con mi familia", { en: "I live with my family", fr: "J'habite avec ma famille", de: "Ich wohne mit meiner Familie", it: "Vivo con la mia famiglia", pt: "Moro com a minha família", nl: "Ik woon bij mijn familie", sv: "Jag bor med min familj", ru: "Я живу с семьёй", ja: "家族と住んでいます", ko: "가족과 같이 살아요", zh: "我和家人一起住", ar: "أعيش مع عائلتي" }, { ru: "ya zhivú s sem'yój", ja: "kazoku to sunde imasu", ko: "gajokgwa gachi sarayo", zh: "wǒ hé jiārén yìqǐ zhù", ar: "aʿīsh maʿa ʿāʾilatī" }),
+    ],
+  },
+  {
+    id: "shopping",
+    emoji: "🛒",
+    title: "Comida y compras",
+    goal: "Comprar en una tienda o un mercado.",
+    phrases: [
+      p("Quiero esto", { en: "I want this", fr: "Je voudrais ça", de: "Ich möchte das", it: "Vorrei questo", pt: "Quero isto", nl: "Ik wil dit graag", sv: "Jag vill ha den här", ru: "Я хочу это", ja: "これをください", ko: "이거 주세요", zh: "我要这个", ar: "أريد هذا" }, { ru: "ya khochú éto", ja: "kore o kudasai", ko: "igeo juseyo", zh: "wǒ yào zhège", ar: "urīd hādhā" }),
+      p("¿Tiene pan?", { en: "Do you have bread?", fr: "Vous avez du pain ?", de: "Haben Sie Brot?", it: "Avete del pane?", pt: "Tem pão?", nl: "Heeft u brood?", sv: "Har ni bröd?", ru: "У вас есть хлеб?", ja: "パンはありますか？", ko: "빵 있어요?", zh: "有面包吗？", ar: "هل عندكم خبز؟" }, { ru: "u vas yest' khleb?", ja: "pan wa arimasu ka?", ko: "ppang isseoyo?", zh: "yǒu miànbāo ma?", ar: "hal ʿindakum khubz?" }),
+      p("Es muy caro", { en: "It's very expensive", fr: "C'est très cher", de: "Das ist sehr teuer", it: "È molto caro", pt: "É muito caro", nl: "Het is erg duur", sv: "Det är väldigt dyrt", ru: "Это очень дорого", ja: "とても高いです", ko: "너무 비싸요", zh: "太贵了", ar: "هذا غالٍ جدا" }, { ru: "éto óchen' dórogo", ja: "totemo takai desu", ko: "neomu bissayo", zh: "tài guì le", ar: "hādhā ghālin jiddan" }),
+      p("Un kilo de manzanas", { en: "A kilo of apples", fr: "Un kilo de pommes", de: "Ein Kilo Äpfel", it: "Un chilo di mele", pt: "Um quilo de maçãs", nl: "Een kilo appels", sv: "Ett kilo äpplen", ru: "Килограмм яблок", ja: "りんごを一キロ", ko: "사과 일 킬로", zh: "一公斤苹果", ar: "كيلو تفاح" }, { ru: "kilográmm yáblok", ja: "ringo o ichi kiro", ko: "sagwa il killo", zh: "yì gōngjīn píngguǒ", ar: "kīlū tuffāḥ" }),
+      p("Tengo hambre", { en: "I'm hungry", fr: "J'ai faim", de: "Ich habe Hunger", it: "Ho fame", pt: "Estou com fome", nl: "Ik heb honger", sv: "Jag är hungrig", ru: "Я голоден", ja: "お腹がすきました", ko: "배고파요", zh: "我饿了", ar: "أنا جائع" }, { ru: "ya góloden", ja: "onaka ga sukimashita", ko: "baegopayo", zh: "wǒ è le", ar: "anā jāʾiʿ" }),
+      p("Tengo sed", { en: "I'm thirsty", fr: "J'ai soif", de: "Ich habe Durst", it: "Ho sete", pt: "Estou com sede", nl: "Ik heb dorst", sv: "Jag är törstig", ru: "Я хочу пить", ja: "喉が渇きました", ko: "목말라요", zh: "我渴了", ar: "أنا عطشان" }, { ru: "ya khochú pit'", ja: "nodo ga kawakimashita", ko: "mongmallayo", zh: "wǒ kě le", ar: "anā ʿaṭshān" }),
+      p("Una bolsa, por favor", { en: "A bag, please", fr: "Un sac, s'il vous plaît", de: "Eine Tüte, bitte", it: "Una busta, per favore", pt: "Um saco, por favor", nl: "Een tas, alstublieft", sv: "En påse, tack", ru: "Пакет, пожалуйста", ja: "袋をお願いします", ko: "봉투 주세요", zh: "请给我一个袋子", ar: "كيس من فضلك" }, { ru: "pakét, pozhálusta", ja: "fukuro o onegai shimasu", ko: "bongtu juseyo", zh: "qǐng gěi wǒ yí ge dàizi", ar: "kīs min faḍlak" }),
+      p("¿Aceptan tarjeta?", { en: "Do you take cards?", fr: "Vous acceptez la carte ?", de: "Kann ich mit Karte zahlen?", it: "Accettate la carta?", pt: "Aceitam cartão?", nl: "Kan ik pinnen?", sv: "Tar ni kort?", ru: "Можно картой?", ja: "カードは使えますか？", ko: "카드 되나요?", zh: "可以刷卡吗？", ar: "هل تقبلون البطاقة؟" }, { ru: "mózhno kártoy?", ja: "kādo wa tsukaemasu ka?", ko: "kadeu doenayo?", zh: "kěyǐ shuā kǎ ma?", ar: "hal taqbalūn al-biṭāqa?" }),
+    ],
+  },
+  {
+    id: "time",
+    emoji: "📅",
+    title: "Días y horas",
+    goal: "Hablar de hoy, mañana y a qué hora.",
+    phrases: [
+      p("hoy", { en: "today", fr: "aujourd'hui", de: "heute", it: "oggi", pt: "hoje", nl: "vandaag", sv: "idag", ru: "сегодня", ja: "今日", ko: "오늘", zh: "今天", ar: "اليوم" }, { ru: "sevódnya", ja: "kyō", ko: "oneul", zh: "jīntiān", ar: "al-yawm" }),
+      p("mañana", { en: "tomorrow", fr: "demain", de: "morgen", it: "domani", pt: "amanhã", nl: "morgen", sv: "imorgon", ru: "завтра", ja: "明日", ko: "내일", zh: "明天", ar: "غدا" }, { ru: "závtra", ja: "ashita", ko: "naeil", zh: "míngtiān", ar: "ghadan" }),
+      p("ayer", { en: "yesterday", fr: "hier", de: "gestern", it: "ieri", pt: "ontem", nl: "gisteren", sv: "igår", ru: "вчера", ja: "昨日", ko: "어제", zh: "昨天", ar: "أمس" }, { ru: "vcherá", ja: "kinō", ko: "eoje", zh: "zuótiān", ar: "ams" }),
+      p("¿Qué hora es?", { en: "What time is it?", fr: "Quelle heure est-il ?", de: "Wie spät ist es?", it: "Che ore sono?", pt: "Que horas são?", nl: "Hoe laat is het?", sv: "Vad är klockan?", ru: "Который час?", ja: "今何時ですか？", ko: "지금 몇 시예요?", zh: "现在几点？", ar: "كم الساعة؟" }, { ru: "kotóryy chas?", ja: "ima nanji desu ka?", ko: "jigeum myeot siyeyo?", zh: "xiànzài jǐ diǎn?", ar: "kam as-sāʿa?" }),
+      p("Son las tres", { en: "It's three o'clock", fr: "Il est trois heures", de: "Es ist drei Uhr", it: "Sono le tre", pt: "São três horas", nl: "Het is drie uur", sv: "Klockan är tre", ru: "Три часа", ja: "三時です", ko: "세 시예요", zh: "三点了", ar: "الساعة الثالثة" }, { ru: "tri chasá", ja: "sanji desu", ko: "se siyeyo", zh: "sān diǎn le", ar: "as-sāʿa ath-thālitha" }),
+      p("el lunes", { en: "on Monday", fr: "lundi", de: "am Montag", it: "lunedì", pt: "na segunda-feira", nl: "op maandag", sv: "på måndag", ru: "в понедельник", ja: "月曜日に", ko: "월요일에", zh: "星期一", ar: "يوم الاثنين" }, { ru: "v ponedél'nik", ja: "getsuyōbi ni", ko: "woryoire", zh: "xīngqīyī", ar: "yawm al-ithnayn" }),
+      p("el fin de semana", { en: "the weekend", fr: "le week-end", de: "das Wochenende", it: "il fine settimana", pt: "o fim de semana", nl: "het weekend", sv: "helgen", ru: "выходные", ja: "週末", ko: "주말", zh: "周末", ar: "عطلة نهاية الأسبوع" }, { ru: "vykhodnýye", ja: "shūmatsu", ko: "jumal", zh: "zhōumò", ar: "ʿuṭlat nihāyat al-usbūʿ" }),
+      p("Hasta mañana", { en: "See you tomorrow", fr: "À demain", de: "Bis morgen", it: "A domani", pt: "Até amanhã", nl: "Tot morgen", sv: "Vi ses imorgon", ru: "До завтра", ja: "また明日", ko: "내일 봐요", zh: "明天见", ar: "إلى الغد" }, { ru: "do závtra", ja: "mata ashita", ko: "naeil bwayo", zh: "míngtiān jiàn", ar: "ilā al-ghad" }),
+    ],
+  },
+  {
+    id: "emergency",
+    emoji: "🚑",
+    title: "Emergencias",
+    goal: "Pedir ayuda si algo va mal.",
+    phrases: [
+      p("¡Ayuda!", { en: "Help!", fr: "Au secours !", de: "Hilfe!", it: "Aiuto!", pt: "Socorro!", nl: "Help!", sv: "Hjälp!", ru: "Помогите!", ja: "助けて！", ko: "도와주세요!", zh: "救命！", ar: "النجدة!" }, { ru: "pomogíte!", ja: "tasukete!", ko: "dowajuseyo!", zh: "jiùmìng!", ar: "an-najda!" }),
+      p("Necesito un médico", { en: "I need a doctor", fr: "J'ai besoin d'un médecin", de: "Ich brauche einen Arzt", it: "Ho bisogno di un medico", pt: "Preciso de um médico", nl: "Ik heb een dokter nodig", sv: "Jag behöver en läkare", ru: "Мне нужен врач", ja: "医者が必要です", ko: "의사가 필요해요", zh: "我需要医生", ar: "أحتاج إلى طبيب" }, { ru: "mne núzhen vrach", ja: "isha ga hitsuyō desu", ko: "uisaga piryohaeyo", zh: "wǒ xūyào yīshēng", ar: "aḥtāj ilā ṭabīb" }),
+      p("Llame a la policía", { en: "Call the police", fr: "Appelez la police", de: "Rufen Sie die Polizei", it: "Chiami la polizia", pt: "Chame a polícia", nl: "Bel de politie", sv: "Ring polisen", ru: "Вызовите полицию", ja: "警察を呼んでください", ko: "경찰을 불러 주세요", zh: "请叫警察", ar: "اتصل بالشرطة" }, { ru: "vyzovite polítsiyu", ja: "keisatsu o yonde kudasai", ko: "gyeongchareul bulleo juseyo", zh: "qǐng jiào jǐngchá", ar: "ittaṣil bi-sh-shurṭa" }),
+      p("Me duele aquí", { en: "It hurts here", fr: "J'ai mal ici", de: "Es tut hier weh", it: "Mi fa male qui", pt: "Dói aqui", nl: "Het doet hier pijn", sv: "Det gör ont här", ru: "У меня болит здесь", ja: "ここが痛いです", ko: "여기가 아파요", zh: "这里疼", ar: "يؤلمني هنا" }, { ru: "u menyá bolít zdes'", ja: "koko ga itai desu", ko: "yeogiga apayo", zh: "zhèlǐ téng", ar: "yuʾlimunī hunā" }),
+      p("Estoy perdido", { en: "I'm lost", fr: "Je suis perdu", de: "Ich habe mich verlaufen", it: "Mi sono perso", pt: "Estou perdido", nl: "Ik ben verdwaald", sv: "Jag har gått vilse", ru: "Я заблудился", ja: "道に迷いました", ko: "길을 잃었어요", zh: "我迷路了", ar: "أنا تائه" }, { ru: "ya zabludílsya", ja: "michi ni mayoimashita", ko: "gireul ireosseoyo", zh: "wǒ mílù le", ar: "anā tāʾih" }),
+      p("¿Dónde está el hospital?", { en: "Where is the hospital?", fr: "Où est l'hôpital ?", de: "Wo ist das Krankenhaus?", it: "Dov'è l'ospedale?", pt: "Onde fica o hospital?", nl: "Waar is het ziekenhuis?", sv: "Var är sjukhuset?", ru: "Где больница?", ja: "病院はどこですか？", ko: "병원이 어디예요?", zh: "医院在哪里？", ar: "أين المستشفى؟" }, { ru: "gde bol'nítsa?", ja: "byōin wa doko desu ka?", ko: "byeongwoni eodiyeyo?", zh: "yīyuàn zài nǎlǐ?", ar: "ayna al-mustashfā?" }),
+      p("Perdí mi pasaporte", { en: "I lost my passport", fr: "J'ai perdu mon passeport", de: "Ich habe meinen Pass verloren", it: "Ho perso il passaporto", pt: "Perdi o meu passaporte", nl: "Ik ben mijn paspoort kwijt", sv: "Jag har tappat mitt pass", ru: "Я потерял паспорт", ja: "パスポートをなくしました", ko: "여권을 잃어버렸어요", zh: "我的护照丢了", ar: "فقدت جواز سفري" }, { ru: "ya poteryál pásport", ja: "pasupōto o nakushimashita", ko: "yeogwoneul ireobeoryeosseoyo", zh: "wǒ de hùzhào diū le", ar: "faqadtu jawāz safarī" }),
+      p("Es urgente", { en: "It's urgent", fr: "C'est urgent", de: "Es ist dringend", it: "È urgente", pt: "É urgente", nl: "Het is dringend", sv: "Det är bråttom", ru: "Это срочно", ja: "緊急です", ko: "급해요", zh: "很紧急", ar: "إنه أمر عاجل" }, { ru: "éto sróchno", ja: "kinkyū desu", ko: "geuphaeyo", zh: "hěn jǐnjí", ar: "innahu amr ʿājil" }),
     ],
   },
 ];

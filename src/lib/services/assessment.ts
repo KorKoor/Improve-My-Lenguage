@@ -22,6 +22,7 @@ export interface ClientAssessmentItem {
   skill: AssessmentItem["skill"];
   prompt: string;
   passage?: string;
+  audio?: string;
   options: string[];
 }
 
@@ -42,7 +43,9 @@ const toClient = (i: AssessmentItem): ClientAssessmentItem => ({
   skill: i.skill,
   prompt: i.prompt,
   passage: i.passage,
-  options: i.options,
+  audio: i.audio,
+  // Orden alfabético: la posición nunca delata la respuesta correcta.
+  options: [...i.options].sort((a, b) => a.localeCompare(b, "es")),
 });
 
 export async function startOrResumeAssessment(learner: Learner, restart = false): Promise<AssessmentStep> {

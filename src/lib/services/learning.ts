@@ -5,7 +5,7 @@ import { ACHIEVEMENT_RULES, newlyUnlocked } from "../engine/achievements";
 import { evaluateChoice, evaluateText, type EvaluationResult } from "../engine/evaluate";
 import { canonicalMatchResponse, resolveExercise } from "../engine/exercises";
 import { Fsrs, newCard, ratingFromOutcome, targetRetention, type CardMemory } from "../engine/fsrs";
-import { defaultEstimate, updateSkillOnline, type SkillEstimate } from "../engine/levels";
+import { defaultEstimate, overallTheta, thetaToCefr, updateSkillOnline, type SkillEstimate } from "../engine/levels";
 import { planSession, type SessionPlan } from "../engine/planner";
 import { computeStreak, localDay, summarizeVocabulary } from "../engine/progress";
 import { buildSessionSteps, sessionSeed, wordCard, type SessionStep } from "../engine/session-builder";
@@ -13,6 +13,7 @@ import { gradeDictation } from "../listening/diff";
 import { isLeech } from "../engine/insights";
 import { detectWeaknesses, type Weakness } from "../engine/weakness";
 import { polyglotDays } from "../engine/multilang";
+import { calibrationStep } from "../engine/calibration";
 import * as repo from "../db/repositories";
 import { rateLimit } from "../db/limits";
 import type { KnowledgeDbRow } from "../db/types";
@@ -237,7 +238,7 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
 
   const timeMs = Math.max(0, Math.min(input.timeMs, 10 * 60_000));
   const skill: Skill =
-    type === "dictation" || type === "listen_mc" || type === "listen_pick" || type === "dictation_word" ? "listening"
+    type === "dictation" || type === "listen_mc" || type === "listen_pick" || type === "dictation_word" || type === "phrase_listen" ? "listening"
     : type === "speak" ? "pronunciation"
     : type === "grammar" || type === "rearrange" || type === "conjugate" ? "grammar"
     : "vocabulary";
@@ -255,7 +256,9 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
   const existing = await repo.getKnowledge(ulId, itemIds);
   const byId = new Map(existing.map((k) => [k.itemId, k]));
   const previousKnowledge = itemIds.map((id) => byId.get(id) ?? null);
-  for (const itemId of itemIds) {
+  // Las frases de «Primeros pasos» no llevan tarjeta de repaso propia (no inflan los pendientes).
+  const tracked = type.startsWith("phrase_") ? [] : itemIds;
+  for (const itemId of tracked) {
     const prev = byId.get(itemId);
     const card = fsrsFor(learner).review(knowledgeToCard(prev, now), rating, now);
     const exposures = (prev?.exposureCount ?? 0) + 1;
@@ -344,6 +347,7 @@ function difficultyOfKey(key: string): number {
   const [type, id] = key.split("|") as [string, string];
   const CEFR: Record<string, number> = { A1: -2.5, A2: -1.5, B1: -0.5, B2: 0.5, C1: 1.5, C2: 2.5 };
   if (type === "grammar") return CEFR[catalog.grammarById(id)?.cefr ?? "B1"] ?? 0;
+  if (type.startsWith("phrase_")) return -2.8;
   if (type === "match") {
     const items = id.split(",").map((i) => catalog.vocabById(i)).filter(Boolean);
     return items.reduce((a, v) => a + (CEFR[v!.cefr] ?? 0), 0) / Math.max(1, items.length) - 0.5;
@@ -394,6 +398,8 @@ export interface SessionSummary {
   correct: number;
   minutes: number;
   newAchievements: { id: string; title: string; icon: string }[];
+  /** Si el nivel se ajustó con esta sesión (primeras sesiones de un idioma). */
+  levelAdjusted?: { direction: "down" | "up"; level: string; reason: string };
 }
 
 export async function finishSession(
@@ -416,12 +422,25 @@ export async function finishSession(
   }
   await repo.bumpActivity(learner.userId, learner.language.code, localDay(new Date(), learner.profile.timezone), { sessions: 1 });
   await repo.track(learner.userId, "session_completed", { exercises: s.exercisesCount, correct: s.correctCount });
+  // Recalibración: las primeras sesiones corrigen un diagnóstico demasiado alto o bajo.
+  let levelAdjusted: SessionSummary["levelAdjusted"];
+  const cal = calibrationStep({ sessionNumber: await repo.countCompletedSessions(learner.ul.id), total: s.exercisesCount, correct: s.correctCount });
+  if (cal && (await repo.claimCalibration(learner.ul.id, sessionId))) {
+    const skills = await getSkills(learner.ul.id);
+    const moved = [...skills.values()].map((k) => ({ ...k, theta: Math.max(-3.2, Math.min(3, k.theta + cal.delta)), se: Math.max(k.se, 0.5) }));
+    await repo.upsertSkillEstimates(learner.ul.id, moved);
+    const measured = moved.filter((k) => k.evidence > 0);
+    const overall = overallTheta(measured.length ? measured : moved);
+    levelAdjusted = { direction: cal.delta < 0 ? "down" : "up", level: overall === null ? "A1" : thetaToCefr(overall), reason: cal.reason };
+    await repo.track(learner.userId, "level_recalibrated", { delta: cal.delta, language: learner.language.code });
+  }
   const newAchievements = await checkAchievements(learner);
   return {
     total: s.exercisesCount,
     correct: s.correctCount,
     minutes: Math.round(s.durationSeconds / 60),
     newAchievements,
+    levelAdjusted,
   };
 }
 

@@ -140,3 +140,15 @@ test("diagnóstico: el parámetro de azar reduce el premio de acertar", () => {
   const sure = [{ difficulty: 0, correct: true, guess: 0 }];
   assert.ok(estimateTheta(lucky, -2, 1.4).theta < estimateTheta(sure, -2, 1.4).theta);
 });
+
+test("diagnóstico: incluye escucha y lectura curada, sin ids repetidos", async () => {
+  const { assessmentBankFor } = await import("../src/lib/content");
+  for (const lang of ["fr", "it", "pt", "de", "en", "ja"] as const) {
+    const bank = assessmentBankFor(lang, "es");
+    assert.equal(new Set(bank.map((i) => i.id)).size, bank.length, lang);
+    const listen = bank.filter((i) => i.skill === "listening");
+    assert.ok(listen.length >= 20, `${lang}: ${listen.length} ítems de escucha`);
+    assert.ok(listen.every((i) => i.audio && i.options.includes(i.answer)));
+    if (["fr", "it", "pt", "de"].includes(lang)) assert.ok(bank.filter((i) => i.id.includes(":a:r:")).length === 5);
+  }
+});

@@ -51,7 +51,8 @@
     "un poco"
   ],
   "其中": [
-    "entre ellos, de los cuales"
+    "entre ellos",
+    "de los cuales"
   ],
   "一定": [
     "seguro, sin duda"
@@ -454,5 +455,27 @@
       "etcétera"
     ],
     "p": "verb"
+  },
+  "另": [
+    "otro",
+    "aparte"
+  ],
+  "最大": [
+    "el más grande",
+    "máximo"
+  ],
+  "因此": [
+    "por eso",
+    "por lo tanto"
+  ],
+  "形成": [
+    "formar",
+    "formarse"
+  ],
+  "有人": {
+    "t": [
+      "alguien"
+    ],
+    "p": "pronoun"
   }
 }

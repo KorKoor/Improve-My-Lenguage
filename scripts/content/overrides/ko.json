@@ -333,5 +333,25 @@
       "espalda"
     ],
     "p": "noun"
+  },
+  "야": [
+    "¡oye!",
+    "¡eh!"
+  ],
+  "좀": [
+    "un poco",
+    "por favor (suaviza)"
+  ],
+  "건": [
+    "la cosa (que…)",
+    "lo que"
+  ],
+  "상": [
+    "premio",
+    "mesa",
+    "superior"
+  ],
+  "_forms": {
+    "하": "하다"
   }
 }

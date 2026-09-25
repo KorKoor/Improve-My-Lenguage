@@ -13,6 +13,14 @@ sys.modules["build_packs"] = bp
 _spec.loader.exec_module(bp)
 
 
+class DedupeTranslations(unittest.TestCase):
+    def test_leading_parenthesis(self):
+        self.assertEqual(bp.dedupe_translations(["mierda", "(una) mierda"]), ["mierda"])
+        self.assertEqual(bp.dedupe_translations(["cierto", "(estar) certero"]), ["cierto", "certero"])
+        self.assertEqual(bp.dedupe_translations(["(auxiliar de futuro)", "voluntad"]), ["(auxiliar de futuro)", "voluntad"])
+        self.assertEqual(bp.dedupe_translations(["abajo", "(para) abajo", "por"]), ["abajo", "por"])
+
+
 class TidyTranslation(unittest.TestCase):
     def test_wiktionary_annotations(self):
         cases = {

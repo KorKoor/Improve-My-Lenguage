@@ -5,6 +5,36 @@ const es = (t: string) => ({ es: t });
 
 export const RU_GRAMMAR_CORE: GrammarConcept[] = [
   {
+    id: "ru:g:byt-present",
+    language: "ru",
+    title: "Sin «ser/estar» en presente: Я студент",
+    cefr: "A1",
+    errorCategory: "ru:byt",
+    summary:
+      "En presente, el ruso normalmente omite el verbo «ser/estar»: Я студент (yo estudiante) = soy estudiante. Tampoco hay artículos: Это книга = es un libro / es el libro. Al escribir, a veces se pone un guion: Москва — столица.",
+    whenToUse: ["Presentarte: Меня зовут Ана. Я из Мексики.", "Señalar cosas: Это мой дом."],
+    formation: [
+      "Sujeto + nombre/adjetivo, sin verbo: Он врач. Она дома.",
+      "«Esto es…»: Это + nombre: Это кофе.",
+      "En pasado sí aparece: был / была / было / были.",
+    ],
+    commonMistakes: [
+      { wrong: "Я есть студент.", right: "Я студент.", why: "En presente no se dice «есть» para «ser»." },
+      { wrong: "Это есть книга.", right: "Это книга.", why: "Sin verbo en presente." },
+    ],
+    examples: [
+      { text: "Я студент.", translation: es("Soy estudiante.") },
+      { text: "Это мой брат.", translation: es("Este es mi hermano.") },
+      { text: "Мама дома.", translation: es("Mamá está en casa.") },
+    ],
+    contrasts: [{ a: "Он врач.", b: "Он был врачом.", explanation: "Presente sin verbo / pasado con был." }],
+    exercises: [
+      { type: "mc", prompt: "¿Cómo se dice «Soy de México»?", options: ["Я из Мексики.", "Я есть из Мексики.", "Я быть из Мексики.", "Мне из Мексики."], answers: ["Я из Мексики."], explanation: "Sin verbo en presente." },
+      { type: "mc", prompt: "«Esto es un café»:", options: ["Это кофе.", "Это есть кофе.", "Этот кофе есть.", "Кофе быть."], answers: ["Это кофе."], explanation: "Это + nombre." },
+      { type: "mc", prompt: "«Ella está en casa»:", options: ["Она дома.", "Она есть дома.", "Она быть дома.", "Она домой."], answers: ["Она дома."], explanation: "Sin verbo; дома = en casa." },
+    ],
+  },
+  {
     id: "ru:g:dative",
     language: "ru",
     title: "Dativo: мне нравится, мне холодно",

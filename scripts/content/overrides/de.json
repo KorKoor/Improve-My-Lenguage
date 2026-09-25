@@ -4,9 +4,9 @@
     "no"
   ],
   "werden": [
-    "llegar a ser",
     "volverse",
-    "(auxiliar de futuro y pasiva)"
+    "llegar a ser",
+    "(futuro y pasiva)"
   ],
   "an": [
     "en",
@@ -107,11 +107,33 @@
     "lo que"
   ],
   "ihr": [
-    "ustedes (informal)",
-    "su (de ella / de ellos)"
+    "vosotros",
+    "su (de ella/ellos)"
   ],
   "Sie": [
     "usted",
     "ustedes"
-  ]
+  ],
+  "gerne": {
+    "t": [
+      "con gusto",
+      "de buena gana"
+    ],
+    "p": "adverb"
+  },
+  "später": [
+    "después",
+    "más tarde"
+  ],
+  "bitte": [
+    "por favor",
+    "de nada"
+  ],
+  "selbst": [
+    "mismo",
+    "incluso"
+  ],
+  "_forms": {
+    "tage": "Tag"
+  }
 }

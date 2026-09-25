@@ -253,6 +253,12 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
             <ul className="mt-2 space-y-1 text-sm">{summary.newAchievements.map((a) => <li key={a.id}>{a.icon} {a.title}</li>)}</ul>
           </div>
         ) : null}
+        {summary?.levelAdjusted && (
+          <p className="max-w-md rounded-2xl bg-primary-soft px-4 py-3 text-sm animate-pop-in" role="status">
+            {summary.levelAdjusted.direction === "down" ? "🌱" : "🚀"} <strong>Hemos ajustado tu nivel a {summary.levelAdjusted.level}</strong> porque {summary.levelAdjusted.reason}.{" "}
+            {summary.levelAdjusted.direction === "down" ? "Tus próximas sesiones empezarán con ejercicios más sencillos." : "Tus próximas sesiones serán un poco más exigentes."}
+          </p>
+        )}
         {status === "done" && focusEvents.current.length >= 8 && (
           <p className="max-w-md rounded-2xl bg-surface px-4 py-3 text-sm shadow-sm">
             {onset !== null
@@ -558,7 +564,7 @@ function ExerciseStep({
       ) : ex.prompt ? (
         <div className="card mt-3 p-6">
           <div className="flex items-start gap-3">
-            <p className={cn("flex-1 font-display font-extrabold", ex.prompt.length > 40 ? "text-xl leading-snug" : "text-3xl sm:text-4xl")} lang={ex.type === "reverse_mc" || ex.type === "recall" ? "es" : language} dir={ex.type === "reverse_mc" || ex.type === "recall" ? "ltr" : dir}>
+            <p className={cn("flex-1 font-display font-extrabold", ex.prompt.length > 40 ? "text-xl leading-snug" : "text-3xl sm:text-4xl")} lang={ex.type === "reverse_mc" || ex.type === "recall" || ex.type === "phrase_pick" ? "es" : language} dir={ex.type === "reverse_mc" || ex.type === "recall" || ex.type === "phrase_pick" ? "ltr" : dir}>
               {ex.prompt}
             </p>
             {ex.audioText ? <SpeakButton text={ex.audioText} locale={locale} size={46} /> : null}
@@ -588,7 +594,7 @@ function ExerciseStep({
                 )}
               >
                 <kbd className="hidden size-6 place-items-center rounded-md border border-border text-[11px] text-muted sm:grid">{i + 1}</kbd>
-                <span className="flex-1" lang={ex.type === "meaning_mc" || ex.type === "listen_mc" ? "es" : language}>{o}</span>
+                <span className="flex-1" lang={ex.type === "meaning_mc" || ex.type === "listen_mc" || ex.type === "phrase_listen" ? "es" : language}>{o}</span>
                 {state === "ok" && <Check size={18} aria-hidden />}
                 {state === "bad" && <X size={18} aria-hidden />}
               </button>

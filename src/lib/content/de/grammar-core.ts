@@ -5,6 +5,67 @@ const es = (t: string) => ({ es: t });
 
 export const DE_GRAMMAR_CORE: GrammarConcept[] = [
   {
+    id: "de:g:sein-haben",
+    language: "de",
+    title: "sein y haben: los dos verbos del primer día",
+    cefr: "A1",
+    errorCategory: "de:sein-haben",
+    summary:
+      "sein es «ser/estar» y haben es «tener». Son irregulares y los usarás en casi todas tus primeras frases: Ich bin Ana. Ich habe einen Bruder. Para la edad se usa sein, no haben: Ich bin 30 Jahre alt.",
+    whenToUse: ["Presentarte: Ich bin Carlos. Ich bin aus Mexiko.", "Decir lo que tienes: Ich habe Zeit. Hast du Hunger?"],
+    formation: [
+      "sein: ich bin, du bist, er/sie ist, wir sind, ihr seid, sie/Sie sind.",
+      "haben: ich habe, du hast, er/sie hat, wir haben, ihr habt, sie/Sie haben.",
+    ],
+    commonMistakes: [
+      { wrong: "Ich habe 30 Jahre.", right: "Ich bin 30 Jahre alt.", why: "La edad se dice con sein + alt." },
+      { wrong: "Er habt ein Auto.", right: "Er hat ein Auto.", why: "Con er/sie/es: hat." },
+    ],
+    examples: [
+      { text: "Ich bin müde.", translation: es("Estoy cansado.") },
+      { text: "Wir haben einen Hund.", translation: es("Tenemos un perro.") },
+      { text: "Bist du zu Hause?", translation: es("¿Estás en casa?") },
+    ],
+    contrasts: [{ a: "Ich bin Lehrer.", b: "Ich habe einen Lehrer.", explanation: "Ser profesor / tener un profesor." }],
+    exercises: [
+      { type: "mc", prompt: "Ich ___ Carlos.", options: ["bin", "habe", "ist", "bist"], answers: ["bin"], explanation: "Presentarse: ich bin." },
+      { type: "mc", prompt: "Du ___ eine Schwester.", options: ["hast", "bist", "habt", "hat"], answers: ["hast"], explanation: "haben con du: hast." },
+      { type: "mc", prompt: "Wie alt ___ du?", options: ["bist", "hast", "ist", "sind"], answers: ["bist"], explanation: "La edad va con sein." },
+      { type: "fill", prompt: "Sie (ella) ___ ein Auto. (haben)", answers: ["hat"], explanation: "er/sie/es hat." },
+    ],
+  },
+  {
+    id: "de:g:artikel-der-die-das",
+    language: "de",
+    title: "der, die, das: el género de los sustantivos",
+    cefr: "A1",
+    errorCategory: "de:gender",
+    summary:
+      "En alemán hay tres géneros: masculino (der), femenino (die) y neutro (das). No siempre coincide con el español (das Mädchen = la chica). Aprende cada palabra con su artículo, como si fuera parte de ella. En plural todos usan die.",
+    whenToUse: ["Siempre que aprendas un sustantivo: der Tisch, die Lampe, das Buch.", "Los sustantivos se escriben con mayúscula."],
+    formation: [
+      "Indefinido: ein (der/das), eine (die): ein Tisch, eine Lampe, ein Buch.",
+      "Pistas: -ung, -heit, -keit → die; -chen, -lein → das; días, meses y estaciones → der.",
+    ],
+    commonMistakes: [
+      { wrong: "die Mädchen ist nett.", right: "Das Mädchen ist nett.", why: "-chen siempre es neutro: das." },
+      { wrong: "der Zeitung", right: "die Zeitung", why: "-ung siempre es femenino." },
+    ],
+    examples: [
+      { text: "Das Buch ist neu.", translation: es("El libro es nuevo.") },
+      { text: "Die Wohnung ist klein.", translation: es("El piso es pequeño.") },
+      { text: "Der Kaffee ist heiß.", translation: es("El café está caliente.") },
+    ],
+    contrasts: [{ a: "der Tisch (la mesa)", b: "die Lampe (la lámpara)", explanation: "El género alemán no sigue al español: apréndelo con la palabra." }],
+    exercises: [
+      { type: "mc", prompt: "___ Zeitung ist interessant.", options: ["Die", "Der", "Das", "Den"], answers: ["Die"], explanation: "-ung → die." },
+      { type: "mc", prompt: "___ Mädchen spielt.", options: ["Das", "Die", "Der", "Ein"], answers: ["Das"], explanation: "-chen → das." },
+      { type: "mc", prompt: "Ich habe ___ Buch.", options: ["ein", "eine", "einen", "der"], answers: ["ein"], explanation: "das Buch → ein Buch." },
+      { type: "fill", prompt: "___ Montag ist mein Lieblingstag. (artículo)", answers: ["Der"], explanation: "Los días de la semana son masculinos." },
+    ],
+  },
+
+  {
     id: "de:g:trennbare-verben",
     language: "de",
     title: "Verbos separables: anfangen → Ich fange an",

@@ -220,6 +220,24 @@ def tidy_translation(c: str) -> str:
     return re.sub(r"\s+", " ", c).strip()
 
 
+def dedupe_translations(ts: list[str]) -> list[str]:
+    """«mierda / (una) mierda» → «mierda»; «seguro / (estar) certero» → «seguro / certero».
+    Un paréntesis al principio sólo aclara el uso: se quita si repite otra opción
+    o si deja una palabra suelta legible."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for t in ts:
+        bare = re.sub(r"^\([^)]*\)\s*", "", t).strip()
+        # «(estar) certero»: el paréntesis inicial sobra si queda algo con sentido.
+        shown = bare if bare and t.startswith("(") and not t.endswith(")") else t
+        key = bare.lower()
+        if key and key in seen:
+            continue
+        seen.add(key or t.lower())
+        out.append(shown)
+    return out
+
+
 def clean_candidate(c: str) -> str:
     c = tidy_translation(c)
     c = re.sub(r"[₀-₉⁰-⁹\d]+$", "", c).strip(" .;:·-")
@@ -1124,7 +1142,7 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
             if DEBUG and len(DROPPED) < 60:
                 DROPPED.append(("sin traducción", rank, lemma, pos, (en.glosses[:2] if en else None)))
             continue
-        translations = translations[:3]
+        translations = dedupe_translations(translations)[:3]
         if overrides.get(lemma):
             # Corrección revisada por una persona (scripts/content/overrides/<código>.json).
             translations = overrides[lemma][:3]

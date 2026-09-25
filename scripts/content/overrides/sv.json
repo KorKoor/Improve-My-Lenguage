@@ -11,7 +11,7 @@
   ],
   "att": [
     "que",
-    "(marca de infinitivo)"
+    "(ante infinitivo)"
   ],
   "på": [
     "en",
@@ -66,9 +66,12 @@
   "upp": [
     "arriba"
   ],
-  "göra": [
-    "hacer"
-  ],
+  "göra": {
+    "t": [
+      "hacer"
+    ],
+    "p": "verb"
+  },
   "bli": [
     "volverse",
     "llegar a ser"
@@ -100,9 +103,12 @@
     "existir",
     "haber"
   ],
-  "vilja": [
-    "querer"
-  ],
+  "vilja": {
+    "t": [
+      "querer"
+    ],
+    "p": "verb"
+  },
   "eller": [
     "o"
   ],
@@ -118,5 +124,13 @@
   "den": [
     "el, la",
     "ese"
+  ],
+  "viss": [
+    "cierto",
+    "seguro"
+  ],
+  "olika": [
+    "diferente",
+    "varios"
   ]
 }

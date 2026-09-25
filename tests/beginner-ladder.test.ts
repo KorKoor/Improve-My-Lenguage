@@ -48,9 +48,9 @@ test("ejercicios de escucha con opciones: sin texto visible y con respuesta en e
   assert.equal(letterHint("l'eau"), "l ' _ _ _");
 });
 
-test("primeros pasos: 6 unidades completas en los 12 idiomas, con transcripción en escrituras no latinas", async () => {
+test("primeros pasos: 10 unidades completas en los 12 idiomas, con transcripción en escrituras no latinas", async () => {
   const { FIRST_STEPS, hasFirstSteps, unitPhrases } = await import("../src/lib/content/first-steps");
-  assert.equal(FIRST_STEPS.length, 6);
+  assert.equal(FIRST_STEPS.length, 10);
   for (const lang of ["en", "fr", "de", "it", "pt", "nl", "sv", "ru", "ja", "ko", "zh", "ar"] as const) {
     assert.ok(hasFirstSteps(lang), lang);
     for (const u of FIRST_STEPS) {
@@ -59,4 +59,38 @@ test("primeros pasos: 6 unidades completas en los 12 idiomas, con transcripción
       if (["ru", "ja", "ko", "zh", "ar"].includes(lang)) assert.ok(ps.every((p) => p.roman), `${lang}/${u.id}: falta transcripción`);
     }
   }
+});
+
+test("recalibración: sólo al principio, con datos suficientes y en ambos sentidos", async () => {
+  const { calibrationStep } = await import("../src/lib/engine/calibration");
+  assert.equal(calibrationStep({ sessionNumber: 1, total: 5, correct: 0 }), null);
+  assert.equal(calibrationStep({ sessionNumber: 2, total: 20, correct: 4 })!.delta, -0.8);
+  assert.equal(calibrationStep({ sessionNumber: 2, total: 20, correct: 8 })!.delta, -0.5);
+  assert.equal(calibrationStep({ sessionNumber: 3, total: 20, correct: 12 }), null);
+  assert.equal(calibrationStep({ sessionNumber: 3, total: 20, correct: 19 })!.delta, 0.3);
+  assert.equal(calibrationStep({ sessionNumber: 9, total: 20, correct: 2 }), null);
+});
+
+test("frases útiles en sesión: se resuelven en el servidor y no mezclan idiomas", async () => {
+  const { buildPhraseExercise, phraseById } = await import("../src/lib/engine/exercises");
+  const listen = buildPhraseExercise("ja", 0, 6, "phrase_listen")!;
+  assert.equal(listen.prompt, "");
+  assert.equal(listen.audioText, "ありがとう");
+  const r = resolveExercise(listen.key, catalog, "es")!;
+  assert.equal(r.accepted[0], "Gracias");
+  assert.ok(listen.options!.includes("Gracias"));
+  assert.match(r.display, /arigatō/);
+  const pick = buildPhraseExercise("fr", 3, 1, "phrase_pick")!;
+  assert.equal(resolveExercise(pick.key, catalog, "es")!.accepted[0], "deux");
+  assert.equal(phraseById("fr:p:no-existe:0"), null);
+});
+
+test("sesión de novato: incluye frases útiles y nada de escribir ni dictados", async () => {
+  const { buildSessionSteps } = await import("../src/lib/engine/session-builder");
+  const { grammarFor } = await import("../src/lib/content");
+  const plan = { totalMinutes: 10, blocks: [{ kind: "new_words" as const, minutes: 6, reason: "" }, { kind: "listening" as const, minutes: 4, reason: "" }] };
+  const steps = buildSessionSteps({ plan, language: "fr", native: "es", catalog, grammar: grammarFor("fr"), knowledge: [], due: [], vocabTheta: -2.8, grammarTheta: -2.8, interests: [], seed: 7 });
+  const types = steps.flatMap((s) => (s.kind === "exercise" ? [s.exercise.type] : []));
+  assert.ok(types.some((t) => t === "phrase_listen" || t === "phrase_pick"), types.join(","));
+  for (const t of ["recall", "cloze", "dictation", "dictation_word", "conjugate"]) assert.ok(!types.includes(t as never), `incluye ${t}`);
 });

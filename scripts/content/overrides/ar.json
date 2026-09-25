@@ -13,23 +13,37 @@
     "lo que",
     "no (con pasado)"
   ],
-  "بعد": [
-    "después (de)"
-  ],
-  "لم": [
-    "no (con pasado)"
-  ],
+  "بعد": {
+    "t": [
+      "después de",
+      "después"
+    ],
+    "p": "preposition"
+  },
+  "لم": {
+    "t": [
+      "no (en pasado)"
+    ],
+    "p": "particle"
+  },
   "بين": [
     "entre"
   ],
   "ان": null,
-  "قبل": [
-    "antes (de)"
-  ],
-  "قد": [
-    "ya (con pasado)",
-    "quizá"
-  ],
+  "قبل": {
+    "t": [
+      "antes de",
+      "antes"
+    ],
+    "p": "preposition"
+  },
+  "قد": {
+    "t": [
+      "ya (con pasado)",
+      "quizá (con presente)"
+    ],
+    "p": "particle"
+  },
   "إن": [
     "si",
     "ciertamente"
@@ -42,14 +56,21 @@
     "otro que, no-",
     "además de"
   ],
-  "تم": [
-    "se completó, se hizo"
-  ],
+  "تم": {
+    "t": [
+      "se hizo",
+      "se completó"
+    ],
+    "p": "verb"
+  },
   "علي": null,
-  "مثل": [
-    "como",
-    "por ejemplo"
-  ],
+  "مثل": {
+    "t": [
+      "como",
+      "por ejemplo"
+    ],
+    "p": "preposition"
+  },
   "محمد": null,
   "لك": [
     "para ti",
@@ -58,10 +79,13 @@
   "أكثر": [
     "más"
   ],
-  "لي": [
-    "para mí",
-    "mío"
-  ],
+  "لي": {
+    "t": [
+      "para mí",
+      "mío"
+    ],
+    "p": "preposition"
+  },
   "بن": null,
   "وفي": null,
   "قال": [
@@ -78,9 +102,13 @@
   "أنا": [
     "yo"
   ],
-  "تكون": [
-    "es / será (ella)"
-  ],
+  "تكون": {
+    "t": [
+      "ser",
+      "estar (ella, futuro)"
+    ],
+    "p": "verb"
+  },
   "كيف": [
     "cómo"
   ],
@@ -93,10 +121,13 @@
     "junto a",
     "cuando"
   ],
-  "لها": [
-    "para ella",
-    "suyo (de ella)"
-  ],
+  "لها": {
+    "t": [
+      "para ella",
+      "suyo (de ella)"
+    ],
+    "p": "preposition"
+  },
   "هي": [
     "ella"
   ],
@@ -175,5 +206,83 @@
       "deber"
     ],
     "p": "verb"
+  },
+  "مصر": {
+    "t": [
+      "Egipto"
+    ],
+    "p": "noun"
+  },
+  "نفس": {
+    "t": [
+      "mismo",
+      "alma"
+    ],
+    "p": "noun"
+  },
+  "حرب": {
+    "t": [
+      "guerra"
+    ],
+    "p": "noun"
+  },
+  "عمر": {
+    "t": [
+      "edad",
+      "vida"
+    ],
+    "p": "noun"
+  },
+  "دول": {
+    "t": [
+      "países",
+      "estados"
+    ],
+    "p": "noun"
+  },
+  "أمن": {
+    "t": [
+      "seguridad"
+    ],
+    "p": "noun"
+  },
+  "نساء": {
+    "t": [
+      "mujeres"
+    ],
+    "p": "noun"
+  },
+  "ذو": {
+    "t": [
+      "con",
+      "poseedor de"
+    ],
+    "p": "noun"
+  },
+  "وقد": {
+    "t": [
+      "y ya"
+    ],
+    "p": "particle"
+  },
+  "كم": {
+    "t": [
+      "cuánto",
+      "cuántos"
+    ],
+    "p": "adverb"
+  },
+  "تحت": {
+    "t": [
+      "debajo de",
+      "bajo"
+    ],
+    "p": "preposition"
+  },
+  "وزارة": {
+    "t": [
+      "ministerio"
+    ],
+    "p": "noun"
   }
 }

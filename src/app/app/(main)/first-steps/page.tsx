@@ -30,7 +30,7 @@ export default async function FirstStepsPage() {
       <header className="animate-rise">
         <h1 className="font-display text-3xl font-extrabold">Primeros pasos en {lang.name.toLowerCase()}</h1>
         <p className="mt-1 max-w-2xl text-muted">
-          ¿No sabes nada todavía? Perfecto: empieza aquí. Seis unidades cortas con las frases que más vas a usar, audio lento y ejercicios de escuchar y elegir. Nada de escribir de memoria.
+          ¿No sabes nada todavía? Perfecto: empieza aquí. Diez unidades cortas con las frases que más vas a usar, audio lento y ejercicios de escuchar y elegir. Nada de escribir de memoria.
         </p>
       </header>
 

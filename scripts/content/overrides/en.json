@@ -39,7 +39,7 @@
     "lata"
   ],
   "will": [
-    "(auxiliar de futuro)",
+    "(futuro) -ré, -rás…",
     "voluntad"
   ],
   "just": {
@@ -158,9 +158,12 @@
   "their": [
     "su (de ellos)"
   ],
-  "would": [
-    "(condicional: -ría)"
-  ],
+  "would": {
+    "t": [
+      "(condicional) -ría"
+    ],
+    "p": "verb"
+  },
   "child": [
     "niño",
     "niña"

@@ -4,11 +4,13 @@
  * Puro y determinista (semilla) → testeable y reproducible.
  */
 import { cognateInfo, type CognateInfo } from "./cognates";
+import { FIRST_STEPS, hasFirstSteps } from "../content/first-steps";
 import type { GrammarConcept, LanguageCode, VocabItem } from "../content/types";
 import {
   buildGrammarExercise,
   buildMatchExercise,
   buildVocabExercise,
+  buildPhraseExercise,
   learnerStage,
   pickVocabExerciseType,
   translationOf,
@@ -193,6 +195,16 @@ export function buildSessionSteps(input: BuildInput): SessionStep[] {
         for (const v of shuffle(newWords, rand)) push("new_words", buildVocabExercise("meaning_mc", v, input.catalog, input.native));
         if (newWords.length >= 3) push("new_words", buildMatchExercise(newWords, input.native, input.seed));
         else for (const v of newWords) push("new_words", buildVocabExercise("reverse_mc", v, input.catalog, input.native));
+        // A1: frases hechas de «Primeros pasos» junto a las palabras sueltas
+        // (un principiante se comunica antes con frases que con vocabulario aislado).
+        if (stage === "novice" && hasFirstSteps(input.language)) {
+          const units = Math.min(FIRST_STEPS.length, 2 + Math.floor(input.knowledge.length / 40));
+          for (let k = 0; k < 3; k++) {
+            const u = Math.floor(rand() * units);
+            const idx = Math.floor(rand() * FIRST_STEPS[u]!.phrases.length);
+            push("new_words", buildPhraseExercise(input.language, u, idx, k % 2 ? "phrase_listen" : "phrase_pick", input.seed));
+          }
+        }
         break;
       }
       case "grammar": {

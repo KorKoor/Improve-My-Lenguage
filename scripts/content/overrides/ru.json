@@ -71,8 +71,8 @@
     "tan"
   ],
   "же": [
-    "(partícula enfática)",
-    "pues"
+    "pues",
+    "(énfasis)"
   ],
   "то": [
     "eso",
@@ -125,5 +125,10 @@
   "вы": [
     "usted",
     "ustedes"
+  ],
+  "ничего": [
+    "nada",
+    "no pasa nada",
+    "nada mal"
   ]
 }

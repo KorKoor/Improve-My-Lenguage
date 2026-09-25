@@ -11,11 +11,14 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
+import { useSpeech } from "@/components/speak-button";
+import { Snail, Volume2 } from "lucide-react";
 import type { AssessmentStep } from "@/lib/services/assessment";
 
-const SKILL_ES = { vocabulary: "Vocabulario", grammar: "Gramática", reading: "Lectura" } as const;
+const SKILL_ES = { vocabulary: "Vocabulario", grammar: "Gramática", reading: "Lectura", listening: "Escucha" } as const;
 
-export function AssessmentRunner({ languageName, language, rtl, restart, alreadyAssessed }: { languageName: string; language: string; rtl: boolean; restart: boolean; alreadyAssessed: boolean }) {
+export function AssessmentRunner({ languageName, language, rtl, restart, alreadyAssessed, locale }: { languageName: string; language: string; rtl: boolean; restart: boolean; alreadyAssessed: boolean; locale: string }) {
+  const { speak } = useSpeech(locale);
   const [phase, setPhase] = useState<"intro" | "loading" | "question" | "result" | "error">(alreadyAssessed && !restart ? "intro" : "intro");
   const [step, setStep] = useState<AssessmentStep | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -146,6 +149,7 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
       <div key={item.id} className="mt-6 animate-rise">
         <Chip tone="muted">{SKILL_ES[item.skill]}</Chip>
         {item.passage && <p className="card mt-4 p-5 leading-relaxed" lang={language} dir={rtl ? "rtl" : "ltr"}>{item.passage}</p>}
+        {item.audio && <AudioPrompt key={item.id} text={item.audio} speak={speak} />}
         <p className="mt-5 font-display text-2xl font-extrabold leading-snug" lang={language}>{item.prompt}</p>
         <div className="mt-6 grid gap-2.5">
           {item.options.map((o, i) => (
@@ -160,6 +164,24 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
         </button>
         <p className="mt-6 text-center text-xs text-muted">No mostramos si acertaste para no condicionar las siguientes respuestas.</p>
       </div>
+    </div>
+  );
+}
+
+/** Ítem de escucha: se reproduce solo al aparecer; se puede repetir (también despacio). */
+function AudioPrompt({ text, speak }: { text: string; speak: (t: string, rate?: number) => boolean }) {
+  useEffect(() => {
+    const t = setTimeout(() => speak(text, 0.9), 300);
+    return () => clearTimeout(t);
+  }, [text, speak]);
+  return (
+    <div className="card mt-4 flex items-center justify-center gap-4 p-6">
+      <button type="button" onClick={() => speak(text, 0.9)} className="grid size-16 place-items-center rounded-full bg-primary text-on-primary shadow-lg active:scale-95" aria-label="Escuchar">
+        <Volume2 size={28} />
+      </button>
+      <button type="button" onClick={() => speak(text, 0.6)} className="grid size-11 place-items-center rounded-full bg-primary-soft text-primary active:scale-95" aria-label="Escuchar despacio">
+        <Snail size={20} />
+      </button>
     </div>
   );
 }

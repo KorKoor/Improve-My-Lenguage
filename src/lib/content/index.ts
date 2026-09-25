@@ -4,6 +4,7 @@
  * migrarlo a base de datos o a un CMS en el futuro sólo cambia este módulo.
  */
 import { cognateInfo } from "../engine/cognates";
+import { READING_BANK } from "./reading-bank";
 import { CEFR_CENTER, itemTheta } from "../engine/levels";
 import type { Catalog } from "../engine/exercises";
 import { EN_ASSESSMENT } from "./en/assessment";
@@ -132,8 +133,46 @@ export const catalog: Catalog = {
  */
 export function assessmentBankFor(language: LanguageCode, native: LanguageCode): AssessmentItem[] {
   const curated = ASSESSMENT[language];
-  if (curated && curated.length > 0) return curated;
+  if (curated && curated.length > 0) return [...curated, ...listeningItems(language, native), ...(READING_BANK[language] ?? [])];
+  return [...generatedBank(language, native), ...listeningItems(language, native), ...(READING_BANK[language] ?? [])];
+}
 
+/**
+ * Comprensión auditiva: se oye una palabra (síntesis de voz) y se elige su
+ * significado. ~40 ítems repartidos por frecuencia; un poco más difíciles que
+ * leer la misma palabra.
+ */
+function listeningItems(language: LanguageCode, native: LanguageCode): AssessmentItem[] {
+  const vocab = vocabFor(language);
+  const step = Math.max(1, Math.floor(Math.min(vocab.length, 6000) / 40));
+  const items: AssessmentItem[] = [];
+  for (let i = 3; i < Math.min(vocab.length, 6000); i += step) {
+    const v = vocab[i]!;
+    const answer = translationOf(v, native)[0];
+    if (!answer) continue;
+    const distractors: string[] = [];
+    for (let d = 1; distractors.length < 3 && d < 40; d++) {
+      for (const j of [i + d * 2, i - d * 2]) {
+        const t = vocab[j] ? translationOf(vocab[j]!, native)[0] : undefined;
+        if (t && t.toLowerCase() !== answer.toLowerCase() && !distractors.includes(t) && distractors.length < 3) distractors.push(t);
+      }
+    }
+    if (distractors.length < 3) continue;
+    items.push({
+      id: `${language}:a:l:${v.id.split(":").pop()}`,
+      language,
+      skill: "listening",
+      difficulty: itemTheta(v) + 0.3,
+      prompt: "Escucha y elige qué significa",
+      audio: v.lemma,
+      options: [answer, ...distractors].sort(),
+      answer,
+    });
+  }
+  return items;
+}
+
+function generatedBank(language: LanguageCode, native: LanguageCode): AssessmentItem[] {
   const items: AssessmentItem[] = [];
   const vocab = vocabFor(language);
   // Con miles de palabras basta una muestra de ~300 repartida por todo el rango

@@ -9,6 +9,7 @@
 import { pronouns, tenseLabel, TENSE_ORDER, withPronoun } from "../content/conjugation";
 import type { GrammarConcept, LanguageCode, Skill, TenseKey, VocabItem } from "../content/types";
 import { CEFR_CENTER, itemTheta } from "./levels";
+import { FIRST_STEPS, unitPhrases } from "../content/first-steps";
 import { hashString, mulberry32, sample, shuffle } from "./random";
 
 export const EXERCISE_TYPES = [
@@ -25,6 +26,8 @@ export const EXERCISE_TYPES = [
   "listen_mc",
   "listen_pick",
   "dictation_word",
+  "phrase_listen",
+  "phrase_pick",
 ] as const;
 export type ExerciseType = (typeof EXERCISE_TYPES)[number];
 
@@ -84,6 +87,8 @@ const TYPE_OFFSET: Record<ExerciseType, number> = {
   listen_mc: -0.3,
   listen_pick: -0.2,
   dictation_word: 0.2,
+  phrase_listen: -0.2,
+  phrase_pick: -0.4,
 };
 
 const EXPECTED_MS: Record<ExerciseType, number> = {
@@ -100,6 +105,8 @@ const EXPECTED_MS: Record<ExerciseType, number> = {
   listen_mc: 9000,
   listen_pick: 9000,
   dictation_word: 14000,
+  phrase_listen: 10000,
+  phrase_pick: 9000,
 };
 
 /** «m _ _ _ _» : primera letra y huecos (ayuda sin regalar la respuesta). */
@@ -174,7 +181,7 @@ function distractors(
 }
 
 export function buildVocabExercise(
-  type: Exclude<ExerciseType, "grammar" | "match">,
+  type: Exclude<ExerciseType, "grammar" | "match" | "phrase_listen" | "phrase_pick">,
   item: VocabItem,
   catalog: Catalog,
   native: LanguageCode,
@@ -433,6 +440,35 @@ export function buildGrammarExercise(
   };
 }
 
+// ── Frases útiles (chunks de «Primeros pasos») ────────────────────────────
+/** id de frase: «fr:p:greetings:3». */
+export function phraseById(id: string): { lang: string; es: string; text: string; roman?: string } | null {
+  const [lang, p, unitId, idx] = id.split(":");
+  if (p !== "p" || !lang || !unitId) return null;
+  const unit = FIRST_STEPS.find((u) => u.id === unitId);
+  const ph = unit ? unitPhrases(unit, lang as LanguageCode)[Number(idx)] : undefined;
+  return ph ? { lang, ...ph } : null;
+}
+
+/**
+ * Ejercicio con una frase hecha: escucharla y elegir su significado, o leer
+ * el significado y elegir la frase. Los distractores salen de la misma unidad.
+ */
+export function buildPhraseExercise(language: LanguageCode, unitIdx: number, phraseIdx: number, kind: "phrase_listen" | "phrase_pick", seed = 0): Exercise | null {
+  const unit = FIRST_STEPS[unitIdx];
+  if (!unit) return null;
+  const phrases = unitPhrases(unit, language);
+  const ph = phrases[phraseIdx];
+  if (!ph || phrases.length < 4) return null;
+  const id = `${language}:p:${unit.id}:${phraseIdx}`;
+  const rand = mulberry32(hashString(`${kind}|${id}|${seed}`));
+  const others = shuffle(phrases.filter((_, i) => i !== phraseIdx), rand).slice(0, 3);
+  const base = { language, itemIds: [id], difficulty: CEFR_CENTER.A1 + TYPE_OFFSET[kind], expectedMs: EXPECTED_MS[kind], key: `${kind}|${id}`, type: kind, input: "choice" as const };
+  return kind === "phrase_listen"
+    ? { ...base, skill: "listening", instruction: "Frase útil · escucha y elige qué significa", prompt: "", audioText: ph.text, options: shuffle([ph.es, ...others.map((o) => o.es)], rand) }
+    : { ...base, skill: "vocabulary", instruction: "Frase útil · ¿cómo se dice?", prompt: ph.es, options: shuffle([ph.text, ...others.map((o) => o.text)], rand) };
+}
+
 /** Resuelve una key a sus respuestas aceptadas (sólo en el servidor). */
 export function resolveExercise(
   key: string,
@@ -454,6 +490,13 @@ export function resolveExercise(
       mode: ex.options ? "choice" : "text",
       typos: false,
     };
+  }
+
+  if (type === "phrase_listen" || type === "phrase_pick") {
+    const ph = phraseById(id);
+    if (!ph) return null;
+    const shown = `${ph.text}${ph.roman ? ` (${ph.roman})` : ""} = ${ph.es}`;
+    return { accepted: [type === "phrase_listen" ? ph.es : ph.text], display: shown, errorCategory: type === "phrase_listen" ? "listening" : "vocabulary", mode: "choice", typos: false };
   }
 
   if (type === "match") {
@@ -573,7 +616,7 @@ export function learnerStage(theta: number): LearnerStage {
   return theta < -2.1 ? "novice" : theta < -1.1 ? "beginner" : "intermediate";
 }
 
-type VocabType = Exclude<ExerciseType, "grammar" | "match">;
+type VocabType = Exclude<ExerciseType, "grammar" | "match" | "phrase_listen" | "phrase_pick">;
 
 /**
  * Escalera de ejercicios por palabra: reconocer (leer y oír) → producir con

@@ -717,6 +717,22 @@ export async function completeSession(ulId: string, sessionId: string, durationS
   return ok ? toSession(ulId, await ref.get()) : null;
 }
 
+/** Marca la sesión como ya usada para recalibrar (una sola vez). Devuelve false si ya lo estaba. */
+export async function claimCalibration(ulId: string, sessionId: string): Promise<boolean> {
+  if (!/^[A-Za-z0-9]{10,40}$/.test(sessionId)) return false;
+  const ref = sessionsOf(ulId).doc(sessionId);
+  return db().runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists || snap.get("calibrated")) return false;
+    tx.update(ref, { calibrated: true });
+    return true;
+  });
+}
+
+export async function countCompletedSessions(ulId: string): Promise<number> {
+  return (await sessionsOf(ulId).where("completed", "==", true).count().get()).data().count;
+}
+
 export async function recentSessionIds(ulId: string, n: number): Promise<string[]> {
   const snap = await sessionsOf(ulId).where("active", "==", true).orderBy("startedAt", "desc").limit(n).select().get();
   return snap.docs.map((d) => d.id);

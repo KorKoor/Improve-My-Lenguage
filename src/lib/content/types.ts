@@ -167,10 +167,12 @@ export type AssessmentItemKind = "mc";
 export interface AssessmentItem {
   id: string; // "<lang>:a:<n>"
   language: LanguageCode;
-  skill: Extract<Skill, "vocabulary" | "grammar" | "reading">;
+  skill: Extract<Skill, "vocabulary" | "grammar" | "reading" | "listening">;
   /** Dificultad en escala logit (modelo de Rasch). ~ -3 (A1) .. +3 (C2). */
   difficulty: number;
   passage?: string;
+  /** Texto que se escucha (ítems de comprensión auditiva; no se muestra escrito). */
+  audio?: string;
   prompt: string;
   options: string[];
   answer: string;

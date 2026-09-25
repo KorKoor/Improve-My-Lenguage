@@ -6,10 +6,13 @@ export interface ChangelogItem {
   href: string;
 }
 
-export const CHANGELOG_VERSION = "2026-09-26";
+export const CHANGELOG_VERSION = "2026-09-26b";
 
 export const CHANGELOG: ChangelogItem[] = [
-  { icon: "👣", title: "Primeros pasos", text: "Seis unidades para quien no sabe nada: saludar, presentarte, cuando no entiendes, números, cafetería y orientarte. Audio lento, escuchar y elegir, ordenar frases, y transcripción en ruso, japonés, coreano, chino y árabe.", href: "/app/first-steps" },
+  { icon: "🎯", title: "Tu nivel se ajusta solo", text: "En tus primeras sesiones de cada idioma, si fallas la mayoría bajamos el nivel (y si aciertas casi todo, lo subimos). Te avisamos cuando pasa.", href: "/app/session" },
+  { icon: "🎧", title: "Diagnóstico con escucha y lectura", text: "El test incluye preguntas de escuchar y elegir, y textos cortos de A1 a C1 en francés, italiano, portugués y alemán.", href: "/app/assessment" },
+  { icon: "💬", title: "Frases útiles en tus sesiones", text: "Si empiezas de cero, tus sesiones mezclan palabras con frases hechas de Primeros pasos: te comunicas antes.", href: "/app/session" },
+  { icon: "👣", title: "Primeros pasos", text: "Diez unidades para quien no sabe nada: saludar, presentarte, cuando no entiendes, números, cafetería, orientarte, familia, compras, días y horas, y emergencias. Audio lento, escuchar y elegir, ordenar frases, y transcripción en ruso, japonés, coreano, chino y árabe.", href: "/app/first-steps" },
   { icon: "🧹", title: "Palabras básicas corregidas", text: "Arreglamos traducciones y confusiones en las palabras más frecuentes (por ejemplo «tu», «sous», «cela» o «maintenant» en francés, y contracciones en italiano y portugués).", href: "/app/vocabulary" },
   { icon: "🌱", title: "Pensado para quien empieza de cero", text: "Diagnóstico con «No lo sé» (y que ya no premia adivinar), opción «Empiezo desde cero», ejercicios de escuchar y elegir antes de escribir, pistas 💡, audio más lento y el botón «Esto es muy difícil» para bajar el nivel al momento.", href: "/app/session" },
   { icon: "⏱️", title: "Modo estudio", text: "Dices cuánto tiempo tienes y lo repartimos entre tus idiomas en bloques, con un temporizador que te guía y descansos en el momento justo.", href: "/app/study" },

@@ -149,6 +149,15 @@
   "grande": [
     "grande"
   ],
+  "certo": [
+    "cierto",
+    "seguro",
+    "claro"
+  ],
+  "seguito": [
+    "seguido",
+    "continuación"
+  ],
   "_forms": {
     "ha": "avere",
     "giorni": "giorno"
