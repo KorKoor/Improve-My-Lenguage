@@ -202,6 +202,14 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "ru:reflexive", label: "verbos en -ся", language: "ru", grammarId: "ru:g:reflexive" },
   { id: "ru:conditional", label: "condicional con бы", language: "ru", grammarId: "ru:g:conditional" },
   { id: "ru:relative", label: "relativo который", language: "ru", grammarId: "ru:g:kotoryi" },
+  { id: "zh:questions", label: "preguntas (吗, 呢, A-no-A)", language: "zh", grammarId: "zh:g:questions" },
+  { id: "zh:zai-you", label: "在 y 有", language: "zh", grammarId: "zh:g:zai-you" },
+  { id: "zh:word-order", label: "orden tiempo-lugar-acción", language: "zh", grammarId: "zh:g:word-order-time" },
+  { id: "zh:comparison", label: "comparación con 比", language: "zh", grammarId: "zh:g:bi" },
+  { id: "zh:modals", label: "会, 能, 可以", language: "zh", grammarId: "zh:g:hui-neng-keyi" },
+  { id: "zh:result", label: "complementos de resultado", language: "zh", grammarId: "zh:g:result-complement" },
+  { id: "zh:direction", label: "complementos direccionales", language: "zh", grammarId: "zh:g:direction-complement" },
+  { id: "zh:emphasis", label: "连…都 y 越来越", language: "zh", grammarId: "zh:g:lian-yuelaiyue" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {

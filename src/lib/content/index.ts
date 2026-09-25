@@ -15,6 +15,7 @@ import { IT_GRAMMAR, IT_VOCAB } from "./it";
 import { PT_GRAMMAR, PT_VOCAB } from "./pt";
 import { EN_GRAMMAR_ADVANCED } from "./en/grammar-advanced";
 import { EN_GRAMMAR_CORE } from "./en/grammar-core";
+import { ZH_GRAMMAR_CORE } from "./zh/grammar-core";
 import { RU_GRAMMAR_CORE } from "./ru/grammar-core";
 import { JA_GRAMMAR_CORE } from "./ja/grammar-core";
 import { PT_GRAMMAR_CORE } from "./pt/grammar-core";
@@ -51,7 +52,7 @@ const GRAMMAR: Record<LanguageCode, GrammarConcept[]> = {
   nl: NL_GRAMMAR,
   ru: [...RU_GRAMMAR, ...RU_GRAMMAR_CORE],
   sv: SV_GRAMMAR,
-  zh: ZH_GRAMMAR,
+  zh: [...ZH_GRAMMAR, ...ZH_GRAMMAR_CORE],
 };
 const ASSESSMENT: Record<LanguageCode, AssessmentItem[]> = { en: EN_ASSESSMENT };
 
