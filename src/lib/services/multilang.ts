@@ -25,6 +25,8 @@ export interface LanguageCard {
   targetLevel: CefrLevel | null;
   /** Minutos por día de la última semana (7 valores, del más antiguo a hoy). */
   week: number[];
+  /** Repasos que vencen en cada uno de los próximos 7 días. */
+  forecast: number[];
   active: boolean;
 }
 
@@ -58,7 +60,7 @@ export async function languagesOverview(viewer: Viewer): Promise<LanguagesOvervi
 
   const cards = await Promise.all(
     langs.map(async (ul, i): Promise<LanguageCard> => {
-      const [skills, due, goal] = await Promise.all([repo.getSkillEstimates(ul.id), repo.countDue(ul.id, now), repo.getActiveGoal(ul.id)]);
+      const [skills, due, goal, forecast] = await Promise.all([repo.getSkillEstimates(ul.id), repo.countDue(ul.id, now), repo.getActiveGoal(ul.id), repo.dueForecast(ul.id, now)]);
       const t = overallTheta(skills.filter((s) => s.evidence > 0));
       const mine = rows.filter((r) => r.languageCode === ul.languageCode);
       const minutesOn = (day: string) => Math.round(mine.filter((r) => r.day === day).reduce((a, r) => a + r.seconds, 0) / 60);
@@ -78,6 +80,7 @@ export async function languagesOverview(viewer: Viewer): Promise<LanguagesOvervi
         goalMinutes: goal?.minutesPerDay ?? null,
         targetLevel: goal?.targetLevel ?? null,
         week,
+        forecast,
         active: ul.languageCode === viewer.profile.activeLanguage,
       };
     }),

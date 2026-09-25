@@ -448,6 +448,17 @@ function dueQuery(ulId: string, now: Date) {
   return ulRef(ulId).collection("knowledge").where("reviewable", "==", true).where("dueAt", "<=", Timestamp.fromDate(now));
 }
 
+/**
+ * Previsión de repasos: cuántos elementos vencen en cada uno de los próximos
+ * `days` tramos de 24 h (sin contar los ya vencidos).
+ */
+export async function dueForecast(ulId: string, now: Date, days = 7): Promise<number[]> {
+  const counts = await Promise.all(
+    Array.from({ length: days + 1 }, (_, i) => dueQuery(ulId, new Date(now.getTime() + i * 86_400_000)).count().get().then((a) => a.data().count)),
+  );
+  return counts.slice(1).map((c, i) => Math.max(0, c - counts[i]!));
+}
+
 export async function getDueKnowledge(ulId: string, now: Date, limit: number): Promise<KnowledgeDbRow[]> {
   const snap = await dueQuery(ulId, now).orderBy("dueAt").limit(limit).get();
   return snap.docs.map((d) => toKnowledge(ulId, d));

@@ -1,10 +1,10 @@
-import { AlertTriangle, Globe2, Plus, Timer } from "lucide-react";
+import { AlertTriangle, CalendarDays, Globe2, Plus, Timer } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LanguageCards } from "@/components/focus/language-cards";
 import { LanguageMark } from "@/components/language-mark";
 import { ButtonLink } from "@/components/ui/button";
-import { languagesOverview } from "@/lib/services/multilang";
+import { languagesOverview, type LanguageCard } from "@/lib/services/multilang";
 import { requireLearner } from "@/lib/services/viewer";
 
 export const metadata: Metadata = { title: "Mis idiomas" };
@@ -58,6 +58,8 @@ export default async function LanguagesPage() {
 
       <LanguageCards cards={o.cards} todayIdx={todayIdx < 0 ? 0 : todayIdx} />
 
+      <ForecastCard cards={o.cards} todayIdx={todayIdx < 0 ? 0 : todayIdx} />
+
       {o.tips.length > 0 && (
         <section aria-labelledby="tips-title" className="space-y-3">
           <h2 id="tips-title" className="flex items-center gap-2 font-display text-xl font-extrabold"><Globe2 size={20} className="text-primary" aria-hidden /> Para que no se mezclen</h2>
@@ -79,5 +81,47 @@ export default async function LanguagesPage() {
         </section>
       )}
     </div>
+  );
+}
+
+const FORECAST_COLORS = ["var(--primary)", "var(--skill-listening)", "var(--skill-writing)", "var(--skill-grammar)", "var(--skill-speaking)", "var(--skill-reading)"];
+const WEEKDAYS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+
+/** Previsión de repasos de la semana, apilada por idioma. */
+function ForecastCard({ cards, todayIdx }: { cards: LanguageCard[]; todayIdx: number }) {
+  const totals = Array.from({ length: 7 }, (_, d) => cards.reduce((a, c) => a + (c.forecast[d] ?? 0), 0));
+  const max = Math.max(10, ...totals);
+  const sum = totals.reduce((a, b) => a + b, 0);
+  const peak = totals.indexOf(Math.max(...totals));
+  const minutes = (n: number) => Math.max(1, Math.round((n * 9) / 60));
+  return (
+    <section className="card p-5" aria-labelledby="fc-title">
+      <h2 id="fc-title" className="flex items-center gap-2 font-semibold"><CalendarDays size={18} className="text-primary" aria-hidden /> Repasos que llegan esta semana</h2>
+      <p className="mt-1 text-sm text-muted">
+        {sum === 0
+          ? "No vence nada en los próximos 7 días: buen momento para aprender material nuevo."
+          : `${sum} repasos en 7 días (≈ ${minutes(sum)} min en total). El día más cargado es el ${peak === 0 ? "de mañana" : WEEKDAYS[(todayIdx + 1 + peak) % 7]}: si puedes, adelanta algo antes.`}
+      </p>
+      <div className="mt-4 flex h-32 items-end gap-2" role="img" aria-label={`Repasos por día: ${totals.join(", ")}`}>
+        {totals.map((t, d) => (
+          <div key={d} className="flex h-full flex-1 flex-col justify-end">
+            <span className="mb-1 text-center text-[11px] font-semibold tabular-nums text-muted">{t || ""}</span>
+            <div className="flex flex-col-reverse overflow-hidden rounded-md" style={{ height: `${(t / max) * 100}%`, minHeight: t ? 4 : 0 }}>
+              {cards.map((c, i) => (c.forecast[d] ? <div key={c.code} style={{ flex: c.forecast[d], background: FORECAST_COLORS[i % FORECAST_COLORS.length] }} /> : null))}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-1 flex gap-2 text-center text-[11px] text-muted" aria-hidden>
+        {totals.map((_, d) => <span key={d} className="flex-1">{d === 0 ? "mañana" : WEEKDAYS[(todayIdx + 1 + d) % 7]}</span>)}
+      </div>
+      {cards.length > 1 && (
+        <ul className="mt-3 flex flex-wrap gap-3 text-xs text-muted">
+          {cards.map((c, i) => (
+            <li key={c.code} className="flex items-center gap-1.5"><span className="size-2.5 rounded-sm" style={{ background: FORECAST_COLORS[i % FORECAST_COLORS.length] }} aria-hidden />{c.name}</li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
