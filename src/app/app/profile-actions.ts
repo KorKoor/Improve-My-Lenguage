@@ -87,6 +87,17 @@ export async function updateIdentityAction(input: { avatar?: string | null; disp
 }
 
 // ── Grupo familiar / de estudio ─────────────────────────────────────────────
+/** El logro «En familia» se comprueba con el perfil ya actualizado. */
+async function unlockGroupAchievement() {
+  try {
+    const learner = await requireLearner();
+    const profile = (await repo.getProfile(learner.userId)) ?? learner.profile;
+    await checkAchievements({ ...learner, profile });
+  } catch {
+    // Sin idioma activo todavía: se desbloqueará en la próxima actividad.
+  }
+}
+
 export async function createGroupAction(name: string): Promise<ProfileResult<{ code: string }>> {
   return run("group.create", async () => {
     const viewer = await requireViewer();
@@ -95,6 +106,7 @@ export async function createGroupAction(name: string): Promise<ProfileResult<{ c
     const clean = String(name ?? "").replace(/[\u0000-\u001f<>]/g, "").trim().slice(0, 40) || "Mi familia";
     const g = await repo.createGroup(viewer.userId, clean, newGroupCode);
     await repo.track(viewer.userId, "group_created");
+    await unlockGroupAchievement();
     revalidatePath("/app/group");
     return { code: g.id };
   });
@@ -111,6 +123,7 @@ export async function joinGroupAction(code: string): Promise<ProfileResult<null>
     if (r === "not_found") throw userError("No encontramos ese código. Revísalo con quien te lo dio.");
     if (r === "full") throw userError("Ese grupo ya está completo (8 personas).");
     await repo.track(viewer.userId, "group_joined");
+    await unlockGroupAchievement();
     revalidatePath("/app", "layout");
     return null;
   });

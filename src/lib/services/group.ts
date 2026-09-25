@@ -4,6 +4,7 @@ import { getLanguage } from "../content";
 import type { CefrLevel } from "../content/types";
 import * as repo from "../db/repositories";
 import { rateLimit } from "../db/limits";
+import { isAdminConfigured, sendPush } from "../firebase/admin";
 import { overallTheta, thetaToCefr } from "../engine/levels";
 import { computeStreak, localDay } from "../engine/progress";
 import type { Viewer } from "./viewer";
@@ -95,6 +96,17 @@ export async function cheer(viewer: Viewer, toId: string, emoji: string): Promis
   if (!g || !g.members.includes(viewer.userId) || !g.members.includes(toId) || toId === viewer.userId) throw new Error("No compartís grupo");
   if (!(await rateLimit(`cheer:${viewer.userId}:${toId}`, 5, 86400))) throw new Error("Ya le mandaste varios ánimos hoy 😊");
   await repo.sendCheer(viewer.userId, toId, emoji);
+  // Además, notificación push si la persona la tiene activada (mejor esfuerzo).
+  try {
+    const tokens = await repo.listPushTokens(toId);
+    if (tokens.length && isAdminConfigured()) {
+      const name = viewer.profile.displayName ?? "Alguien de tu grupo";
+      const { invalid } = await sendPush(tokens, { title: `${emoji} ¡Ánimo!`, body: `${name} te manda ánimo para estudiar hoy.`, link: "/app" });
+      if (invalid.length) await repo.prunePushTokens(invalid);
+    }
+  } catch (err) {
+    console.error("[group] no se pudo enviar la notificación del ánimo", err);
+  }
 }
 
 /** Ánimos recibidos sin ver (con el nombre de quien los mandó); los marca como vistos. */

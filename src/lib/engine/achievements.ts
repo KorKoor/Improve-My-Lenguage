@@ -21,6 +21,12 @@ export interface AchievementStats {
   scenariosCompleted?: number;
   /** Sesiones de pronunciación terminadas. */
   speakingSessions?: number;
+  /** Rondas del entrenador de verbos terminadas. */
+  verbDrills?: number;
+  /** Misiones diarias reclamadas (en total). */
+  questsClaimed?: number;
+  /** Pertenece a un grupo familiar o de estudio. */
+  inGroup?: boolean;
   /** Hizo el cuestionario «¿Cómo aprendes mejor?». */
   personalityDone?: boolean;
 }
@@ -38,6 +44,12 @@ export const ACHIEVEMENT_RULES: AchievementRule[] = [
   { id: "first-session", title: "Primera sesión", description: "Completaste tu primera sesión de estudio.", icon: "🌱", unlocked: (s) => s.sessionsCompleted >= 1 },
   { id: "streak-7", title: "Una semana seguida", description: "7 días consecutivos estudiando.", icon: "🔥", unlocked: (s) => s.currentStreak >= 7 },
   { id: "streak-30", title: "Hábito formado", description: "30 días consecutivos estudiando.", icon: "🏔️", unlocked: (s) => s.currentStreak >= 30 },
+  { id: "words-500", title: "500 palabras", description: "500 palabras aprendidas: ya entiendes gran parte de lo cotidiano.", icon: "📘", unlocked: (s) => s.wordsLearned >= 500 },
+  { id: "words-1000", title: "Mil palabras", description: "1 000 palabras aprendidas. Nivel de conversación real.", icon: "🏛️", unlocked: (s) => s.wordsLearned >= 1000 },
+  { id: "streak-100", title: "Cien días", description: "100 días seguidos. Esto ya es parte de tu vida.", icon: "💎", unlocked: (s) => s.currentStreak >= 100 },
+  { id: "first-verbs", title: "Conjugador", description: "Completaste tu primera ronda de verbos.", icon: "🔤", unlocked: (s) => (s.verbDrills ?? 0) >= 1 },
+  { id: "quests-10", title: "Cazador de misiones", description: "Reclamaste 10 misiones diarias.", icon: "🎯", unlocked: (s) => (s.questsClaimed ?? 0) >= 10 },
+  { id: "family", title: "En familia", description: "Te uniste a un grupo para aprender acompañado.", icon: "👨‍👩‍👧", unlocked: (s) => Boolean(s.inGroup) },
   { id: "words-100", title: "100 palabras", description: "100 palabras aprendidas (con repasos exitosos).", icon: "📚", unlocked: (s) => s.wordsLearned >= 100 },
   { id: "exercises-100", title: "100 ejercicios", description: "Completaste 100 ejercicios.", icon: "✍️", unlocked: (s) => s.exercisesCompleted >= 100 },
   { id: "first-conversation", title: "Primera conversación", description: "Hablaste con tu tutor por primera vez.", icon: "💬", unlocked: (s) => s.conversations >= 1 },
