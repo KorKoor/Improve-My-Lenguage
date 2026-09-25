@@ -1,5 +1,6 @@
 "use client";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { LanguageMark } from "@/components/language-mark";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { saveOnboarding, type OnboardingInput } from "@/app/app/actions";
@@ -9,7 +10,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
 import type { CefrLevel, Topic } from "@/lib/content/types";
 
-interface LangOpt { code: string; name: string; nativeName: string; flag: string; status: string; taken: boolean }
+interface LangOpt { code: string; name: string; nativeName: string; status: string; taken: boolean }
 type Defaults = Pick<OnboardingInput, "displayName" | "nativeLanguage" | "dailyMinutes" | "interests" | "explanationDepth" | "preferredDifficulty" | "competitive" | "interactionPrefs" | "aiConsent" | "privacyAccepted">;
 
 const LEVELS: { v: CefrLevel | "unknown"; label: string; hint: string }[] = [
@@ -95,7 +96,7 @@ export function OnboardingWizard({ adding, languages, topics, defaults }: { addi
             <div className="mt-6 grid gap-2.5 sm:grid-cols-2" role="radiogroup" aria-label="Idioma">
               {languages.map((l) => (
                 <button key={l.code} type="button" role="radio" aria-checked={data.language === l.code} disabled={l.taken} onClick={() => set("language", l.code)} className={cn(option(data.language === l.code), l.taken && "opacity-50")}>
-                  <span className="text-2xl" aria-hidden>{l.flag}</span>
+                  <LanguageMark code={l.code} size={40} />
                   <span className="flex-1"><span className="block font-semibold">{l.name}</span><span className="text-sm text-muted" lang={l.code}>{l.nativeName}</span></span>
                   {l.taken ? <span className="text-xs text-muted">Ya lo estudias</span> : l.status === "beta" ? <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-semibold text-muted">Beta</span> : null}
                 </button>

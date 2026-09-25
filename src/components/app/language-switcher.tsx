@@ -3,12 +3,12 @@ import { Check, Plus } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
 import { setActiveLanguageAction } from "@/app/app/actions";
+import { LanguageMark } from "@/components/language-mark";
 import { cn } from "@/lib/cn";
 
 export interface LangOption {
   code: string;
   name: string;
-  flag: string;
   level: string | null;
 }
 
@@ -26,7 +26,7 @@ export function LanguageSwitcher({ options, active }: { options: LangOption[]; a
               onClick={() => start(async () => { await setActiveLanguageAction(o.code); })}
               className={cn("flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm transition", o.code === active ? "font-semibold" : "text-muted hover:bg-surface")}
             >
-              <span aria-hidden>{o.flag}</span>
+              <LanguageMark code={o.code} size={22} />
               <span className="flex-1">{o.name}</span>
               {o.level ? <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", o.code === active ? "bg-primary-soft text-primary" : "bg-surface text-muted")}>{o.level}</span> : null}
               {o.code === active ? <Check size={14} className="text-primary" aria-label="Activo" /> : null}

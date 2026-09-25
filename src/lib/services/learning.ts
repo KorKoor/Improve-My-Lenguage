@@ -139,6 +139,8 @@ export interface AnswerInput {
 }
 
 export interface AnswerFeedback {
+  /** Para "¿Lo sabías con seguridad?" (sólo aciertos). */
+  attemptId?: string;
   correct: boolean;
   nearMiss: boolean;
   note?: EvaluationResult["note"];
@@ -198,6 +200,7 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
   });
   const existing = await repo.getKnowledge(ulId, itemIds);
   const byId = new Map(existing.map((k) => [k.itemId, k]));
+  const previousKnowledge = itemIds.map((id) => byId.get(id) ?? null);
   for (const itemId of itemIds) {
     const prev = byId.get(itemId);
     const card = fsrs.review(knowledgeToCard(prev, now), rating, now);
@@ -242,6 +245,7 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
     attempts: Math.max(1, input.attempts),
     confidence: input.confidence ?? null,
     difficulty,
+    previousKnowledge: result.correct ? previousKnowledge : undefined,
   });
   if (!result.correct) {
     await repo.insertMistakes([
@@ -269,6 +273,7 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
   });
 
   return {
+    attemptId,
     correct: result.correct,
     nearMiss: result.nearMiss,
     note: result.note,
@@ -290,6 +295,42 @@ function difficultyOfKey(key: string): number {
   const v = catalog.vocabById(id);
   const offset: Record<string, number> = { meaning_mc: -0.6, reverse_mc: -0.3, recall: 0.3, cloze: 0.1, rearrange: 0.2, dictation: 0.5 };
   return (CEFR[v?.cefr ?? "B1"] ?? 0) + (offset[type] ?? 0);
+}
+
+/**
+ * "¿Lo sabías con seguridad?" tras un acierto. Si el alumno adivinó, el
+ * repaso se recalcula desde el estado previo con calificación "Hard": la
+ * palabra volverá antes. Sólo sobre aciertos recientes (≤ 15 min) y una vez.
+ */
+export async function reviseConfidence(learner: Learner, attemptId: string, guessed: boolean): Promise<void> {
+  const ulId = learner.ul.id;
+  const attempt = await repo.getAttempt(ulId, attemptId);
+  if (!attempt || !attempt.correct || attempt.confidence !== null) return;
+  if (Date.now() - attempt.createdAt.getTime() > 15 * 60_000) return;
+  await repo.setAttemptConfidence(ulId, attemptId, guessed ? 0.2 : 1);
+  if (!guessed || !attempt.previousKnowledge) return;
+
+  const [type, idPart] = attempt.exerciseKey.split("|") as [string, string];
+  const itemIds = type === "match" ? idPart.split(",") : [idPart];
+  const current = new Map((await repo.getKnowledge(ulId, itemIds)).map((k) => [k.itemId, k]));
+  const at = attempt.createdAt;
+  for (const [i, itemId] of itemIds.entries()) {
+    const prev = attempt.previousKnowledge[i] ?? undefined;
+    const now = current.get(itemId);
+    if (!now) continue;
+    const card = fsrs.review(knowledgeToCard(prev, at), 2, at);
+    await repo.saveKnowledge({
+      ...now,
+      stability: card.stability,
+      difficulty: card.difficulty,
+      reps: card.reps,
+      lapses: card.lapses,
+      state: card.state,
+      dueAt: card.due,
+      lastReviewAt: card.lastReview,
+    });
+  }
+  await repo.track(learner.userId, "answer_guessed", { key: attempt.exerciseKey });
 }
 
 export interface SessionSummary {

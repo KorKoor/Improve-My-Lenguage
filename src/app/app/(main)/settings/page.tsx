@@ -44,7 +44,7 @@ export default async function SettingsPage() {
           active={learner.language.code}
           options={langs.map((ul) => {
             const l = getLanguage(ul.languageCode);
-            return { code: ul.languageCode, name: l?.name ?? ul.languageCode, flag: l?.flagEmoji ?? "🌐", level: null };
+            return { code: ul.languageCode, name: l?.name ?? ul.languageCode, level: null };
           })}
         />
         <a href="/app/assessment?restart=1" className="mt-4 inline-block text-sm font-semibold text-primary hover:underline">Repetir el diagnóstico de {learner.language.name.toLowerCase()}</a>

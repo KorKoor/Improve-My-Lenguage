@@ -2,7 +2,7 @@
 import { ArrowRight, Check, Headphones, Lightbulb, Loader2, MessageCircle, Snail, Trophy, Volume2, X } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { finishSessionAction, startSessionAction, submitAnswerAction } from "@/app/app/actions";
+import { finishSessionAction, reviseConfidenceAction, startSessionAction, submitAnswerAction } from "@/app/app/actions";
 import { BLOCK_META } from "@/components/app/labels";
 import { Mascot } from "@/components/mascot";
 import { SpeakButton, useSpeech } from "@/components/speak-button";
@@ -505,6 +505,29 @@ function MatchInput({ ex, language, disabled, onDone }: { ex: Exercise; language
   );
 }
 
+/** "¿Lo sabías con seguridad?": si adivinó, la palabra se repasará antes. */
+function ConfidenceCheck({ attemptId }: { attemptId: string }) {
+  const [answer, setAnswer] = useState<"sure" | "guessed" | null>(null);
+  const choose = (guessed: boolean) => {
+    setAnswer(guessed ? "guessed" : "sure");
+    void reviseConfidenceAction(attemptId, guessed);
+  };
+  if (answer) {
+    return (
+      <p className="mt-3 text-sm text-muted" role="status">
+        {answer === "guessed" ? "Anotado: la repasarás antes para fijarla." : "¡Bien! La espaciaremos más."}
+      </p>
+    );
+  }
+  return (
+    <div className="mt-3 flex items-center gap-2 text-sm text-muted">
+      <span className="flex-1">¿Lo sabías con seguridad?</span>
+      <button type="button" onClick={() => choose(false)} className="rounded-full bg-surface px-3 py-1 font-semibold text-success hover:brightness-95">Sí</button>
+      <button type="button" onClick={() => choose(true)} className="rounded-full bg-surface px-3 py-1 font-semibold text-text hover:brightness-95">Adiviné</button>
+    </div>
+  );
+}
+
 function FeedbackSheet({ feedback: f, onNext }: { feedback: AnswerFeedback; onNext: () => void }) {
   const ok = f.correct;
   return (
@@ -520,6 +543,7 @@ function FeedbackSheet({ feedback: f, onNext }: { feedback: AnswerFeedback; onNe
         )}
         {f.explanation && <p className="mt-2 text-sm leading-relaxed">{f.explanation}</p>}
         {!ok && f.errorLabel && <p className="mt-2 text-xs text-muted">Registrado como: {f.errorLabel}. Lo tendremos en cuenta en tus próximas sesiones.</p>}
+        {ok && f.attemptId && <ConfidenceCheck attemptId={f.attemptId} />}
         <Button size="lg" variant={ok ? "success" : "danger"} className="mt-4 w-full" onClick={onNext} autoFocus>
           Continuar
         </Button>

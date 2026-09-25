@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
+import { siteUrl } from "@/lib/site-url";
 import { LANGUAGES } from "@/lib/content";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000";
+  const base = siteUrl;
   const now = new Date();
   const pages = ["", "/features", "/languages", "/about", "/privacy"].map((p) => ({
     url: `${base}${p}`,

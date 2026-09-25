@@ -2,6 +2,7 @@ import { ArrowRight, BookOpen, Clock, Flame, Gauge, Repeat, Sparkles, Target } f
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BLOCK_META, SKILL_META, formatMinutes, greeting } from "@/components/app/labels";
+import { QuickSearch } from "@/components/app/quick-search";
 import { Heatmap } from "@/components/charts/heatmap";
 import { Mascot } from "@/components/mascot";
 import { ButtonLink } from "@/components/ui/button";
@@ -32,55 +33,66 @@ export default async function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Saludo */}
-      <header className="flex flex-wrap items-end gap-4 animate-rise">
-        <div className="flex-1">
-          <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-[32px]">
+      <header className="flex items-start gap-4 animate-rise sm:items-center">
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-2xl font-extrabold tracking-tight sm:text-[32px]">
             {greeting(learner.profile.timezone)}{d.greetingName ? `, ${d.greetingName}` : ""}
           </h1>
-          <p className="mt-1 flex flex-wrap items-center gap-2 text-muted">
-            {d.overall ? (
-              <>
+          {d.overall ? (
+            <>
+              <p className="mt-1 flex items-center gap-2 text-sm text-muted sm:hidden">
+                {lang.name}
+                <Chip>{d.overall.level}{d.overall.next ? ` · ${Math.round(d.overall.progress * 100)} % → ${d.overall.next}` : ""}</Chip>
+              </p>
+              <p className="mt-1 hidden flex-wrap items-center gap-2 text-muted sm:flex">
                 Tu {lang.name.toLowerCase()} está en <Chip>{d.overall.level}</Chip>
                 {d.overall.next ? <span>· {Math.round(d.overall.progress * 100)} % del camino hacia {d.overall.next}</span> : null}
-              </>
-            ) : (
-              <>Empecemos por conocer tu nivel de {lang.name.toLowerCase()}.</>
-            )}
-          </p>
+              </p>
+            </>
+          ) : (
+            <p className="mt-1 text-muted">Empecemos por conocer tu nivel de {lang.name.toLowerCase()}.</p>
+          )}
         </div>
+        <div className="hidden lg:block"><QuickSearch /></div>
         {d.streak > 0 && (
-          <Chip tone="warning" className="px-3 py-1 text-sm"><Flame size={15} aria-hidden /> {d.streak} {d.streak === 1 ? "día" : "días"}</Chip>
+          <Chip tone="warning" className="shrink-0 px-3 py-1 text-sm">
+            <Flame size={15} aria-hidden /> {d.streak}<span className="hidden sm:inline"> {d.streak === 1 ? "día" : "días"}</span>
+          </Chip>
         )}
+        <Link href="/app/settings" aria-label="Tu perfil y configuración" className="hidden size-11 shrink-0 place-items-center rounded-full bg-primary font-display text-base font-extrabold text-on-primary lg:grid">
+          {(learner.profile.displayName ?? learner.email ?? "?").slice(0, 1).toUpperCase()}
+        </Link>
       </header>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         {/* Sesión de hoy — acción principal */}
         {d.assessed ? (
-          <Card className="relative p-6 sm:p-7">
+          <Card className="relative p-5 sm:p-7">
             <div className="flex items-start gap-4">
               <div className="flex-1">
-                <div className="flex flex-wrap gap-2">
-                  <Chip tone="muted">{lang.flagEmoji} {lang.name}{d.overall ? ` · ${d.overall.level}` : ""}</Chip>
+                <div className="hidden flex-wrap gap-2 sm:flex">
+                  <Chip tone="muted">{lang.name}{d.overall ? ` · ${d.overall.level}` : ""}</Chip>
                   <Chip tone="success">Adaptada a ti</Chip>
                 </div>
-                <h2 className="mt-3 font-display text-2xl font-extrabold sm:text-[26px]">Tu sesión de hoy</h2>
-                <p className="mt-1 text-muted">{d.plan.totalMinutes} minutos repartidos según lo que más te ayuda ahora mismo.</p>
+                <h2 className="font-display text-xl font-extrabold sm:mt-3 sm:text-[26px]">Tu sesión de hoy</h2>
+                <p className="mt-1 hidden text-muted sm:block">{d.plan.totalMinutes} minutos repartidos según lo que más te ayuda ahora mismo.</p>
               </div>
               <Mascot size={104} className="hidden shrink-0 sm:block" />
+              <Chip tone="muted" className="px-3 py-1 text-sm sm:hidden">{d.plan.totalMinutes} min</Chip>
             </div>
 
-            <div className="mt-6 flex gap-1" aria-hidden>
+            <div className="mt-4 flex gap-1 sm:mt-6" aria-hidden>
               {d.plan.blocks.map((b, i) => (
                 <span key={i} className="h-2.5 rounded-full" style={{ flex: b.minutes, background: BLOCK_META[b.kind].color }} />
               ))}
             </div>
-            <ul className="mt-3 divide-y divide-border/70">
+            <ul className="mt-2 sm:mt-3 sm:divide-y sm:divide-border/70">
               {d.plan.blocks.map((b, i) => (
-                <li key={i} className="flex items-start gap-3.5 py-3">
+                <li key={i} className="flex items-start gap-3.5 py-2 sm:py-3">
                   <span className="mt-1.5 size-2.5 shrink-0 rounded-full" style={{ background: BLOCK_META[b.kind].color }} aria-hidden />
                   <div className="flex-1">
-                    <p className="font-semibold">{BLOCK_META[b.kind].label}</p>
-                    <p className="text-sm text-muted">{b.reason}</p>
+                    <p className="font-medium sm:font-semibold">{BLOCK_META[b.kind].label}</p>
+                    <p className="hidden text-sm text-muted sm:block">{b.reason}</p>
                   </div>
                   <span className="text-sm font-semibold text-muted">{b.minutes} min</span>
                 </li>
@@ -94,7 +106,7 @@ export default async function Dashboard() {
               <nav aria-label="Duración de la sesión" className="flex flex-wrap gap-1.5">
                 {MINUTE_OPTIONS.map((m) => (
                   <Link key={m} href={`/app/session?minutes=${m}`} className={`rounded-full px-3 py-1 text-xs font-semibold transition ${m === learner.profile.dailyMinutes ? "bg-primary-soft text-primary" : "bg-surface-muted text-muted hover:text-text"}`}>
-                    {m} min
+                    {m}<span className="hidden sm:inline"> min</span>
                   </Link>
                 ))}
               </nav>
@@ -125,21 +137,25 @@ export default async function Dashboard() {
           </section>
 
           {/* Repaso */}
-          <Card>
+          <Card className="p-4 sm:p-6">
             <div className="flex items-center gap-3">
               <IconBox icon={Repeat} color="var(--skill-reading)" size={42} />
-              <div>
-                <p className="text-sm font-semibold text-muted">Repaso pendiente</p>
-                <p className="font-display text-2xl font-extrabold">{d.dueCount} {d.dueCount === 1 ? "elemento" : "elementos"}</p>
+              <div className="min-w-0 flex-1">
+                <p className="hidden text-sm font-semibold text-muted sm:block">Repaso pendiente</p>
+                <p className="font-display text-lg font-extrabold sm:text-2xl">{d.dueCount} {d.dueCount === 1 ? "elemento" : "elementos"}</p>
+                <p className="text-xs text-muted sm:hidden">{d.dueCount > 0 ? "listos para repasar" : "estás al día"}</p>
               </div>
+              {d.dueCount > 0 && (
+                <ButtonLink href="/app/review" variant="secondary" size="sm" className="sm:hidden">Repasar</ButtonLink>
+              )}
             </div>
-            <p className="mt-3 text-sm text-muted">
+            <p className="mt-3 hidden text-sm text-muted sm:block">
               {d.dueCount > 0
                 ? "Están en su punto óptimo: repasarlos hoy fija el recuerdo durante más tiempo."
                 : "Estás al día. Los próximos repasos aparecerán cuando empiecen a olvidarse."}
             </p>
             {d.dueCount > 0 && (
-              <ButtonLink href="/app/review" variant="secondary" className="mt-4 w-full">Repasar ahora (≈{Math.max(1, Math.round(d.dueCount * 0.3))} min)</ButtonLink>
+              <ButtonLink href="/app/review" variant="secondary" className="mt-4 hidden w-full sm:flex">Repasar ahora (≈{Math.max(1, Math.round(d.dueCount * 0.3))} min)</ButtonLink>
             )}
           </Card>
         </div>
@@ -153,12 +169,12 @@ export default async function Dashboard() {
           { icon: BookOpen, color: "var(--skill-vocabulary)", value: String(d.wordsLearned), label: "Palabras aprendidas", hint: "≥ 2 repasos y recuerdo ≥ 80 %" },
           { icon: Target, color: "var(--skill-grammar)", value: d.accuracy30 === null ? "—" : `${Math.round(d.accuracy30 * 100)} %`, label: "Precisión", hint: "Últimos 30 días" },
         ].map((k) => (
-          <div key={k.label} className="card flex items-center gap-3 p-4">
-            <IconBox icon={k.icon} color={k.color} size={44} />
+          <div key={k.label} className="card flex flex-col items-start gap-3 p-4 sm:flex-row sm:items-center">
+            <IconBox icon={k.icon} color={k.color} size={42} />
             <div className="min-w-0">
               <p className="font-display text-xl font-extrabold leading-tight">{k.value}</p>
-              <p className="text-sm font-semibold">{k.label}</p>
-              <p className="truncate text-[11px] text-muted">{k.hint}</p>
+              <p className="text-sm text-muted sm:font-semibold sm:text-text">{k.label}</p>
+              <p className="hidden truncate text-[11px] text-muted sm:block">{k.hint}</p>
             </div>
           </div>
         ))}
@@ -171,11 +187,11 @@ export default async function Dashboard() {
           <ul className="space-y-3.5">
             {d.skills.map((s) => {
               const meta = SKILL_META[s.skill];
-              const unknown = s.evidence === 0 && !d.assessed;
+              const unknown = s.evidence === 0;
               return (
                 <li key={s.skill} className="flex items-center gap-3">
-                  <IconBox icon={meta.icon} color={meta.color} size={34} />
-                  <span className="w-28 shrink-0 text-sm font-medium">{meta.label}</span>
+                  <span className="hidden sm:contents"><IconBox icon={meta.icon} color={meta.color} size={34} /></span>
+                  <span className="w-24 shrink-0 text-sm font-medium sm:w-28">{meta.label}</span>
                   <Chip tone={unknown ? "muted" : "primary"} className="w-10 justify-center">{unknown ? "—" : s.level}</Chip>
                   <ProgressBar value={unknown ? 0 : s.progress} color={meta.color} label={`${meta.label}: progreso dentro de ${s.level}`} className="flex-1" />
                   <span className="hidden w-32 shrink-0 text-right text-xs text-muted sm:block">
@@ -226,9 +242,9 @@ export default async function Dashboard() {
           ) : (
             <ul className="space-y-3">
               {d.weaknesses.map((w) => (
-                <li key={w.category} className="flex items-center gap-3 text-sm">
-                  <span className="w-40 shrink-0 font-medium capitalize">{w.label}</span>
-                  <ProgressBar value={w.count / Math.max(...d.weaknesses.map((x) => x.count))} color="var(--danger)" label={`${w.label}: ${w.count} errores`} className="flex-1" />
+                <li key={w.category} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+                  <span className="flex-1 font-medium first-letter:uppercase sm:w-40 sm:flex-none">{w.label}</span>
+                  <ProgressBar value={w.count / Math.max(...d.weaknesses.map((x) => x.count))} color="var(--danger)" label={`${w.label}: ${w.count} errores`} className="order-last basis-full sm:order-none sm:basis-auto sm:flex-1" />
                   <span className="w-16 shrink-0 text-xs text-muted">{w.count} {w.count === 1 ? "error" : "errores"}</span>
                   {w.grammarId ? (
                     <Link href={`/app/session?focus=grammar:${encodeURIComponent(w.grammarId)}&minutes=5`} className="shrink-0 font-semibold text-primary hover:underline">Practicar</Link>

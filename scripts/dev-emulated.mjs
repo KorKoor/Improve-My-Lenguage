@@ -1,6 +1,7 @@
 // Desarrollo 100 % local: emuladores de Firebase Auth + Firestore y `next dev`
 // apuntando a ellos. No necesita service account ni toca el proyecto real
 // (usa el proyecto ficticio "demo-iml"). Requiere Java 11+.
+// Siembra un usuario demo con historial: demo@improve.local / demo-password
 //   npm run dev:emulated
 import { spawn } from "node:child_process";
 
@@ -20,6 +21,7 @@ const env = {
 
 const shell = process.platform === "win32";
 const port = process.env.PORT ?? "3000";
-const cmd = `firebase emulators:exec --only auth,firestore --project ${PROJECT} "npx next dev --port ${port}"`;
+const inner = `npx tsx --conditions=react-server scripts/seed-demo.ts && npx next dev --port ${port}`;
+const cmd = `firebase emulators:exec --only auth,firestore --project ${PROJECT} "${inner}"`;
 const child = spawn(cmd, { env, stdio: "inherit", shell: shell ? true : "/bin/sh" });
 child.on("exit", (code) => process.exit(code ?? 0));

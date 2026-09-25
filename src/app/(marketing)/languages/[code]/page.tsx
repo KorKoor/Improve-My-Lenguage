@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LanguageMark } from "@/components/language-mark";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
@@ -29,7 +30,7 @@ export default async function LanguagePage({ params }: { params: Promise<{ code:
   const grammar = grammarFor(l.code);
   return (
     <div className="mx-auto max-w-4xl px-4 py-14 sm:px-6">
-      <p className="text-5xl" aria-hidden>{l.flagEmoji}</p>
+      <LanguageMark code={l.code} size={64} />
       <h1 className="mt-3 font-display text-4xl font-extrabold">Aprender {l.name.toLowerCase()}</h1>
       <p className="mt-1 text-lg text-muted" lang={l.code} dir={l.rtl ? "rtl" : "ltr"}>{l.nativeName}</p>
       <dl className="mt-8 grid gap-4 sm:grid-cols-3">

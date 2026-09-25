@@ -6,14 +6,14 @@ import { cn } from "@/lib/cn";
 export type ThemePref = "light" | "dark" | "system";
 
 /** Script inline que aplica el tema antes del primer pintado (evita parpadeo). */
-export const themeScript = `(function(){try{var m=document.cookie.match(/(?:^|; )theme=(light|dark|system)/);var p=m?m[1]:'system';var d=p==='dark'||(p==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
+export const themeScript = `(function(){try{var m=document.cookie.match(/(?:^|; )theme=(light|dark|system)/);var p=m?m[1]:'light';var d=p==='dark'||(p==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);}catch(e){}})();`;
 
 function apply(pref: ThemePref) {
   const dark = pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", dark);
 }
 
-export function ThemeToggle({ initial = "system", onChange }: { initial?: ThemePref; onChange?: (p: ThemePref) => void }) {
+export function ThemeToggle({ initial = "light", onChange }: { initial?: ThemePref; onChange?: (p: ThemePref) => void }) {
   const [pref, setPref] = useState<ThemePref>(initial);
   useEffect(() => {
     const m = document.cookie.match(/(?:^|; )theme=(light|dark|system)/);

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LanguageMark } from "@/components/language-mark";
 import Link from "next/link";
 import { Chip } from "@/components/ui/chip";
 import { LANGUAGES } from "@/lib/content";
@@ -21,7 +22,7 @@ export default function LanguagesPage() {
           return (
             <li key={l.code}>
               <Link href={`/languages/${l.code}`} className="card flex items-center gap-4 p-5 transition hover:-translate-y-0.5">
-                <span className="text-3xl" aria-hidden>{l.flagEmoji}</span>
+                <LanguageMark code={l.code} size={48} />
                 <span className="flex-1">
                   <span className="block font-display text-lg font-extrabold">{l.name}</span>
                   <span className="block text-sm text-muted" lang={l.code}>{l.nativeName}</span>

@@ -79,3 +79,5 @@ temp/
 *-firebase-adminsdk-*.json
 service-account*.json
 .firebase/
+firestore-debug.log
+*-debug.log

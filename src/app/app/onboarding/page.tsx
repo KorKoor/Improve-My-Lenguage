@@ -18,7 +18,7 @@ export default async function Onboarding({ searchParams }: { searchParams: Promi
     <main id="main" className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col px-4 sm:px-6">
       <OnboardingWizard
         adding={adding}
-        languages={learnableLanguages().map((l) => ({ code: l.code, name: l.name, nativeName: l.nativeName, flag: l.flagEmoji, status: l.status, taken: existing.includes(l.code) }))}
+        languages={learnableLanguages().map((l) => ({ code: l.code, name: l.name, nativeName: l.nativeName, status: l.status, taken: existing.includes(l.code) }))}
         topics={TOPICS}
         defaults={{
           displayName: p.displayName ?? "",

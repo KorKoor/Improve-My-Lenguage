@@ -8,7 +8,7 @@ import * as repo from "@/lib/db/repositories";
 import { AiUnavailableError } from "@/lib/ai/provider";
 import { answerAssessment, startOrResumeAssessment, type AssessmentStep } from "@/lib/services/assessment";
 import { deleteAccount } from "@/lib/services/account";
-import { finishSession, RateLimitedError, startSession, submitAnswer, type AnswerFeedback, type BuiltSession, type SessionFocus, type SessionSummary } from "@/lib/services/learning";
+import { finishSession, RateLimitedError, reviseConfidence, startSession, submitAnswer, type AnswerFeedback, type BuiltSession, type SessionFocus, type SessionSummary } from "@/lib/services/learning";
 import { AiQuotaError, endConversation, sendTutorMessage, startConversation } from "@/lib/services/tutor";
 import type { ConversationFeedback } from "@/lib/ai/prompts";
 import { requireLearner, requireViewer } from "@/lib/services/viewer";
@@ -158,6 +158,13 @@ export async function submitAnswerAction(input: {
   });
 }
 
+export async function reviseConfidenceAction(attemptId: string, guessed: boolean): Promise<ActionResult<null>> {
+  return run("session.confidence", async () => {
+    await reviseConfidence(await requireLearner(), str(attemptId, 64), guessed === true);
+    return null;
+  });
+}
+
 export async function finishSessionAction(sessionId: string, durationSeconds: number): Promise<ActionResult<SessionSummary | null>> {
   return run("session.finish", async () => {
     const summary = await finishSession(await requireLearner(), str(sessionId, 64), int(durationSeconds, 0, 14_400, 0));
@@ -212,7 +219,7 @@ export async function updateSettingsAction(input: {
     await repo.updateProfile(viewer.userId, {
       displayName: input.displayName !== undefined ? str(input.displayName, 60) || null : undefined,
       dailyMinutes: input.dailyMinutes !== undefined ? int(input.dailyMinutes, 5, 120, 15) : undefined,
-      theme: input.theme !== undefined ? oneOf(input.theme, ["light", "dark", "system"] as const, "system") : undefined,
+      theme: input.theme !== undefined ? oneOf(input.theme, ["light", "dark", "system"] as const, "light") : undefined,
       explanationDepth: input.explanationDepth !== undefined ? oneOf(input.explanationDepth, ["brief", "balanced", "detailed"] as const, "balanced") : undefined,
       preferredDifficulty: input.preferredDifficulty !== undefined ? oneOf(input.preferredDifficulty, ["easy", "balanced", "challenging"] as const, "balanced") : undefined,
       interests: input.interests !== undefined ? input.interests.filter((t) => topics.has(t)).slice(0, 8) : undefined,

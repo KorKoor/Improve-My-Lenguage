@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Nunito } from "next/font/google";
 import { themeScript } from "@/components/theme";
+import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter", display: "swap" });
 const nunito = Nunito({ subsets: ["latin", "latin-ext"], weight: ["700", "800"], variable: "--font-nunito", display: "swap" });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -29,10 +29,8 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbf8f4" },
-    { media: "(prefers-color-scheme: dark)", color: "#14121c" },
-  ],
+  // El diseño es claro por defecto; el modo oscuro sólo se activa si el usuario lo elige.
+  themeColor: "#fbf8f4",
   width: "device-width",
   initialScale: 1,
 };

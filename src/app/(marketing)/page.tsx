@@ -1,4 +1,5 @@
 import { ArrowRight, Brain, Compass, Gauge, MessageCircle, Repeat, Sparkles, Target } from "lucide-react";
+import { LanguageMark } from "@/components/language-mark";
 import Link from "next/link";
 import { Mascot } from "@/components/mascot";
 import { ButtonLink } from "@/components/ui/button";
@@ -107,7 +108,7 @@ export default function Landing() {
           <div className="flex flex-wrap gap-2">
             {LANGUAGES.slice(0, 8).map((l) => (
               <Link key={l.code} href={`/languages/${l.code}`} className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium hover:border-primary">
-                <span aria-hidden>{l.flagEmoji}</span> {l.name}
+                <span className="inline-flex items-center gap-2"><LanguageMark code={l.code} size={20} /> {l.name}</span>
               </Link>
             ))}
           </div>

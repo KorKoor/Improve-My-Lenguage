@@ -235,7 +235,7 @@ firebase deploy --only firestore
 npm run dev:emulated
 ```
 
-Starts the Firebase Auth + Firestore emulators (demo project, requires Java 11+) and `next dev` wired to them.
+Starts the Firebase Auth + Firestore emulators (demo project, requires Java 11+) and `next dev` wired to them. It seeds a demo learner with ~20 weeks of realistic history: `demo@improve.local` / `demo-password`.
 
 See [docs/DATABASE.md](docs/DATABASE.md) for the data model.
 

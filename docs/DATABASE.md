@@ -60,3 +60,5 @@ Contraseñas (las gestiona Firebase Auth), audio, datos de pago ni la IP. Las cl
 ## Desarrollo local sin tocar producción
 
 `npm run dev:emulated` arranca los emuladores de Auth y Firestore (proyecto ficticio `demo-iml`, requiere Java 11+) y `next dev` conectado a ellos. Las reglas de `firestore.rules` también se aplican en el emulador.
+
+Al arrancar siembra un usuario de demostración con ~20 semanas de historial realista (repasos FSRS simulados, errores clasificados, actividad, objetivo y logros): **demo@improve.local / demo-password**. El script (`scripts/seed-demo.ts`) se niega a correr fuera de los emuladores.

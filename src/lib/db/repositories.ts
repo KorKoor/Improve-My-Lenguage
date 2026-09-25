@@ -88,7 +88,7 @@ function toProfile(snap: DocumentSnapshot): ProfileRow {
     nativeLanguage: str(d.nativeLanguage) ?? "es",
     activeLanguage: str(d.activeLanguage),
     timezone: str(d.timezone) ?? "America/Mexico_City",
-    theme: (d.theme as ProfileRow["theme"]) ?? "system",
+    theme: (d.theme as ProfileRow["theme"]) ?? "light",
     dailyMinutes: num(d.dailyMinutes, 15),
     explanationDepth: (d.explanationDepth as ProfileRow["explanationDepth"]) ?? "balanced",
     preferredDifficulty: (d.preferredDifficulty as ProfileRow["preferredDifficulty"]) ?? "balanced",
@@ -321,12 +321,56 @@ export interface AttemptInsert {
   attempts: number;
   confidence: number | null;
   difficulty: number;
+  /**
+   * Estado de memoria de los ítems ANTES de este intento. Permite recalcular
+   * el repaso si el alumno indica después que adivinó (ver reviseConfidence).
+   */
+  previousKnowledge?: (KnowledgeDbRow | null)[];
 }
 
 export async function insertAttempt(a: AttemptInsert): Promise<string> {
-  const { userLanguageId: ulId, ...data } = a;
-  const ref = await ulRef(ulId).collection("attempts").add({ ...data, response: data.response.slice(0, 500), createdAt: Timestamp.now() });
+  const { userLanguageId: ulId, previousKnowledge, ...data } = a;
+  const ref = await ulRef(ulId).collection("attempts").add({
+    ...data,
+    response: data.response.slice(0, 500),
+    previousKnowledgeJson: previousKnowledge ? toJson(previousKnowledge) : null,
+    createdAt: Timestamp.now(),
+  });
   return ref.id;
+}
+
+export interface AttemptRow {
+  id: string;
+  exerciseKey: string;
+  exerciseType: string;
+  correct: boolean;
+  confidence: number | null;
+  previousKnowledge: (KnowledgeDbRow | null)[] | null;
+  createdAt: Date;
+}
+
+export async function getAttempt(ulId: string, attemptId: string): Promise<AttemptRow | null> {
+  if (!/^[A-Za-z0-9]{10,40}$/.test(attemptId)) return null;
+  const snap = await ulRef(ulId).collection("attempts").doc(attemptId).get();
+  if (!snap.exists) return null;
+  const d = snap.data()!;
+  const prev = json(d.previousKnowledgeJson) as (Record<string, unknown> | null)[] | null;
+  return {
+    id: snap.id,
+    exerciseKey: String(d.exerciseKey),
+    exerciseType: String(d.exerciseType),
+    correct: d.correct === true,
+    confidence: typeof d.confidence === "number" ? d.confidence : null,
+    // Las fechas vuelven como texto ISO desde el JSON.
+    previousKnowledge: prev?.map((k) =>
+      k ? ({ ...k, dueAt: new Date(String(k.dueAt)), lastReviewAt: k.lastReviewAt ? new Date(String(k.lastReviewAt)) : null } as KnowledgeDbRow) : null,
+    ) ?? null,
+    createdAt: date(d.createdAt) ?? new Date(0),
+  };
+}
+
+export async function setAttemptConfidence(ulId: string, attemptId: string, confidence: number): Promise<void> {
+  await ulRef(ulId).collection("attempts").doc(attemptId).update({ confidence });
 }
 
 export interface MistakeInsert {

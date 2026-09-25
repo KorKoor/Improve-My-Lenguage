@@ -7,10 +7,10 @@ export function Card({ className, ...props }: ComponentProps<"section">) {
 
 export function CardHeader({ title, aside, icon }: { title: ReactNode; aside?: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="mb-4 flex items-center gap-3">
+    <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-0.5">
       {icon}
       <h2 className="font-display text-lg font-extrabold tracking-tight">{title}</h2>
-      {aside ? <div className="ml-auto text-xs text-muted">{aside}</div> : null}
+      {aside ? <div className="w-full text-xs text-muted sm:ml-auto sm:w-auto sm:text-right">{aside}</div> : null}
     </div>
   );
 }

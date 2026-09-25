@@ -1,6 +1,7 @@
 import "server-only";
 import { isAdminConfigured } from "./firebase/admin";
 import { isFirebaseWebConfigured } from "./firebase/config";
+import { resolveSiteUrl } from "./site-url";
 
 /**
  * Variables de entorno del servidor. Nunca importar desde componentes cliente
@@ -13,7 +14,7 @@ function read(name: string): string | undefined {
 }
 
 export const env = {
-  siteUrl: read("NEXT_PUBLIC_SITE_URL") ?? "http://localhost:3000",
+  siteUrl: resolveSiteUrl(),
   aiProvider: (read("AI_PROVIDER") ?? "gemini") as "gemini" | "openai-compatible" | "none",
   geminiApiKey: read("GEMINI_API_KEY"),
   openaiCompatBaseUrl: read("OPENAI_COMPAT_BASE_URL"),

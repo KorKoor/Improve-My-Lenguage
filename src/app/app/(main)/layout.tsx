@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SidebarNav, TabBar } from "@/components/app/nav";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { Logo } from "@/components/logo";
+import { LanguageMark } from "@/components/language-mark";
 import { getLanguage } from "@/lib/content";
 import { overallTheta, thetaToCefr } from "@/lib/engine/levels";
 import { countDue, getSkillEstimates, listUserLanguages } from "@/lib/db/repositories";
@@ -15,7 +16,7 @@ export default async function AppShell({ children }: { children: React.ReactNode
       const l = getLanguage(ul.languageCode);
       const skills = await getSkillEstimates(ul.id);
       const t = overallTheta(skills.filter((s) => s.evidence > 0));
-      return { code: ul.languageCode, name: l?.name ?? ul.languageCode, flag: l?.flagEmoji ?? "🌐", level: t === null ? null : thetaToCefr(t) };
+      return { code: ul.languageCode, name: l?.name ?? ul.languageCode, level: t === null ? null : thetaToCefr(t) };
     }),
   );
   const initial = (learner.profile.displayName ?? learner.email ?? "?").slice(0, 1).toUpperCase();
@@ -35,7 +36,7 @@ export default async function AppShell({ children }: { children: React.ReactNode
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border/60 bg-bg/85 px-4 py-3 backdrop-blur lg:hidden">
           <Logo href="/app" compact />
-          <span className="font-display font-extrabold">{learner.language.flagEmoji} {learner.language.name}</span>
+          <span className="flex items-center gap-2 font-display font-extrabold"><LanguageMark code={learner.language.code} size={24} /> {learner.language.name}</span>
           <Link href="/app/settings" aria-label="Configuración" className="ml-auto grid size-9 place-items-center rounded-full bg-primary text-sm font-bold text-on-primary">{initial}</Link>
         </header>
         <main id="main" className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-9 lg:pb-12 lg:pt-8">{children}</main>

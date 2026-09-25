@@ -6,9 +6,9 @@ export function Logo({ href = "/", compact = false }: { href?: string; compact?:
     <Link href={href} className="flex items-center gap-2.5 rounded-xl" aria-label="Improve My Languages — inicio">
       <Mascot size={compact ? 34 : 42} />
       {!compact && (
-        <span className="leading-tight">
-          <span className="block font-display text-[17px] font-extrabold tracking-tight">Improve My Languages</span>
-          <span className="block text-[10.5px] font-medium text-muted">Learn smarter. Become better.</span>
+        <span className="hidden min-w-0 leading-tight min-[440px]:block">
+          <span className="block whitespace-nowrap font-display text-[15px] font-extrabold tracking-tight sm:text-[17px]">Improve My Languages</span>
+          <span className="hidden text-[10.5px] font-medium text-muted sm:block">Learn smarter. Become better.</span>
         </span>
       )}
     </Link>
