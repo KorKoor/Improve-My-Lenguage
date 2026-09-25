@@ -217,6 +217,13 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "ko:conditional", label: "condicional -(으)면", language: "ko", grammarId: "ko:g:conditional" },
   { id: "ko:modifiers", label: "modificadores de nombre", language: "ko", grammarId: "ko:g:modifiers" },
   { id: "ko:seems", label: "-것 같다", language: "ko", grammarId: "ko:g:geot-gatda" },
+  { id: "nl:negation", label: "niet / geen", language: "nl", grammarId: "nl:g:niet-geen" },
+  { id: "nl:plural", label: "plural y diminutivos", language: "nl", grammarId: "nl:g:plural-diminutive" },
+  { id: "nl:imperfectum", label: "imperfectum ('t kofschip)", language: "nl", grammarId: "nl:g:imperfectum" },
+  { id: "nl:modals", label: "verbos modales", language: "nl", grammarId: "nl:g:modals" },
+  { id: "nl:comparatives", label: "comparativo y superlativo", language: "nl", grammarId: "nl:g:comparatives" },
+  { id: "nl:reflexive", label: "verbos reflexivos", language: "nl", grammarId: "nl:g:reflexive" },
+  { id: "nl:relative", label: "oraciones de relativo", language: "nl", grammarId: "nl:g:relative" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {
