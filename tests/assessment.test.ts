@@ -25,7 +25,7 @@ function bank(): AssessmentItem[] {
         skill,
         difficulty: Math.round(b * 100) / 100,
         prompt: "?",
-        options: ["a", "b"],
+        options: ["a", "b", "c", "d"],
         answer: "a",
       });
     }
@@ -39,7 +39,7 @@ function simulate(trueTheta: number, seed: number) {
   let state = createAssessment("t");
   while (!isFinished(state, items.length)) {
     const item = selectNextItem(state, items)!;
-    const correct = rand() < pCorrect(trueTheta, item.difficulty);
+    const correct = rand() < pCorrect(trueTheta, item.difficulty, 0.25);
     state = recordResponse(state, item, correct, 3000);
   }
   return state;
@@ -104,4 +104,39 @@ test("nivel global ignora habilidades sin evidencia", () => {
     { skill: "speaking", theta: 3, se: 1.5, evidence: 0 },
   ]);
   assert.ok(o !== null && Math.abs(o) < 0.01);
+});
+
+test("diagnóstico: un principiante total de francés no sale A2 (azar, cognados, «No lo sé»)", async () => {
+  const { assessmentBankFor } = await import("../src/lib/content");
+  const { cognateInfo } = await import("../src/lib/engine/cognates");
+  const bank = assessmentBankFor("fr", "es");
+  const run = (answer: (item: (typeof bank)[number], i: number) => "right" | "wrong" | "idk") => {
+    let s = createAssessment("fr", { priorMean: -2.3, priorSd: 1.4, maxItems: 18, minItems: 8 });
+    for (let i = 0; !isFinished(s, bank.length); i++) {
+      const item = selectNextItem(s, bank)!;
+      const a = answer(item, i);
+      s = recordResponse(s, item, a === "right", 4000, a === "idk");
+    }
+    return s;
+  };
+  const isCognate = (item: (typeof bank)[number]) => {
+    const m = /«(.+)»/.exec(item.prompt);
+    return Boolean(m && cognateInfo(m[1]!, "fr", [item.answer])?.kind === "cognate");
+  };
+  // Adivina al azar (1 de cada 4) pero acierta siempre los cognados.
+  const guesser = run((item, i) => (isCognate(item) || i % 4 === 0 ? "right" : "wrong"));
+  const g = estimateTheta(guesser.responses, guesser.priorMean, guesser.priorSd);
+  assert.equal(thetaToCefr(g.theta), "A1", `θ=${g.theta.toFixed(2)}`);
+  // Pulsa «No lo sé» salvo en cognados: A1 y termina pronto.
+  const honest = run((item) => (isCognate(item) ? "right" : "idk"));
+  assert.equal(thetaToCefr(estimateTheta(honest.responses, honest.priorMean, honest.priorSd).theta), "A1");
+  // Todo «No lo sé»: se detiene a las 5 preguntas.
+  assert.equal(run(() => "idk").responses.length, 5);
+});
+
+test("diagnóstico: el parámetro de azar reduce el premio de acertar", () => {
+  assert.ok(pCorrect(0, 0, 0.25) > pCorrect(0, 0));
+  const lucky = [{ difficulty: 0, correct: true, guess: 0.25 }];
+  const sure = [{ difficulty: 0, correct: true, guess: 0 }];
+  assert.ok(estimateTheta(lucky, -2, 1.4).theta < estimateTheta(sure, -2, 1.4).theta);
 });

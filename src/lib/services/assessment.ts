@@ -9,6 +9,7 @@ import {
   recordResponse,
   selectNextItem,
   type AssessmentState,
+  DONT_KNOW,
 } from "../engine/assessment";
 import { evaluateChoice } from "../engine/evaluate";
 import { cefrToTheta, thetaToCefr, type SkillEstimate } from "../engine/levels";
@@ -53,9 +54,10 @@ export async function startOrResumeAssessment(learner: Learner, restart = false)
     if (item) return { done: false, assessmentId: row.id, item: toClient(item), answered: state.responses.length, maxItems: state.maxItems };
   }
   const self = learner.ul.selfReportedLevel;
+  // Sin nivel declarado se parte de A1: es mejor subir rápido que abrumar.
   const state = createAssessment(learner.language.code, {
-    priorMean: self ? cefrToTheta(self) : -1,
-    priorSd: self ? 1.2 : 1.6,
+    priorMean: self ? cefrToTheta(self) : -2.3,
+    priorSd: self ? 1.2 : 1.4,
     maxItems: Math.min(18, bank.length),
     minItems: Math.min(8, bank.length),
   });
@@ -65,6 +67,18 @@ export async function startOrResumeAssessment(learner: Learner, restart = false)
   await repo.updateAssessmentRow(row.id, learner.ul.id, { state, currentItemId: first.id });
   await repo.track(learner.userId, "assessment_started", { language: learner.language.code });
   return { done: false, assessmentId: row.id, item: toClient(first), answered: 0, maxItems: state.maxItems };
+}
+
+/**
+ * «Empiezo desde cero»: sin diagnóstico. Todas las habilidades arrancan en
+ * A1 bajo (θ = −3) con incertidumbre alta, así los primeros ejercicios son de
+ * reconocimiento y el nivel sube solo en cuanto aciertes.
+ */
+export async function startFromZero(learner: Learner): Promise<void> {
+  const skills: Skill[] = ["vocabulary", "grammar", "reading", "listening", "writing", "speaking", "pronunciation"];
+  await repo.upsertSkillEstimates(learner.ul.id, skills.map((skill) => ({ skill, theta: -3, se: 0.9, evidence: 1 })));
+  await repo.markAssessed(learner.ul.id);
+  await repo.track(learner.userId, "assessment_skipped_beginner", { language: learner.language.code });
 }
 
 export async function answerAssessment(
@@ -82,8 +96,9 @@ export async function answerAssessment(
   const item = bank.find((i) => i.id === itemId);
   if (!item) throw new Error("Ítem desconocido");
 
-  const correct = evaluateChoice(choice, item.answer).correct;
-  let state = recordResponse(row.state as AssessmentState, item, correct, Math.max(0, Math.min(timeMs, 600_000)));
+  const dontKnow = choice === DONT_KNOW;
+  const correct = !dontKnow && evaluateChoice(choice, item.answer).correct;
+  let state = recordResponse(row.state as AssessmentState, item, correct, Math.max(0, Math.min(timeMs, 600_000)), dontKnow);
 
   if (!isFinished(state, bank.length)) {
     const next = selectNextItem(state, bank);

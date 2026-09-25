@@ -42,7 +42,8 @@ export function knowledgeToCard(k: KnowledgeDbRow | undefined, now: Date): CardM
   };
 }
 
-export async function getSkills(ulId: string, fallbackTheta = -1.5): Promise<Map<Skill, SkillEstimate>> {
+// Sin datos se asume principiante (A1 alto): mejor subir rápido que abrumar.
+export async function getSkills(ulId: string, fallbackTheta = -2.4): Promise<Map<Skill, SkillEstimate>> {
   const rows = await repo.getSkillEstimates(ulId);
   const map = new Map<Skill, SkillEstimate>();
   for (const r of rows) map.set(r.skill, r);
@@ -50,6 +51,19 @@ export async function getSkills(ulId: string, fallbackTheta = -1.5): Promise<Map
     if (!map.has(s)) map.set(s, defaultEstimate(s, fallbackTheta));
   }
   return map;
+}
+
+/**
+ * «Esto es muy difícil»: baja el nivel estimado de todas las habilidades
+ * (sin bajar de A1) para que los próximos ejercicios sean de reconocimiento.
+ */
+export async function lowerLevel(learner: Learner, delta = 0.8): Promise<void> {
+  const skills = await getSkills(learner.ul.id);
+  await repo.upsertSkillEstimates(
+    learner.ul.id,
+    [...skills.values()].map((s) => ({ ...s, theta: Math.max(-3.2, s.theta - delta), se: Math.max(s.se, 0.6) })),
+  );
+  await repo.track(learner.userId, "level_lowered", { language: learner.language.code, delta });
 }
 
 export async function getWeaknesses(ulId: string, now = new Date()): Promise<Weakness[]> {
@@ -140,6 +154,7 @@ export async function startSession(
     // A quien le gusta el reto, palabras nuevas un poco más altas (±0.3 logits).
     vocabTheta: skills.get("vocabulary")!.theta + (learner.profile.personality?.dims.challenge ?? 0) * 0.3,
     grammarTheta: skills.get("grammar")!.theta,
+    listeningTheta: skills.get("listening")?.theta,
     interests: learner.profile.interests,
     seed: sessionSeed(ulId, day, opts.surprise ? String(now.getTime()) : String(knowledge.length)),
     style: learner.profile.personality ? { ear: learner.profile.personality.dims.ear, challenge: learner.profile.personality.dims.challenge } : undefined,
@@ -222,13 +237,13 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
 
   const timeMs = Math.max(0, Math.min(input.timeMs, 10 * 60_000));
   const skill: Skill =
-    type === "dictation" ? "listening"
+    type === "dictation" || type === "listen_mc" || type === "listen_pick" || type === "dictation_word" ? "listening"
     : type === "speak" ? "pronunciation"
     : type === "grammar" || type === "rearrange" || type === "conjugate" ? "grammar"
     : "vocabulary";
 
   // 1. Memoria FSRS por ítem
-  const expectedMs = { match: 20000, dictation: 25000, rearrange: 20000, grammar: 15000, recall: 10000, cloze: 12000, conjugate: 12000, speak: 20000 }[type] ?? 7000;
+  const expectedMs = { match: 20000, dictation: 25000, rearrange: 20000, grammar: 15000, recall: 10000, cloze: 12000, conjugate: 12000, speak: 20000, listen_mc: 9000, listen_pick: 9000, dictation_word: 14000 }[type] ?? 7000;
   const rating = ratingFromOutcome({
     correct: result.correct,
     nearMiss: result.nearMiss,
@@ -286,7 +301,9 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
     difficulty,
     previousKnowledge: result.correct ? previousKnowledge : undefined,
   });
-  if (!result.correct) {
+  // «No lo sé» (respuesta vacía) no es un patrón de error: no se registra como fallo tipificado.
+  const gaveUp = !response.trim() && resolved.mode !== "match";
+  if (!result.correct && !gaveUp) {
     await repo.insertMistakes([
       {
         userLanguageId: ulId,
@@ -318,7 +335,7 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
     note: result.note,
     expected: resolved.display,
     explanation: resolved.explanation,
-    errorLabel: result.correct ? undefined : errorLabel(resolved.errorCategory),
+    errorLabel: result.correct || gaveUp ? undefined : errorLabel(resolved.errorCategory),
   };
 }
 

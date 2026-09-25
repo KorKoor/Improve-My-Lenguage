@@ -3,7 +3,7 @@ import { ArrowRight, Check, Headphones, Lightbulb, Loader2, MessageCircle, Mic, 
 import { POS_ES } from "@/components/app/labels";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { explainMistakeAction, finishSessionAction, reviseConfidenceAction, startSessionAction, submitAnswerAction } from "@/app/app/actions";
+import { explainMistakeAction, tooHardAction, finishSessionAction, reviseConfidenceAction, startSessionAction, submitAnswerAction } from "@/app/app/actions";
 import { BLOCK_META } from "@/components/app/labels";
 import { Confetti, CountUp } from "@/components/celebrate";
 import { Mascot } from "@/components/mascot";
@@ -50,6 +50,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
   const [clock, setClock] = useState(0);
   const [onset, setOnset] = useState<number | null>(null);
   const [lightened, setLightened] = useState(0);
+  const [gaveUp, setGaveUp] = useState(false);
   /**
    * Con fatiga alta, las palabras nuevas se retienen peor: si el alumno
    * decide seguir, quitamos las que quedaban (intro + ejercicios) y la
@@ -112,6 +113,23 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
     return () => clearInterval(t);
   }, [status, onBreak]);
 
+  // Muchos fallos al principio: ofrecer bajar el nivel (una vez por sesión).
+  const [easier, setEasier] = useState<"hidden" | "offer" | "done">("hidden");
+  useEffect(() => {
+    if (easier === "hidden" && results.total >= 6 && results.correct / results.total < 0.4) setEasier("offer");
+  }, [results, easier]);
+  const makeEasier = async () => {
+    const r = await tooHardAction();
+    if (!r.ok) return;
+    setEasier("done");
+    setSuggestion(null);
+    lastBreakAt.current = Date.now();
+    setCombo({ now: 0, best: 0 });
+    setResults({ total: 0, correct: 0 });
+    focusEvents.current = [];
+    await load();
+  };
+
   const step = queue[index];
   const progress = queue.length ? index / queue.length : 0;
 
@@ -134,9 +152,10 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
   }, [index, queue.length, finish]);
 
   const submit = useCallback(
-    async (ex: Exercise, response: string, pairs?: Record<string, string>) => {
+    async (ex: Exercise, response: string, pairs?: Record<string, string>, attempts = 1) => {
       if (submitting || feedback) return;
       setSubmitting(true);
+      setGaveUp(!response.trim() && ex.input !== "match");
       setLastAnswer({ key: ex.key, response });
       const res = await submitAnswerAction({
         sessionId,
@@ -144,7 +163,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         response,
         pairs,
         timeMs: Date.now() - stepStartedAt.current,
-        attempts: 1,
+        attempts,
       });
       setSubmitting(false);
       if (!res.ok) {
@@ -159,7 +178,8 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
       });
       // Lectura de foco tras cada respuesta: ¿toca una pausa?
       const nowMs = Date.now();
-      focusEvents.current.push({ correct: res.data.correct, timeMs: nowMs - stepStartedAt.current, atMin: (nowMs - startedAt.current - breakMs.current) / 60000 });
+      // «No lo sé» no es cansancio: no entra en la lectura de foco.
+      if (response.trim() || ex.input === "match") focusEvents.current.push({ correct: res.data.correct, timeMs: nowMs - stepStartedAt.current, atMin: (nowMs - startedAt.current - breakMs.current) / 60000 });
       const reading = readFocus(focusEvents.current, { span, sinceBreakMin: (nowMs - lastBreakAt.current) / 60000 });
       if (smartBreaks && reading.advice !== "continue" && nowMs >= snoozeUntil.current) {
         setSuggestion({ reading, plan: planBreak(reading, (nowMs - startedAt.current - breakMs.current) / 60000, focusEvents.current.length) });
@@ -272,6 +292,19 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         <span className="text-xs font-semibold text-muted tabular-nums">{index + 1}/{queue.length}</span>
         <SessionClock seconds={clock} target={minutes * 60} />
       </div>
+      {index >= 1 && !feedback && (
+        <div className="mt-2 flex justify-end">
+          <button
+            type="button"
+            onClick={() => {
+              if (window.confirm("¿Hacemos la sesión más fácil? Bajaremos tu nivel en este idioma y empezaremos con ejercicios de elegir y escuchar.")) void makeEasier();
+            }}
+            className="rounded-full px-2.5 py-1 text-xs font-semibold text-muted hover:bg-surface-muted hover:text-text"
+          >
+            😵 Esto es muy difícil
+          </button>
+        </div>
+      )}
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold text-white" style={{ background: meta.color }}>
           <meta.icon size={13} aria-hidden /> {meta.label}
@@ -289,7 +322,17 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         ) : null}
       </div>
 
-      {suggestion && !feedback && !onBreak && (
+      {easier === "offer" && !feedback && (
+        <div role="status" className="mt-4 flex flex-col gap-3 rounded-2xl border border-primary/30 bg-primary-soft p-4 text-sm animate-sheet sm:flex-row sm:items-center">
+          <span className="text-2xl" aria-hidden>🌱</span>
+          <p className="flex-1"><strong>Parece que esto está por encima de tu nivel.</strong> ¿Bajamos la dificultad? Empezarás con ejercicios de elegir y escuchar, y subiremos en cuanto aciertes.</p>
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => void makeEasier()}>Sí, más fácil</Button>
+            <Button size="sm" variant="ghost" onClick={() => setEasier("done")}>Seguir así</Button>
+          </div>
+        </div>
+      )}
+      {suggestion && !feedback && !onBreak && easier !== "offer" && (
         <BreakSuggestion
           reading={suggestion.reading}
           plan={suggestion.plan}
@@ -310,7 +353,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
           }}
         />
       )}
-      <div key={step.uid} className={cn("mt-4", feedback && !feedback.correct ? "animate-shake" : "animate-rise")} lang={step.kind === "exercise" || step.kind === "intro" ? undefined : "es"}>
+      <div key={step.uid} className={cn("mt-4", feedback && !feedback.correct && !gaveUp ? "animate-shake" : "animate-rise")} lang={step.kind === "exercise" || step.kind === "intro" ? undefined : "es"}>
         {step.kind === "intro" && <IntroStep step={step} locale={locale} language={language} rtl={rtl} onNext={next} />}
         {step.kind === "tip" && <TipStep step={step} language={language} onNext={next} />}
         {step.kind === "tutor" && <TutorStep minutes={step.minutes} onSkip={next} onGo={() => void finish()} />}
@@ -345,7 +388,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
           }}
         />
       )}
-      {feedback && <FeedbackSheet feedback={feedback} onNext={next} combo={combo.now} explain={aiEnabled && !feedback.correct && lastAnswer ? lastAnswer : null} />}
+      {feedback && <FeedbackSheet feedback={feedback} gaveUp={gaveUp} onNext={next} combo={combo.now} explain={aiEnabled && !feedback.correct && lastAnswer ? lastAnswer : null} />}
     </div>
   );
 }
@@ -452,19 +495,21 @@ function ExerciseStep({
   disabled: boolean;
   submitting: boolean;
   feedback: AnswerFeedback | null;
-  onSubmit: (ex: Exercise, response: string, pairs?: Record<string, string>) => void;
+  onSubmit: (ex: Exercise, response: string, pairs?: Record<string, string>, attempts?: number) => void;
   onSkip: () => void;
 }) {
   const [text, setText] = useState("");
+  const [showHint, setShowHint] = useState(false);
+  const listening = !ex.prompt && Boolean(ex.audioText) && ex.input !== "speech";
   const [chosen, setChosen] = useState<string | null>(null);
   const [order, setOrder] = useState<number[]>([]);
   const { supported, speak } = useSpeech(locale);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (ex.type === "dictation" && ex.audioText) speak(ex.audioText);
+    if (listening && ex.audioText) speak(ex.audioText);
     if (ex.input === "text") inputRef.current?.focus();
-  }, [ex, speak]);
+  }, [ex, speak, listening]);
 
   // Atajos 1–4 para opción múltiple
   useEffect(() => {
@@ -487,15 +532,16 @@ function ExerciseStep({
     <div>
       <p className="text-sm font-semibold text-muted">{ex.instruction}</p>
 
-      {ex.type === "dictation" ? (
+      {listening ? (
         supported ? (
-          <div className="card mt-3 flex items-center justify-center gap-4 p-8">
+          <div className="card mt-3 flex flex-wrap items-center justify-center gap-4 p-8">
             <button type="button" onClick={() => speak(ex.audioText!)} className="grid size-20 place-items-center rounded-full bg-primary text-on-primary shadow-lg transition active:scale-95" aria-label="Reproducir audio">
               <Volume2 size={34} />
             </button>
             <button type="button" onClick={() => speak(ex.audioText!, 0.7)} className="grid size-12 place-items-center rounded-full bg-primary-soft text-primary transition active:scale-95" aria-label="Reproducir más despacio">
               <Snail size={22} />
             </button>
+            {ex.context && ex.type === "dictation_word" && <p className="basis-full text-center text-sm text-muted">Significa «{ex.context}»</p>}
           </div>
         ) : (
           <div className="card mt-3 p-6 text-center">
@@ -537,7 +583,7 @@ function ExerciseStep({
                 )}
               >
                 <kbd className="hidden size-6 place-items-center rounded-md border border-border text-[11px] text-muted sm:grid">{i + 1}</kbd>
-                <span className="flex-1" lang={ex.type === "meaning_mc" ? "es" : language}>{o}</span>
+                <span className="flex-1" lang={ex.type === "meaning_mc" || ex.type === "listen_mc" ? "es" : language}>{o}</span>
                 {state === "ok" && <Check size={18} aria-hidden />}
                 {state === "bad" && <X size={18} aria-hidden />}
               </button>
@@ -546,8 +592,8 @@ function ExerciseStep({
         </div>
       )}
 
-      {ex.input === "text" && (ex.type !== "dictation" || supported) && (
-        <form className="mt-5" onSubmit={(e) => { e.preventDefault(); if (text.trim()) onSubmit(ex, text); }}>
+      {ex.input === "text" && (!listening || supported) && (
+        <form className="mt-5" onSubmit={(e) => { e.preventDefault(); if (text.trim()) onSubmit(ex, text, undefined, showHint ? 2 : 1); }}>
           <label className="sr-only" htmlFor="answer">Tu respuesta</label>
           <input
             id="answer"
@@ -566,12 +612,29 @@ function ExerciseStep({
               feedback ? (feedback.correct ? "border-success" : "border-danger") : "border-border",
             )}
           />
+          {showHint && ex.hint && !feedback && (
+            <p className="mt-2 font-mono text-lg tracking-wider text-primary animate-pop-in" lang={language} aria-label="Pista">{ex.hint}</p>
+          )}
           {!feedback && (
             <Button type="submit" size="lg" className="mt-4 w-full" disabled={!text.trim() || submitting}>
               {submitting ? <Loader2 className="animate-spin" size={18} aria-hidden /> : null} Comprobar
             </Button>
           )}
         </form>
+      )}
+
+      {/* Ayudas: pista (en respuestas escritas) y «No lo sé» (siempre). */}
+      {!feedback && ex.input !== "match" && ex.input !== "speech" && (
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          {ex.input === "text" && ex.hint && !showHint && (
+            <button type="button" onClick={() => setShowHint(true)} className="rounded-full bg-warning-soft px-3.5 py-2 text-sm font-semibold text-warning hover:brightness-95">
+              💡 Pista
+            </button>
+          )}
+          <button type="button" disabled={disabled} onClick={() => onSubmit(ex, "")} className="rounded-full border border-dashed border-border px-3.5 py-2 text-sm font-semibold text-muted hover:border-primary hover:text-primary">
+            🤷 No lo sé
+          </button>
+        </div>
       )}
 
       {ex.input === "order" && ex.tokens && (
@@ -741,7 +804,7 @@ function ConfidenceCheck({ attemptId }: { attemptId: string }) {
 
 const PRAISE = ["¡Correcto!", "¡Eso es!", "¡Genial!", "¡Muy bien!", "¡Perfecto!", "¡Exacto!"];
 
-function FeedbackSheet({ feedback: f, onNext, combo, explain }: { feedback: AnswerFeedback; onNext: () => void; combo: number; explain: { key: string; response: string } | null }) {
+function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain }: { feedback: AnswerFeedback; gaveUp?: boolean; onNext: () => void; combo: number; explain: { key: string; response: string } | null }) {
   const ok = f.correct;
   const [why, setWhy] = useState<{ state: "idle" | "loading" | "done" | "error"; text?: string }>({ state: "idle" });
   const askWhy = async () => {
@@ -752,8 +815,17 @@ function FeedbackSheet({ feedback: f, onNext, combo, explain }: { feedback: Answ
   };
   const praise = combo >= 5 ? `¡Imparable! ${combo} seguidas` : combo >= 3 ? `¡En racha! ${combo} seguidas` : PRAISE[(combo + (f.attemptId?.length ?? 0)) % PRAISE.length]!;
   return (
-    <div role="status" aria-live="assertive" className={cn("fixed inset-x-0 bottom-0 z-40 animate-rise rounded-t-3xl px-4 pb-[max(env(safe-area-inset-bottom),20px)] pt-5 shadow-[0_-8px_30px_rgb(0_0_0/0.08)]", ok ? "bg-success-soft" : "bg-danger-soft")}>
+    <div role="status" aria-live="assertive" className={cn("fixed inset-x-0 bottom-0 z-40 animate-rise rounded-t-3xl px-4 pb-[max(env(safe-area-inset-bottom),20px)] pt-5 shadow-[0_-8px_30px_rgb(0_0_0/0.08)]", ok ? "bg-success-soft" : gaveUp ? "bg-primary-soft" : "bg-danger-soft")}>
       <div className="mx-auto max-w-2xl">
+        {gaveUp ? (
+          <>
+            <p className="flex items-center gap-2 font-display text-xl font-extrabold text-primary">🌱 Sin problema, así se aprende</p>
+            {f.expected && <p className="mt-1 text-lg font-semibold">{f.expected}</p>}
+            {f.explanation && <p className="mt-2 text-sm leading-relaxed">{f.explanation}</p>}
+            <p className="mt-2 text-sm text-muted">Volverá pronto, primero con opciones para que la reconozcas.</p>
+            <Button size="lg" className="mt-4 w-full" onClick={onNext} autoFocus>Continuar</Button>
+          </>
+        ) : (<>
         <p className={cn("flex items-center gap-2 font-display text-xl font-extrabold", ok ? "text-success" : "text-danger")}>
           <span className={cn("grid size-8 place-items-center rounded-full text-white animate-pop-in", ok ? "bg-success" : "bg-danger")} aria-hidden>
             {ok ? <Check size={18} strokeWidth={3} /> : <X size={18} strokeWidth={3} />}
@@ -778,6 +850,7 @@ function FeedbackSheet({ feedback: f, onNext, combo, explain }: { feedback: Answ
         <Button size="lg" variant={ok ? "success" : "danger"} className="mt-4 w-full" onClick={onNext} autoFocus>
           Continuar
         </Button>
+        </>)}
       </div>
     </div>
   );

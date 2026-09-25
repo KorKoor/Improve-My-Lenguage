@@ -3,6 +3,7 @@
  * Todo lo que el motor necesita saber del contenido pasa por aquí, de modo que
  * migrarlo a base de datos o a un CMS en el futuro sólo cambia este módulo.
  */
+import { cognateInfo } from "../engine/cognates";
 import { CEFR_CENTER, itemTheta } from "../engine/levels";
 import type { Catalog } from "../engine/exercises";
 import { EN_ASSESSMENT } from "./en/assessment";
@@ -152,11 +153,14 @@ export function assessmentBankFor(language: LanguageCode, native: LanguageCode):
       }
     }
     if (distractors.length < 3) continue;
+    // Para hispanohablantes, un cognado («important», «université») se acierta
+    // sin saber el idioma: se trata como mucho más fácil para no inflar el nivel.
+    const cognate = native === "es" && cognateInfo(v.lemma, language, [answer])?.kind === "cognate";
     items.push({
       id: `${language}:a:v:${v.id.split(":").pop()}`,
       language,
       skill: "vocabulary",
-      difficulty: itemTheta(v) - 0.3,
+      difficulty: itemTheta(v) - 0.3 - (cognate ? 1.5 : 0),
       prompt: `¿Qué significa «${v.lemma}»${v.reading ? ` (${v.reading})` : ""}?`,
       options: [answer, ...distractors].sort(),
       answer,

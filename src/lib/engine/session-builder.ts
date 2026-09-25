@@ -9,6 +9,7 @@ import {
   buildGrammarExercise,
   buildMatchExercise,
   buildVocabExercise,
+  learnerStage,
   pickVocabExerciseType,
   translationOf,
   type Catalog,
@@ -68,6 +69,8 @@ export interface BuildInput {
   due: KnowledgeLite[];
   vocabTheta: number;
   grammarTheta: number;
+  /** θ de escucha (si se conoce): decide cuándo llegan los dictados. */
+  listeningTheta?: number;
   interests: string[];
   seed: number;
   /** Preferencias del cuestionario de perfil (opcional). */
@@ -147,6 +150,8 @@ export function selectGrammar(
 
 export function buildSessionSteps(input: BuildInput): SessionStep[] {
   const rand = mulberry32(input.seed);
+  const stage = learnerStage(input.vocabTheta);
+  const listenStage = learnerStage(Math.min(input.listeningTheta ?? input.vocabTheta, input.vocabTheta + 0.5));
   const kmap = new Map(input.knowledge.map((k) => [k.itemId, k]));
   const vocab = input.catalog.vocab(input.language);
   const steps: SessionStep[] = [];
@@ -174,14 +179,15 @@ export function buildSessionSteps(input: BuildInput): SessionStep[] {
           const v = input.catalog.vocabById(k.itemId);
           if (!v) continue;
           reviewedVocab.push(v);
-          const type = pickVocabExerciseType(k.reps, rand, true, input.style, Boolean(v.conjugation));
+          const type = pickVocabExerciseType(k.reps, rand, true, input.style, Boolean(v.conjugation), stage, listenStage);
           const ok = push("review", buildVocabExercise(type, v, input.catalog, input.native, input.seed));
           if (!ok) push("review", buildVocabExercise("meaning_mc", v, input.catalog, input.native));
         }
         break;
       }
       case "new_words": {
-        const count = Math.max(1, Math.ceil(n / 2));
+        // Un principiante total aprende mejor pocas palabras bien fijadas.
+        const count = Math.max(1, Math.min(stage === "novice" ? 4 : stage === "beginner" ? 6 : 99, Math.ceil(n / 2)));
         newWords = selectNewWords(vocab, kmap, input.vocabTheta, input.interests, count, rand);
         for (const v of newWords) steps.push({ kind: "intro", block: "new_words", word: wordCard(v, input.native) });
         for (const v of shuffle(newWords, rand)) push("new_words", buildVocabExercise("meaning_mc", v, input.catalog, input.native));
@@ -206,23 +212,34 @@ export function buildSessionSteps(input: BuildInput): SessionStep[] {
           },
         });
         const start = (k?.reps ?? 0) % g.exercises.length;
-        const count = Math.min(n, g.exercises.length);
-        for (let i = 0; i < count; i++) push("grammar", buildGrammarExercise(g, (start + i) % g.exercises.length));
+        // Novatos: sólo ejercicios de elegir (escribir llega cuando ya reconoces la regla).
+        const order = Array.from({ length: g.exercises.length }, (_, i) => (start + i) % g.exercises.length);
+        const allowed = stage === "novice" ? order.filter((i) => g.exercises[i]!.type === "mc") : order;
+        for (const i of (allowed.length ? allowed : order).slice(0, Math.min(n, g.exercises.length))) push("grammar", buildGrammarExercise(g, i));
         // Conjugación de verbos que ya conoces (si el idioma tiene tablas).
         const verbs = shuffle(
-          vocab.filter((v) => v.conjugation && (kmap.get(v.id)?.reps ?? 0) > 0),
+          vocab.filter((v) => stage !== "novice" && v.conjugation && (kmap.get(v.id)?.reps ?? 0) > 0),
           rand,
         ).slice(0, block.minutes >= 4 ? 2 : 1);
         for (const v of verbs) push("grammar", buildVocabExercise("conjugate", v, input.catalog, input.native, input.seed));
         break;
       }
       case "listening": {
+        // Sólo palabras que ya has visto (o las nuevas de hoy): nunca se pide
+        // oír algo que no conoces. Novato → elegir; principiante → también
+        // escribir una palabra; intermedio → dictado de frases.
         const seen = vocab.filter((v) => (kmap.get(v.id)?.reps ?? 0) > 0);
-        const pool = seen.length >= n ? seen : [...seen, ...newWords, ...vocab.filter((v) => itemTheta(v) <= input.vocabTheta + 0.5)];
+        const pool = [...seen, ...newWords];
+        if (listenStage === "intermediate" && pool.length < n) pool.push(...vocab.filter((v) => itemTheta(v) <= input.vocabTheta - 0.3));
         let added = 0;
         for (const v of shuffle(pool, rand)) {
           if (added >= n) break;
-          if (push("listening", buildVocabExercise("dictation", v, input.catalog, input.native, input.seed))) added++;
+          const reps = kmap.get(v.id)?.reps ?? 0;
+          const type =
+            listenStage === "novice" ? (rand() < 0.5 ? "listen_mc" : "listen_pick")
+            : listenStage === "beginner" ? (reps >= 3 && rand() < 0.4 ? "dictation_word" : rand() < 0.5 ? "listen_pick" : "listen_mc")
+            : reps >= 2 && rand() < 0.7 ? "dictation" : "dictation_word";
+          if (push("listening", buildVocabExercise(type, v, input.catalog, input.native, input.seed))) added++;
         }
         break;
       }

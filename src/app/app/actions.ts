@@ -6,9 +6,9 @@ import { getLanguage, getVocab, TOPICS } from "@/lib/content";
 import { CEFR_LEVELS, type CefrLevel } from "@/lib/content/types";
 import * as repo from "@/lib/db/repositories";
 import { AiUnavailableError } from "@/lib/ai/provider";
-import { answerAssessment, startOrResumeAssessment, type AssessmentStep } from "@/lib/services/assessment";
+import { answerAssessment, startFromZero, startOrResumeAssessment, type AssessmentStep } from "@/lib/services/assessment";
 import { deleteAccount } from "@/lib/services/account";
-import { finishSession, RateLimitedError, reviseConfidence, startSession, submitAnswer, type AnswerFeedback, type BuiltSession, type SessionFocus, type SessionSummary } from "@/lib/services/learning";
+import { finishSession, lowerLevel, RateLimitedError, reviseConfidence, startSession, submitAnswer, type AnswerFeedback, type BuiltSession, type SessionFocus, type SessionSummary } from "@/lib/services/learning";
 import { AiQuotaError, endConversation, explainMistake, sendTutorMessage, startConversation } from "@/lib/services/tutor";
 import type { ConversationFeedback } from "@/lib/ai/prompts";
 import { requireLearner, requireViewer } from "@/lib/services/viewer";
@@ -125,6 +125,22 @@ export async function saveOnboarding(input: OnboardingInput): Promise<ActionResu
 }
 
 // ── Diagnóstico ────────────────────────────────────────────────────────────
+export async function tooHardAction(): Promise<ActionResult<null>> {
+  return run("session.too-hard", async () => {
+    await lowerLevel(await requireLearner());
+    revalidatePath("/app", "layout");
+    return null;
+  });
+}
+
+export async function startFromZeroAction(): Promise<ActionResult<null>> {
+  return run("assessment.zero", async () => {
+    await startFromZero(await requireLearner());
+    revalidatePath("/app", "layout");
+    return null;
+  });
+}
+
 export async function startAssessmentAction(restart = false): Promise<ActionResult<AssessmentStep>> {
   return run("assessment.start", async () => startOrResumeAssessment(await requireLearner(), Boolean(restart)));
 }

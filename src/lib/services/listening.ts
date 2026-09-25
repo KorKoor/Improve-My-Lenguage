@@ -82,10 +82,16 @@ export async function buildListening(learner: Learner, count = 10): Promise<{ it
     found = candidates(learner, rank, minCov, factor);
     if (found.length >= 25) break;
   }
-  const pool = shuffle(found.sort((a, b) => b.coverage - a.coverage).slice(0, 120), rand);
+  // Principiantes: frases cortas (se entienden de una vez y caben en la memoria).
+  const maxWords = theta < -2.1 ? 6 : theta < -1.1 ? 9 : 99;
+  const short = found.filter((c) => c.text.split(/\s+/).length <= maxWords);
+  const pool = shuffle((short.length >= 10 ? short : found).sort((a, b) => b.coverage - a.coverage).slice(0, 120), rand);
   if (pool.length < 4) return { items: [], locale: learner.language.speechLocale };
+  // Nada de dictados de frases para quien empieza: primero reconocer.
   const plan: ListeningKind[] =
-    theta < -1.5 ? ["spot", "spot", "meaning", "spot", "meaning", "meaning", "spot", "meaning", "dictation", "dictation"]
+    theta < -2.1 ? ["spot", "meaning", "spot", "meaning", "spot", "meaning", "spot", "meaning", "spot", "meaning"]
+    : theta < -1.1 ? ["spot", "spot", "meaning", "spot", "meaning", "meaning", "spot", "meaning", "meaning", "dictation"]
+    : theta < -0.5 ? ["spot", "spot", "meaning", "spot", "meaning", "meaning", "spot", "meaning", "dictation", "dictation"]
     : theta < 0 ? ["spot", "meaning", "meaning", "dictation", "meaning", "dictation", "spot", "meaning", "dictation", "dictation"]
     : ["meaning", "dictation", "meaning", "dictation", "dictation", "meaning", "dictation", "dictation", "meaning", "dictation"];
   const items: ListeningItem[] = [];

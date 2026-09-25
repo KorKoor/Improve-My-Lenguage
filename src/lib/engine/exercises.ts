@@ -22,6 +22,9 @@ export const EXERCISE_TYPES = [
   "grammar",
   "conjugate",
   "speak",
+  "listen_mc",
+  "listen_pick",
+  "dictation_word",
 ] as const;
 export type ExerciseType = (typeof EXERCISE_TYPES)[number];
 
@@ -43,6 +46,8 @@ export interface Exercise {
   pairs?: { left: string[]; right: string[] };
   /** Texto a leer con síntesis de voz (dictado, pronunciación). */
   audioText?: string;
+  /** Pista opcional para respuestas escritas (primera letra y longitud). */
+  hint?: string;
   /** Tipo de entrada esperada en la UI. */
   input: "choice" | "text" | "order" | "match" | "speech";
   expectedMs: number;
@@ -76,6 +81,9 @@ const TYPE_OFFSET: Record<ExerciseType, number> = {
   grammar: 0,
   conjugate: 0.4,
   speak: 0.3,
+  listen_mc: -0.3,
+  listen_pick: -0.2,
+  dictation_word: 0.2,
 };
 
 const EXPECTED_MS: Record<ExerciseType, number> = {
@@ -89,7 +97,17 @@ const EXPECTED_MS: Record<ExerciseType, number> = {
   grammar: 15000,
   conjugate: 12000,
   speak: 20000,
+  listen_mc: 9000,
+  listen_pick: 9000,
+  dictation_word: 14000,
 };
+
+/** «m _ _ _ _» : primera letra y huecos (ayuda sin regalar la respuesta). */
+export function letterHint(word: string): string {
+  const chars = [...word];
+  if (chars.length <= 2) return `${chars[0] ?? ""}…`;
+  return chars.map((c, i) => (i === 0 || c === " " || c === "'" || c === "-" ? c : "_")).join(" ");
+}
 
 export function translationOf(item: VocabItem, native: LanguageCode): string[] {
   return (
@@ -211,6 +229,7 @@ export function buildVocabExercise(
         skill: "vocabulary",
         instruction: "Escribe la palabra",
         prompt: translationOf(item, native).join(", "),
+        hint: letterHint(item.lemma),
         context: item.examples[0]
           ? blankOut(item.examples[0].text, item.lemma, spaced) ?? undefined
           : undefined,
@@ -229,6 +248,7 @@ export function buildVocabExercise(
         instruction: "Completa la frase",
         prompt: blankOut(ex.text, item.lemma, spaced)!,
         context: ex.translation?.[native],
+        hint: letterHint(item.lemma),
         input: "text",
       };
     }
@@ -269,6 +289,49 @@ export function buildVocabExercise(
         instruction: `Conjuga · ${tenseLabel(item.language, tense)}`,
         prompt: `${item.lemma} → ${pronouns(item.language)[person]} …`,
         context: translationOf(item, native)[0],
+        input: "text",
+      };
+    }
+    case "listen_mc": {
+      const opts = shuffle([tr(item), ...distractors(item, pool, 3, rand, tr)], rand);
+      return {
+        ...base,
+        key: `listen_mc|${item.id}`,
+        type,
+        skill: "listening",
+        instruction: "Escucha y elige qué significa",
+        prompt: "",
+        options: opts,
+        audioText: item.lemma,
+        input: "choice",
+      };
+    }
+    case "listen_pick": {
+      const lemma = (v: VocabItem) => v.lemma;
+      const opts = shuffle([item.lemma, ...distractors(item, pool, 3, rand, lemma)], rand);
+      return {
+        ...base,
+        key: `listen_pick|${item.id}`,
+        type,
+        skill: "listening",
+        instruction: "Escucha y elige la palabra que oyes",
+        prompt: "",
+        options: opts,
+        audioText: item.lemma,
+        input: "choice",
+      };
+    }
+    case "dictation_word": {
+      return {
+        ...base,
+        key: `dictation_word|${item.id}`,
+        type,
+        skill: "listening",
+        instruction: "Escucha y escribe la palabra",
+        prompt: "",
+        context: translationOf(item, native)[0],
+        audioText: item.lemma,
+        hint: letterHint(item.lemma),
         input: "text",
       };
     }
@@ -423,6 +486,12 @@ export function resolveExercise(
       };
     case "reverse_mc":
       return { accepted: [item.lemma], display: item.lemma, explanation: usage, errorCategory: "vocabulary", mode: "choice", typos: false };
+    case "listen_mc":
+      return { accepted: [tr[0]!], display: `${item.lemma} = ${tr.join(", ")}`, explanation: usage, errorCategory: "listening", mode: "choice", typos: false };
+    case "listen_pick":
+      return { accepted: [item.lemma], display: `${item.lemma} = ${tr.join(", ")}`, explanation: usage, errorCategory: "listening", mode: "choice", typos: false };
+    case "dictation_word":
+      return { accepted: [item.lemma, ...(item.acceptedForms ?? [])], display: `${item.lemma} = ${tr.join(", ")}`, errorCategory: "listening", mode: "text", typos: true };
     case "recall":
     case "cloze":
       return {
@@ -494,26 +563,74 @@ export interface ExerciseStyle {
   challenge: number;
 }
 
+/**
+ * Etapa del alumno para elegir ejercicios. Un principiante total no debe
+ * escribir de memoria ni hacer dictados de frases: primero reconoce.
+ */
+export type LearnerStage = "novice" | "beginner" | "intermediate";
+
+export function learnerStage(theta: number): LearnerStage {
+  return theta < -2.1 ? "novice" : theta < -1.1 ? "beginner" : "intermediate";
+}
+
+type VocabType = Exclude<ExerciseType, "grammar" | "match">;
+
+/**
+ * Escalera de ejercicios por palabra: reconocer (leer y oír) → producir con
+ * ayuda → producir sin ayuda. Depende de cuántas veces has visto la palabra
+ * (`reps`), de tu etapa en vocabulario y, para lo auditivo, en escucha.
+ */
 export function pickVocabExerciseType(
   reps: number,
   rand: () => number,
   allowAudio: boolean,
   style?: ExerciseStyle,
   canConjugate = false,
-): Exclude<ExerciseType, "grammar" | "match"> {
+  stage: LearnerStage = "intermediate",
+  listenStage: LearnerStage = stage,
+): VocabType {
   if (reps === 0) return "meaning_mc";
-  if (reps === 1) return rand() < ((style?.challenge ?? 0) > 0.3 ? 0.7 : 0.5) ? "reverse_mc" : "meaning_mc";
-  const pool: Exclude<ExerciseType, "grammar" | "match">[] = ["recall", "cloze", "cloze", "reverse_mc", "rearrange"];
-  if (allowAudio) pool.push("dictation");
-  // Verbos con tabla: a veces se repasan conjugándolos (gramática en contexto).
-  if (canConjugate) pool.push("conjugate", "conjugate");
-  if (allowAudio) pool.push("speak");
-  // La forma de aprender inclina la balanza, sin eliminar ningún tipo.
-  if (style) {
-    if (style.ear > 0.3 && allowAudio) pool.push("dictation");
-    if (style.ear < -0.3) pool.push("cloze");
-    if (style.challenge > 0.3) pool.push("recall");
-    if (style.challenge < -0.3) pool.push("reverse_mc");
+  const pool: VocabType[] = [];
+  const add = (t: VocabType, n = 1) => {
+    for (let i = 0; i < n; i++) pool.push(t);
+  };
+  const audio = allowAudio;
+  if (reps === 1) {
+    add("meaning_mc");
+    add("reverse_mc", stage === "novice" ? 1 : 2);
+    if (audio) add("listen_mc", listenStage === "intermediate" ? 1 : 2);
+  } else if (stage === "novice" || (stage === "beginner" && reps <= 2)) {
+    // Sólo reconocimiento (con y sin audio); escribir llega a partir de la 3.ª vez.
+    add("reverse_mc", 2);
+    add("meaning_mc");
+    if (audio) add("listen_pick", 2), add("listen_mc", 2);
+    if (stage === "novice" && reps >= 4) add("recall");
+  } else if (stage === "beginner") {
+    add("reverse_mc");
+    add("recall", 2);
+    add("cloze");
+    add("rearrange");
+    if (audio) add("listen_pick"), add("listen_mc"), add("dictation_word", listenStage === "novice" ? 0 : 1);
+    if (canConjugate && reps >= 3) add("conjugate");
+    if (audio && reps >= 3) add("speak");
+  } else {
+    add("recall");
+    add("cloze", 2);
+    add("reverse_mc");
+    add("rearrange");
+    if (audio) {
+      add(listenStage === "intermediate" ? "dictation" : "dictation_word");
+      add("listen_pick");
+      add("speak");
+    }
+    if (canConjugate) add("conjugate", 2);
   }
-  return sample(pool, 1, rand)[0]!;
+  // La forma de aprender inclina la balanza, sin romper la escalera.
+  if (style) {
+    if (style.ear > 0.3 && audio) add(pool.includes("dictation") ? "dictation" : "listen_mc");
+    if (style.ear < -0.3) add(pool.includes("cloze") ? "cloze" : "reverse_mc");
+    if (style.challenge > 0.3 && pool.includes("recall")) add("recall");
+    if (style.challenge < -0.3) add("reverse_mc");
+  }
+  return pool[Math.floor(rand() * pool.length)]!;
 }

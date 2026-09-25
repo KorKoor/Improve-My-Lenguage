@@ -2,7 +2,9 @@
 import { ArrowRight, Gauge, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { answerAssessmentAction, startAssessmentAction } from "@/app/app/actions";
+import { answerAssessmentAction, startAssessmentAction, startFromZeroAction } from "@/app/app/actions";
+import { DONT_KNOW } from "@/lib/engine/assessment";
+import { useRouter } from "next/navigation";
 import { SKILL_META } from "@/components/app/labels";
 import { Mascot } from "@/components/mascot";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -19,6 +21,14 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const shownAt = useRef(Date.now());
+  const router = useRouter();
+
+  async function fromZero() {
+    setPhase("loading");
+    const res = await startFromZeroAction();
+    if (!res.ok) { setError(res.error); setPhase("error"); return; }
+    router.push("/app");
+  }
 
   async function begin() {
     setPhase("loading");
@@ -60,9 +70,13 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
         <ul className="max-w-md space-y-2 text-left text-muted">
           <li>• Entre 8 y 18 preguntas. Tarda unos 5 minutos.</li>
           <li>• Si aciertas, sube la dificultad; si fallas, baja. Es normal fallar varias: así encontramos tu techo.</li>
-          <li>• Si no sabes una respuesta, no adivines al azar: elige la que te parezca más probable.</li>
+          <li>• Si no sabes una respuesta, pulsa <strong>«No lo sé»</strong>. Adivinar hace que luego te pongamos ejercicios demasiado difíciles.</li>
         </ul>
         <Button size="lg" onClick={() => void begin()}>{alreadyAssessed ? "Repetir diagnóstico" : "Empezar"} <ArrowRight size={18} aria-hidden /></Button>
+        <button type="button" onClick={() => void fromZero()} className="card lift max-w-md p-4 text-left">
+          <span className="block font-semibold">🌱 No sé nada todavía: empiezo desde cero</span>
+          <span className="text-sm text-muted">Sin test. Empezamos por lo más básico, con ejercicios de elegir y mucha ayuda; subimos en cuanto vayas acertando.</span>
+        </button>
         <Link href="/app" className="text-sm text-muted hover:text-text">Ahora no</Link>
       </div>
     );
@@ -134,6 +148,9 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
             </button>
           ))}
         </div>
+        <button type="button" disabled={busy} onClick={() => void answer(DONT_KNOW)} className="mt-3 w-full rounded-2xl border border-dashed border-border px-4 py-3 text-sm font-semibold text-muted hover:border-primary hover:text-primary">
+          🤷 No lo sé
+        </button>
         <p className="mt-6 text-center text-xs text-muted">No mostramos si acertaste para no condicionar las siguientes respuestas.</p>
       </div>
     </div>

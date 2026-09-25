@@ -1,5 +1,8 @@
 /**
- * Diagnóstico adaptativo (Computerized Adaptive Testing) con modelo de Rasch.
+ * Diagnóstico adaptativo (Computerized Adaptive Testing) con modelo de Rasch
+ * y parámetro de adivinación (3PL con c fijo = 1/nº de opciones): acertar una
+ * pregunta de opción múltiple al azar ya no sube el nivel como si se supiera.
+ * «No lo sé» cuenta como fallo sin azar posible.
  *
  * - Estimación de θ por EAP (Expected A Posteriori) sobre una rejilla.
  *   Es robusta incluso con todas las respuestas correctas o incorrectas,
@@ -16,6 +19,8 @@ export interface AssessmentResponse {
   difficulty: number;
   correct: boolean;
   timeMs: number;
+  /** Probabilidad de acertar al azar (1/opciones). 0 = sin azar (p. ej. «No lo sé»). */
+  guess?: number;
 }
 
 export interface AssessmentState {
@@ -40,17 +45,17 @@ const GRID: number[] = (() => {
   return g;
 })();
 
-export const pCorrect = (theta: number, b: number) => 1 / (1 + Math.exp(-(theta - b)));
+export const pCorrect = (theta: number, b: number, guess = 0) => guess + (1 - guess) / (1 + Math.exp(-(theta - b)));
 
 export function estimateTheta(
-  responses: Pick<AssessmentResponse, "difficulty" | "correct">[],
+  responses: Pick<AssessmentResponse, "difficulty" | "correct" | "guess">[],
   priorMean = 0,
   priorSd = 1.5,
 ): ThetaEstimate {
   const logPost = GRID.map((t) => {
     let lp = -((t - priorMean) ** 2) / (2 * priorSd * priorSd);
     for (const r of responses) {
-      const p = pCorrect(t, r.difficulty);
+      const p = pCorrect(t, r.difficulty, r.guess ?? 0);
       lp += Math.log(r.correct ? p : 1 - p);
     }
     return lp;
@@ -85,6 +90,8 @@ export function currentEstimate(state: AssessmentState): ThetaEstimate {
 export function isFinished(state: AssessmentState, bankSize: number): boolean {
   const n = state.responses.length;
   if (n >= state.maxItems || n >= bankSize) return true;
+  // Principiante total: 5 fallos (o «No lo sé») seguidos desde el inicio bastan.
+  if (n >= 5 && state.responses.every((r) => !r.correct)) return true;
   if (n < state.minItems) return false;
   return currentEstimate(state).se <= state.targetSe;
 }
@@ -127,15 +134,20 @@ export function recordResponse(
   item: AssessmentItem,
   correct: boolean,
   timeMs: number,
+  dontKnow = false,
 ): AssessmentState {
+  const guess = dontKnow ? 0 : 1 / Math.max(2, item.options.length);
   return {
     ...state,
     responses: [
       ...state.responses,
-      { itemId: item.id, skill: item.skill, difficulty: item.difficulty, correct, timeMs },
+      { itemId: item.id, skill: item.skill, difficulty: item.difficulty, correct: dontKnow ? false : correct, timeMs, guess },
     ],
   };
 }
+
+/** Respuesta especial del botón «No lo sé». */
+export const DONT_KNOW = "__dont_know__";
 
 /** θ por habilidad a partir de las respuestas del diagnóstico. */
 export function perSkillEstimates(state: AssessmentState): Map<Skill, ThetaEstimate & { n: number }> {
