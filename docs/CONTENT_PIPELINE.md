@@ -73,7 +73,7 @@ La app carga cada paquete bajo demanda en el servidor (`src/lib/content/packs.ts
 3. Regístralo en `content/index.ts` y cambia su `status` a `"available"` en `languages.ts`.
 4. `npm test` valida automáticamente cada idioma disponible: IDs, ejemplos, ≥ 30 palabras, ≥ 2 conceptos, banco de diagnóstico ≥ 12 ítems, temas válidos y que cada ejercicio sea resoluble.
 
-Estado actual: 12 idiomas disponibles con vocabulario hasta C1 desde datos públicos, gramática A1–C1 (8–13 lecciones por idioma) y tablas de conjugación en los idiomas flexivos. Se recomienda revisión humana continua de las traducciones más frecuentes.
+Estado actual: 12 idiomas disponibles con vocabulario hasta C1 desde datos públicos, gramática A1–C1 (14–27 lecciones por idioma) y tablas de conjugación en los idiomas flexivos. Se recomienda revisión humana continua de las traducciones más frecuentes.
 
 ## Fase 3: contenido real de internet (diseño)
 

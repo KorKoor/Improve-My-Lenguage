@@ -63,7 +63,7 @@ Core goals:
 ### Content system
 
 - 12 languages (EN, FR, DE, IT, PT, NL, SV, RU, AR, JA, KO, ZH) with 5,500–9,700 frequency-ranked words each (A1 → C1), conjugation tables for ~700–970 verbs per inflecting language, built from open data (Wiktionary, Tatoeba, wordfreq, Wikimedia Commons audio) — see docs/CONTENT_PIPELINE.md
-- grammar syllabus A1 → C1 for every language (8–13 lessons with exercises), written for Spanish speakers
+- grammar syllabus A1 → C1 for every language (14–27 lessons per language, each with Spanish-speaker mistakes, contrasts and validated exercises)
 - domainized vocabulary and grammar structures
 - content configuration that can scale to more languages
 - structured, versioned learning resources

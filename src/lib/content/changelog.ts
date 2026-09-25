@@ -9,6 +9,7 @@ export interface ChangelogItem {
 export const CHANGELOG_VERSION = "2026-09-25";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "🧩", title: "El doble de gramática", text: "Los 12 idiomas suman nuevas lecciones de A1 a C1 (hasta 27 en inglés), con errores típicos de hispanohablantes y ejercicios.", href: "/app/grammar" },
   { icon: "👨‍👩‍👧", title: "Familia y amigos", text: "Crea un grupo con un código, mira quién ya estudió hoy y mandaos ánimos (también como notificación).", href: "/app/group" },
   { icon: "🔤", title: "Entrenador de verbos", text: "Tablas de conjugación de cientos de verbos y práctica por tiempos según tu nivel. Los verbos también aparecen en tus sesiones.", href: "/app/verbs" },
   { icon: "🗺️", title: "Tu camino a C1", text: "Un mapa de A1 a C1 con criterios medibles: palabras, gramática y destrezas de cada nivel.", href: "/app/path" },
