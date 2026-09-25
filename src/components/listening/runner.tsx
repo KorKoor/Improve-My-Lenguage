@@ -14,12 +14,12 @@ import type { ListeningFeedback, ListeningItem } from "@/lib/services/listening"
 const SPEEDS = [0.75, 1, 1.25, 1.5] as const;
 const KIND_LABEL = { spot: "¿Qué palabra escuchaste?", meaning: "¿Qué significa la frase?", dictation: "Escribe lo que escuchas" } as const;
 
-export function ListeningRunner({ languageName }: { languageName: string }) {
+export function ListeningRunner({ languageName, beginner = false }: { languageName: string; beginner?: boolean }) {
   const [state, setState] = useState<"intro" | "loading" | "running" | "done" | "empty" | "error">("intro");
   const [items, setItems] = useState<ListeningItem[]>([]);
   const [locale, setLocale] = useState("en-US");
   const [i, setI] = useState(0);
-  const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(1);
+  const [speed, setSpeed] = useState<(typeof SPEEDS)[number]>(beginner ? 0.75 : 1);
   const [answer, setAnswer] = useState("");
   const [fb, setFb] = useState<ListeningFeedback | null>(null);
   const [busy, setBusy] = useState(false);

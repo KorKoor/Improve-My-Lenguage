@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SessionRunner } from "@/components/session/runner";
 import { requireLearner } from "@/lib/services/viewer";
+import { getSkills } from "@/lib/services/learning";
 import { aiAvailable } from "@/lib/ai/provider";
 import { sessionMinutesFor, viewerAttentionSpan } from "@/lib/services/multilang";
 
@@ -21,6 +22,7 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
       aiEnabled={aiAvailable() && learner.profile.aiConsent}
       span={viewerAttentionSpan(learner)}
       smartBreaks={learner.profile.smartBreaks}
+      gentle={(await getSkills(learner.ul.id)).get("listening")!.theta < -1.1}
       title={sp.focus === "leeches" ? "Palabras rebeldes" : "Sesión de estudio"}
     />
   );

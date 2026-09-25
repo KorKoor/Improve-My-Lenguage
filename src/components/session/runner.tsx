@@ -35,10 +35,12 @@ interface Props {
   span?: number;
   /** El alumno quiere sugerencias de pausa. */
   smartBreaks?: boolean;
+  /** Principiante: el audio suena más despacio por defecto. */
+  gentle?: boolean;
 }
 
 
-export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15, smartBreaks = true }: Props) {
+export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15, smartBreaks = true, gentle = false }: Props) {
   // ── Temporizador inteligente ──
   const focusEvents = useRef<FocusEvent[]>([]);
   const lastBreakAt = useRef(0);
@@ -359,6 +361,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         {step.kind === "tutor" && <TutorStep minutes={step.minutes} onSkip={next} onGo={() => void finish()} />}
         {step.kind === "exercise" && (
           <ExerciseStep
+            gentle={gentle}
             exercise={step.exercise}
             locale={locale}
             language={language}
@@ -478,6 +481,7 @@ function TutorStep({ minutes, onSkip, onGo }: { minutes: number; onSkip: () => v
 }
 
 function ExerciseStep({
+  gentle = false,
   exercise: ex,
   locale,
   language,
@@ -488,6 +492,7 @@ function ExerciseStep({
   onSubmit,
   onSkip,
 }: {
+  gentle?: boolean;
   exercise: Exercise;
   locale: string;
   language: string;
@@ -507,7 +512,7 @@ function ExerciseStep({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (listening && ex.audioText) speak(ex.audioText);
+    if (listening && ex.audioText) speak(ex.audioText, gentle ? 0.8 : 1);
     if (ex.input === "text") inputRef.current?.focus();
   }, [ex, speak, listening]);
 
@@ -535,10 +540,10 @@ function ExerciseStep({
       {listening ? (
         supported ? (
           <div className="card mt-3 flex flex-wrap items-center justify-center gap-4 p-8">
-            <button type="button" onClick={() => speak(ex.audioText!)} className="grid size-20 place-items-center rounded-full bg-primary text-on-primary shadow-lg transition active:scale-95" aria-label="Reproducir audio">
+            <button type="button" onClick={() => speak(ex.audioText!, gentle ? 0.8 : 1)} className="grid size-20 place-items-center rounded-full bg-primary text-on-primary shadow-lg transition active:scale-95" aria-label="Reproducir audio">
               <Volume2 size={34} />
             </button>
-            <button type="button" onClick={() => speak(ex.audioText!, 0.7)} className="grid size-12 place-items-center rounded-full bg-primary-soft text-primary transition active:scale-95" aria-label="Reproducir más despacio">
+            <button type="button" onClick={() => speak(ex.audioText!, gentle ? 0.55 : 0.7)} className="grid size-12 place-items-center rounded-full bg-primary-soft text-primary transition active:scale-95" aria-label="Reproducir más despacio">
               <Snail size={22} />
             </button>
             {ex.context && ex.type === "dictation_word" && <p className="basis-full text-center text-sm text-muted">Significa «{ex.context}»</p>}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SessionRunner } from "@/components/session/runner";
 import { countDue } from "@/lib/db/repositories";
 import { requireLearner } from "@/lib/services/viewer";
+import { getSkills } from "@/lib/services/learning";
 import { aiAvailable } from "@/lib/ai/provider";
 import { viewerAttentionSpan } from "@/lib/services/multilang";
 
@@ -22,6 +23,7 @@ export default async function ReviewPage() {
       aiEnabled={aiAvailable() && learner.profile.aiConsent}
       span={viewerAttentionSpan(learner)}
       smartBreaks={learner.profile.smartBreaks}
+      gentle={(await getSkills(learner.ul.id)).get("listening")!.theta < -1.1}
       title="Repaso"
     />
   );

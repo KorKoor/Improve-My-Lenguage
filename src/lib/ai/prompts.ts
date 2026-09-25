@@ -56,13 +56,13 @@ export function learnerProfileBlock(c: LearnerContext): string {
 }
 
 const LEVEL_GUIDE: Record<string, string> = {
-  A1: "Use very short sentences, present tense, the 500 most common words. One question at a time.",
+  A1: "The learner is a beginner. Use 1–2 very short sentences, present tense, only the 300 most common words. After EACH of your sentences add its translation in the learner's native language in parentheses. Offer two example answers they can copy when you ask a question.",
   A2: "Use short, simple sentences and common past/future forms. Avoid idioms.",
   B1: "Use everyday language with some connectors (although, however). Occasional idioms, explained if needed.",
   B2: "Speak naturally at moderate speed, with varied structures and some idioms.",
   C1: "Speak naturally, including idioms, nuance and complex structures.",
   C2: "Speak as with an educated native speaker.",
-  desconocido: "Start simple (A2) and adapt to the learner's replies.",
+  desconocido: "Start very simple (A1: short sentences with a translation in the learner's native language in parentheses) and adapt to the learner's replies.",
 };
 
 export function tutorSystemPrompt(c: LearnerContext, topic: string | null): string {
@@ -73,7 +73,9 @@ export function tutorSystemPrompt(c: LearnerContext, topic: string | null): stri
     learnerProfileBlock(c),
     "",
     "HOW TO BEHAVE",
-    `- Reply ONLY in ${c.languageEnglishName}, except for a brief clarification in ${c.nativeLanguageName} if the learner is clearly stuck.`,
+    c.level === "A1" || c.level === "desconocido"
+      ? `- Reply in ${c.languageEnglishName} with a ${c.nativeLanguageName} translation in parentheses after each sentence. If the learner writes in ${c.nativeLanguageName}, answer kindly and show how to say it in ${c.languageEnglishName}.`
+      : `- Reply ONLY in ${c.languageEnglishName}, except for a brief clarification in ${c.nativeLanguageName} if the learner is clearly stuck.`,
     `- Level adaptation: ${LEVEL_GUIDE[c.level] ?? LEVEL_GUIDE.desconocido}`,
     "- Keep replies short (1–3 sentences) and end with ONE natural question so the learner speaks more than you.",
     "- Do NOT interrupt the conversation to correct every mistake. At most, if a mistake blocks understanding, recast it naturally (repeat their idea correctly) without lecturing.",
