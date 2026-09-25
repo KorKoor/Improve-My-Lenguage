@@ -49,6 +49,23 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
   const [onBreak, setOnBreak] = useState<{ plan: BreakPlan; startedAt: number } | null>(null);
   const [clock, setClock] = useState(0);
   const [onset, setOnset] = useState<number | null>(null);
+  const [lightened, setLightened] = useState(0);
+  /**
+   * Con fatiga alta, las palabras nuevas se retienen peor: si el alumno
+   * decide seguir, quitamos las que quedaban (intro + ejercicios) y la
+   * sesión continúa con repaso y práctica de lo ya conocido.
+   */
+  const lighten = (reading: FocusReading) => {
+    if (reading.fatigue < 0.6) return;
+    setQueue((q) => {
+      const future = q.slice(index + 1);
+      const kept = future.filter((s) => s.block !== "new_words" || ("retry" in s && s.retry));
+      const removed = future.length - kept.length;
+      if (removed === 0 || kept.length < 3) return q;
+      setLightened(removed);
+      return [...q.slice(0, index + 1), ...kept];
+    });
+  };
   const [lastAnswer, setLastAnswer] = useState<{ key: string; response: string } | null>(null);
   const [status, setStatus] = useState<"loading" | "error" | "running" | "finishing" | "done" | "empty">("loading");
   const [error, setError] = useState<string | null>(null);
@@ -260,6 +277,11 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
           <meta.icon size={13} aria-hidden /> {meta.label}
         </span>
         {"retry" in step && step.retry ? <Chip tone="warning">Otra oportunidad</Chip> : null}
+        {lightened > 0 ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success animate-pop-in" title="Con cansancio las palabras nuevas se fijan peor: volverán en otra sesión.">
+            🪶 Sesión aligerada: sin palabras nuevas
+          </span>
+        ) : null}
         {combo.now >= 3 ? (
           <span key={combo.now} className="ml-auto inline-flex items-center gap-1 rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-bold text-warning animate-pop-in" aria-label={`${combo.now} aciertos seguidos`}>
             <span className="animate-flame" aria-hidden>🔥</span> {combo.now} seguidas
@@ -272,6 +294,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
           reading={suggestion.reading}
           plan={suggestion.plan}
           onTake={() => {
+            lighten(suggestion.reading);
             setOnBreak({ plan: suggestion.plan, startedAt: Date.now() });
             setSuggestion(null);
           }}
@@ -281,6 +304,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
           }}
           onDismiss={() => {
             // No insistir durante unos minutos.
+            lighten(suggestion.reading);
             snoozeUntil.current = Date.now() + 6 * 60_000;
             setSuggestion(null);
           }}
