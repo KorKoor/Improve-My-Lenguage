@@ -356,7 +356,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         />
       )}
       <div key={step.uid} className={cn("mt-4", feedback && !feedback.correct && !gaveUp ? "animate-shake" : "animate-rise")} lang={step.kind === "exercise" || step.kind === "intro" ? undefined : "es"}>
-        {step.kind === "intro" && <IntroStep step={step} locale={locale} language={language} rtl={rtl} onNext={next} />}
+        {step.kind === "intro" && <IntroStep step={step} locale={locale} language={language} rtl={rtl} onNext={next} gentle={gentle} />}
         {step.kind === "tip" && <TipStep step={step} language={language} onNext={next} />}
         {step.kind === "tutor" && <TutorStep minutes={step.minutes} onSkip={next} onGo={() => void finish()} />}
         {step.kind === "exercise" && (
@@ -396,12 +396,12 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
   );
 }
 
-function IntroStep({ step, locale, language, rtl, onNext }: { step: Extract<SessionStep, { kind: "intro" }>; locale: string; language: string; rtl: boolean; onNext: () => void }) {
+function IntroStep({ step, locale, language, rtl, onNext, gentle = false }: { step: Extract<SessionStep, { kind: "intro" }>; locale: string; language: string; rtl: boolean; onNext: () => void; gentle?: boolean }) {
   const w = step.word;
   const { speak } = useSpeech(locale);
   useEffect(() => {
-    speak(w.lemma);
-  }, [speak, w.lemma]);
+    speak(w.lemma, gentle ? 0.8 : 1);
+  }, [speak, w.lemma, gentle]);
   return (
     <div>
       <p className="text-sm font-semibold text-muted">{step.block === "review" ? "Vuelve a mirarla con calma" : "Palabra nueva"}</p>
