@@ -1,5 +1,5 @@
 import "server-only";
-import { catalog, errorLabel, getVocab, grammarForCategory, topicLabel } from "../content";
+import { catalog, errorLabel, getLanguage, getVocab, grammarForCategory, topicLabel } from "../content";
 import type { CefrLevel, Skill } from "../content/types";
 import { overallTheta, progressWithinLevel, thetaToCefr, type SkillEstimate } from "../engine/levels";
 import { planSession, type SessionPlan } from "../engine/planner";
@@ -11,6 +11,7 @@ import { addDays, accuracy, computeStreak, freezeDaysNeeded, consistency, isLear
 import { practicePicks, recommend, type PracticePick, type Recommendation } from "../engine/recommender";
 import type { Weakness } from "../engine/weakness";
 import * as repo from "../db/repositories";
+import { cognateInfo } from "../engine/cognates";
 import type { ActivityRow, GoalRow } from "../db/types";
 import { aiAvailable } from "../ai/provider";
 import { getSkills, getWeaknesses, knowledgeToCard } from "./learning";
@@ -223,6 +224,27 @@ export async function getProgress(learner: Learner): Promise<ProgressData> {
     knowledge.map((k) => ({ ...knowledgeToCard(k, now), itemId: k.itemId, itemType: k.itemType })),
     now,
   );
+  // Otros idiomas (días sin estudiarlos) y palabras regalo por venir.
+  const langs = await repo.listUserLanguages(learner.userId);
+  const byLang = await repo.getActivityByLanguage(learner.userId, addDays(today, -60));
+  const otherLanguages = await Promise.all(
+    langs
+      .filter((l) => l.languageCode !== learner.language.code)
+      .map(async (l) => {
+        const last = byLang.filter((r) => r.languageCode === l.languageCode && (r.exercises > 0 || r.seconds > 0)).map((r) => r.day).sort().at(-1);
+        return {
+          name: getLanguage(l.languageCode)?.name ?? l.languageCode,
+          daysSince: last ? Math.round((Date.parse(`${today}T12:00:00Z`) - Date.parse(`${last}T12:00:00Z`)) / 86_400_000) : null,
+          due: await repo.countDue(l.id, now),
+        };
+      }),
+  );
+  const seenIds = new Set(knowledge.map((k) => k.itemId));
+  const upcoming = catalog.vocab(learner.language.code).filter((v) => !seenIds.has(v.id)).slice(0, 300);
+  const cognateShare =
+    learner.native === "es" && upcoming.length >= 50
+      ? upcoming.filter((v) => cognateInfo(v.lemma, v.language, v.translations.es ?? [])?.kind === "cognate").length / upcoming.length
+      : null;
   return {
     skills: skillViews([...skillsMap.values()]),
     vocabulary: { ...vocab, total: catalog.vocab(learner.language.code).length },
@@ -253,6 +275,8 @@ export async function getProgress(learner: Learner): Promise<ProgressData> {
         return t === null ? null : thetaToCefr(t);
       })(),
       languageName: learner.language.name,
+      otherLanguages,
+      cognateShare,
     }),
   };
 }

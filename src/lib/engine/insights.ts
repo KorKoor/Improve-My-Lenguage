@@ -42,6 +42,10 @@ export interface InsightInput {
   weekly: { total: number; correct: number }[];
   level: CefrLevel | null;
   languageName: string;
+  /** Otros idiomas del alumno y días sin estudiarlos (null = nunca). */
+  otherLanguages?: { name: string; daysSince: number | null; due: number }[];
+  /** Proporción de cognados entre las próximas palabras por aprender (0–1), si aplica. */
+  cognateShare?: number | null;
 }
 
 const dayMs = 86_400_000;
@@ -155,6 +159,32 @@ export function buildInsights(input: InsightInput): Insight[] {
       title: `${n} de los últimos 7 días`,
       body: n >= 5 ? "Constancia excelente: estudiar a menudo rinde más que sesiones largas y espaciadas." : n >= 3 ? "Buen ritmo. Un día más por semana marca una diferencia notable en la memoria." : "Pocos días esta semana. Incluso 5 minutos cuentan: mantienen vivos tus repasos.",
       tone: n >= 5 ? "good" : "info",
+    });
+  }
+
+  // Varios idiomas: el que más tiempo lleva olvidado.
+  const neglected = (input.otherLanguages ?? []).filter((l) => l.daysSince !== null && l.daysSince >= 4).sort((a, b) => b.daysSince! - a.daysSince!)[0];
+  if (neglected) {
+    out.push({
+      id: "neglected-language",
+      icon: "🧳",
+      title: `${neglected.daysSince} días sin ${neglected.name.toLowerCase()}`,
+      body: `${neglected.due > 0 ? `Tiene ${neglected.due} repasos esperando. ` : ""}Cinco minutos bastan para que no se pierda lo aprendido: el reparto diario ya le está dando prioridad.`,
+      tone: "warn",
+      href: "/app/languages",
+      cta: "Ver mis idiomas",
+    });
+  }
+
+  // Cognados: cuánto de lo que viene «ya casi lo sabes».
+  if (input.cognateShare != null && input.cognateShare >= 0.15) {
+    const pct = Math.round(input.cognateShare * 100);
+    out.push({
+      id: "cognates",
+      icon: "🤝",
+      title: `${pct} % de palabras regalo`,
+      body: `De las próximas palabras que vas a aprender en ${input.languageName.toLowerCase()}, ${pct} de cada 100 se parecen al español. Te las marcamos al presentarlas: se aprenden casi solas.`,
+      tone: "good",
     });
   }
 
