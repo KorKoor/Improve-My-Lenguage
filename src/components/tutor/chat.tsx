@@ -31,6 +31,35 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
   const [micSupported, setMicSupported] = useState(false);
   const recRef = useRef<SpeechRec | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  // Modo voz: el tutor lee su respuesta y luego escucha la tuya, sin tocar nada.
+  const [voice, setVoice] = useState(false);
+  const voiceRef = useRef(false);
+  const doneRef = useRef(false);
+  const sendRef = useRef<(t?: string) => Promise<void>>(async () => {});
+
+  useEffect(() => {
+    try {
+      setVoice(localStorage.getItem("iml:tutor-voice") === "1");
+    } catch {}
+  }, []);
+  useEffect(() => {
+    voiceRef.current = voice;
+    if (!voice) window.speechSynthesis?.cancel();
+  }, [voice]);
+
+  function toggleVoice() {
+    setVoice((v) => {
+      // Se guarda sólo al pulsar (un efecto lo sobrescribiría al montar en modo estricto).
+      try {
+        localStorage.setItem("iml:tutor-voice", v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
+  }
+  useEffect(() => () => {
+    window.speechSynthesis?.cancel();
+    recRef.current?.stop();
+  }, []);
 
   useEffect(() => {
     const w = window as unknown as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec };
@@ -43,7 +72,10 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
   function mergeGoals(g: number[]) {
     setGoalsDone((prev) => {
       const next = [...new Set([...prev, ...g])].sort();
-      if (scenario && next.length === scenario.goals.length && prev.length < next.length) setParty(true);
+      if (scenario && next.length === scenario.goals.length && prev.length < next.length) {
+        setParty(true);
+        doneRef.current = true; // escena terminada: el modo voz deja de escuchar
+      }
       return next;
     });
   }
@@ -55,16 +87,32 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
     setScenario(sc);
     setGoalsDone([]);
     setParty(false);
+    doneRef.current = false;
     const res = await startConversationAction(sc ? `scenario:${sc.id}` : topic);
     setBusy(false);
     if (!res.ok) return setError(res.error);
     setConversationId(res.data.conversationId);
     setMessages([{ role: "assistant", content: res.data.message }]);
+    speakThenListen(res.data.message);
   }
 
-  async function send(e?: React.FormEvent) {
-    e?.preventDefault();
-    const t = text.trim();
+  function speakThenListen(reply: string) {
+    if (!voiceRef.current || !("speechSynthesis" in window)) return;
+    const synth = window.speechSynthesis;
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(reply);
+    u.lang = locale;
+    const v = synth.getVoices().find((x) => x.lang.toLowerCase().startsWith(locale.slice(0, 2).toLowerCase()));
+    if (v) u.voice = v;
+    u.onend = () => {
+      if (voiceRef.current && !doneRef.current) listen(true);
+    };
+    synth.speak(u);
+  }
+
+  async function send(e?: React.FormEvent | string) {
+    if (e && typeof e !== "string") e.preventDefault();
+    const t = (typeof e === "string" ? e : text).trim();
     if (!t || !conversationId || busy) return;
     setText("");
     setMessages((m) => [...m, { role: "user", content: t }]);
@@ -75,7 +123,9 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
     if (!res.ok) return setError(res.error);
     setMessages((m) => [...m, { role: "assistant", content: res.data.message }]);
     if (scenario) mergeGoals(res.data.goals);
+    speakThenListen(res.data.message);
   }
+  sendRef.current = send;
 
   async function end() {
     if (!conversationId) return;
@@ -87,23 +137,40 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
     setConversationId(null);
   }
 
-  function toggleMic() {
+  /** Escucha por voz. En modo voz envía lo dicho automáticamente al terminar. */
+  function listen(autoSend = false) {
     const w = window as unknown as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec };
     const Ctor = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!Ctor) return;
-    if (listening) { recRef.current?.stop(); return; }
     const rec = new Ctor();
     rec.lang = locale;
     rec.interimResults = false;
     rec.continuous = false;
+    let said = "";
     rec.onresult = (e) => {
-      const said = Array.from(e.results).map((r) => r[0]?.transcript ?? "").join(" ");
-      setText((t) => (t ? `${t} ${said}` : said));
+      said = Array.from(e.results).map((r) => r[0]?.transcript ?? "").join(" ").trim();
+      if (!autoSend) setText((t) => (t ? `${t} ${said}` : said));
     };
-    rec.onend = () => setListening(false);
+    rec.onend = () => {
+      setListening(false);
+      if (autoSend && said) void sendRef.current(said);
+    };
     recRef.current = rec;
     setListening(true);
-    rec.start();
+    try {
+      rec.start();
+    } catch {
+      setListening(false);
+    }
+  }
+
+  function toggleMic() {
+    if (listening) {
+      recRef.current?.stop();
+      return;
+    }
+    window.speechSynthesis?.cancel();
+    listen(voice);
   }
 
   function pastTitle(topic: string | null) {
@@ -202,6 +269,17 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
       {party && <Confetti />}
       <div className="flex items-center gap-3 border-b border-border px-5 py-3">
         <p className="flex-1 text-sm font-semibold">{scenario ? `${scenario.icon} ${scenario.title}` : `Conversación en ${languageName.toLowerCase()}`}</p>
+        {micSupported && (
+          <button
+            type="button"
+            onClick={toggleVoice}
+            aria-pressed={voice}
+            title="El tutor lee sus respuestas y escucha las tuyas sin tocar nada"
+            className={cn("inline-flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition", voice ? "bg-primary text-on-primary" : "bg-surface-muted text-muted hover:text-text")}
+          >
+            <Mic size={14} aria-hidden /> Modo voz
+          </button>
+        )}
         <Button size="sm" variant="secondary" disabled={busy || messages.filter((m) => m.role === "user").length === 0} onClick={() => void end()}>Terminar y ver feedback</Button>
       </div>
       {scenario && (
