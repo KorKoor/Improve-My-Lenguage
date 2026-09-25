@@ -3,6 +3,8 @@ import { SidebarNav, TabBar } from "@/components/app/nav";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
 import { ComfortSync } from "@/components/comfort";
 import { PlanBar } from "@/components/focus/plan-bar";
+import { FocusGuard } from "@/components/focus/focus-guard";
+import { viewerAttentionSpan } from "@/lib/services/multilang";
 import { Logo } from "@/components/logo";
 import { LanguageMark } from "@/components/language-mark";
 import { getLanguage } from "@/lib/content";
@@ -45,6 +47,7 @@ export default async function AppShell({ children }: { children: React.ReactNode
         <main id="main" className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-9 lg:pb-12 lg:pt-8">{children}</main>
       </div>
       <PlanBar />
+      <FocusGuard span={viewerAttentionSpan(learner)} />
       <TabBar due={due} simple={learner.profile.simpleMode} />
     </div>
   );

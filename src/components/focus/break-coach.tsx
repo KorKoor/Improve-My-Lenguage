@@ -6,6 +6,7 @@ import { recordBreakAction } from "@/app/app/study-actions";
 import { Button } from "@/components/ui/button";
 import { BREAK_ACTIVITIES, type BreakActivity } from "@/lib/engine/focus";
 import { cn } from "@/lib/cn";
+import { markBreak } from "./focus-clock";
 
 const BREATH = [
   { label: "Inhala", secs: 4 },
@@ -87,6 +88,7 @@ export function BreakCoach({
   }, []);
 
   const finish = (completed: boolean) => {
+    if (completed) markBreak();
     if (!reported.current) {
       reported.current = true;
       void recordBreakAction(activity, elapsed, completed);
