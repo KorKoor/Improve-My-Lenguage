@@ -105,6 +105,23 @@ Arquetipo = máximo de combinaciones lineales de dimensiones (Explorador, Estrat
 | Tendencia | precisión de las 2 últimas semanas con ≥ 10 intentos vs. las 2 anteriores (sólo si cambia ≥ 5 puntos) |
 | Palabra del día | no vista, con ejemplo, rango entre 0.9× y 1.8× del rango conocido; preferencia por audio grabado; semilla = día + usuario |
 
+## 6d. Varios idiomas — `multilang.ts`
+
+- **Reparto diario**: peso = prioridad (principal 3, en progreso 2, mantener 1) + presión de repasos (mín(2, vencidos/40)) + abandono (+0,8 si ≥ 3 días sin estudiarlo, +0,4 si 2). Si ya cumplió su objetivo de hoy, ×0,35. Un idioma en «mantener» sin repasos y visto hace < 3 días descansa ese día.
+- Los minutos se redondean a bloques de 5 (mayor resto) y el principal nunca recibe menos que otro. Modo «repaso» si vaciar los vencidos (≈ 9 s por repaso) ocupa ≥ 70 % del bloque.
+- **Interferencia**: pares muy cercanos (es-it, es-pt, it-pt, de-nl…) = 2, misma familia = 1. El orden de bloques evita poner seguidos dos idiomas cercanos y el plan inserta una pausa entre ellos.
+
+## 6e. Temporizador inteligente y descansos — `focus.ts`, `study-plan.ts`
+
+- **Lectura de foco** tras cada respuesta (≥ 6 respuestas): caída de precisión (media suavizada de las 6 últimas frente al inicio), lentitud (mediana reciente ÷ inicial), fallos seguidos y minutos sin pausa frente a tu capacidad de atención. Fatiga = 0,35·caída + 0,2·lentitud + 0,15·fallos + 0,3·tiempo → seguir, micro-pausa (≥ 0,4 o 3 fallos), pausa (≥ 0,6) o terminar (≥ 0,8 y ≥ 20 min).
+- **Capacidad de atención**: en cada sesión se detecta el minuto de inicio de la fatiga (la media móvil de 5 cae ≥ 40 puntos desde su mejor valor). Se combina la mediana de las últimas 12 sesiones con la preferencia declarada (peso 3) → entre 6 y 45 min.
+- **Mejor hora**: precisión por franja (mañana, tarde, noche, madrugada) con suavizado bayesiano hacia tu media; se muestra sólo con ≥ 40 respuestas y ≥ 2 puntos de diferencia.
+- **Modo estudio**: reparte el tiempo, divide los idiomas con ≥ 15 min en núcleo (60 %) + práctica según tus favoritos, e inserta descansos de 1–2 min cuando el siguiente bloque superaría tu capacidad de atención (5 min andando tras 45 min de estudio).
+
+## 6f. Cognados y falsos amigos — `cognates.ts`
+
+Para hispanohablantes en idiomas de escritura latina: se aplican correspondencias ortográficas (-tion→-ción, -zione→-ción, -ção→-ción, -té→-dad, ph→f…) y se compara con las propias traducciones de la palabra por distancia de edición (umbral 0,72–0,8 según longitud; exacto en palabras de ≤ 4 letras). Los falsos amigos salen de una lista curada.
+
 ## 7. Métricas de progreso — `progress.ts`
 
 | Métrica | Definición |

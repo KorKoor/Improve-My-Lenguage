@@ -86,6 +86,14 @@ Core goals:
 - progress computed from real activity; claiming is transactional and idempotent
 - XP derived from lifetime activity plus claimed quests, with levels and titles
 
+### Several languages, smart timer and smart breaks
+
+- **My languages**: mark each language as main, in progress or maintain; every day your minutes are split by priority, due reviews and neglect, and similar languages (Italian ↔ Portuguese, German ↔ Dutch) are kept apart
+- **Study mode**: say how much time you have and get a timeline of blocks across languages and activities, with a floating timer that guides you from block to block
+- **Smart breaks**: during a session the app watches accuracy drops, slower answers and error streaks against your learned attention span, and proposes a guided break (breathing, eye rest, stretching) or suggests stopping
+- **Your rhythm**: attention span and best time of day are learned from your own answers
+- **Cognates and false friends**: new words that look like Spanish are flagged as "gift words"; curated false friends get a warning
+
 ### Family & friends groups
 
 - create a group with a 6-character code (no ambiguous characters, easy to dictate) and invite up to 8 people

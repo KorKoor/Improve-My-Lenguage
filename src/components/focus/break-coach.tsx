@@ -77,6 +77,15 @@ export function BreakCoach({
     if (done) chime();
   }, [done]);
 
+  // Mientras dura el descanso, la página de fondo no se desplaza.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   const finish = (completed: boolean) => {
     if (!reported.current) {
       reported.current = true;

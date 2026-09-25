@@ -54,6 +54,13 @@ export function PlanBar({ inline = false }: { inline?: boolean }) {
   const left = plan && block ? block.minutes * 60 - (now - plan.blockStartedAt) / 1000 : 0;
   const over = left <= 0;
 
+  // Deja sitio a la barra flotante para que no tape el final de la página.
+  useEffect(() => {
+    if (inline || hidden) return;
+    document.body.classList.add("has-plan");
+    return () => document.body.classList.remove("has-plan");
+  }, [inline, hidden]);
+
   useEffect(() => {
     if (!plan || !over || warned.current === plan.idx) return;
     warned.current = plan.idx;
