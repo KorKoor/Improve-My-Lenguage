@@ -9,6 +9,8 @@ export interface ChangelogItem {
 export const CHANGELOG_VERSION = "2026-09-27";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "🔀", title: "Repaso intercalado", text: "Repasa lo pendiente de todos tus idiomas en una sola sesión, alternándolos (con la voz y la dirección de escritura de cada uno). En «Mis idiomas».", href: "/app/languages" },
+  { icon: "📱", title: "Modo estudio en cualquier dispositivo", text: "Empieza un plan en el ordenador y continúalo en el móvil.", href: "/app/study" },
   { icon: "🏠", title: "Un solo botón en modo sencillo", text: "«Seguir aprendiendo» elige solo lo que toca: repaso, la siguiente lección del Camino guiado, un poco de práctica o una historia.", href: "/app" },
   { icon: "🧭", title: "Camino guiado: de cero a A1", text: "30 lecciones de 10 minutos en orden: frases útiles, las palabras más básicas (casa, agua, comer…), gramática sencilla y repaso. Tú sólo pulsa «Continuar».", href: "/app/course" },
   { icon: "📚", title: "Historias para empezar", text: "Historias cortas A1–A2 en los 12 idiomas (con transcripción en ruso, árabe, japonés, coreano y chino): toca una palabra para ver qué significa y guárdala para repasar.", href: "/app/stories" },

@@ -3,7 +3,8 @@ import { catalog, errorLabel, grammarFor, grammarForCategory } from "../content"
 import type { Skill } from "../content/types";
 import { ACHIEVEMENT_RULES, newlyUnlocked } from "../engine/achievements";
 import { evaluateChoice, evaluateText, type EvaluationResult } from "../engine/evaluate";
-import { canonicalMatchResponse, resolveExercise } from "../engine/exercises";
+import { buildVocabExercise, canonicalMatchResponse, learnerStage, pickVocabExerciseType, resolveExercise } from "../engine/exercises";
+import { mulberry32 } from "../engine/random";
 import { Fsrs, newCard, ratingFromOutcome, targetRetention, type CardMemory } from "../engine/fsrs";
 import { defaultEstimate, overallTheta, thetaToCefr, updateSkillOnline, type SkillEstimate } from "../engine/levels";
 import { planSession, type SessionPlan } from "../engine/planner";
@@ -80,7 +81,7 @@ export async function getWeaknesses(ulId: string, now = new Date()): Promise<Wea
   return detectWeaknesses(mistakes, stats, sessions, now).filter((w) => w.category !== "vocabulary");
 }
 
-export type SessionFocus = "new_words" | "listening" | "review" | "leeches" | `grammar:${string}` | `lesson:${number}` | null;
+export type SessionFocus = "new_words" | "listening" | "review" | "leeches" | "mixed" | `grammar:${string}` | `lesson:${number}` | null;
 
 export interface BuiltSession {
   sessionId: string;
@@ -146,6 +147,8 @@ export async function startSession(
   }
 
   const day = localDay(now, learner.profile.timezone);
+  // Repaso intercalado: lo vencido de TODOS tus idiomas, alternándolos.
+  if (focus === "mixed") return startMixedReview(learner, now, day);
   // Camino guiado: la lección fija sustituye a la sesión planificada.
   if (focus?.startsWith("lesson:")) {
     const course = courseFor(learner);
@@ -546,4 +549,35 @@ export function courseFor(learner: Pick<Learner, "language" | "native">): Lesson
     courses.set(key, c);
   }
   return c;
+}
+
+/**
+ * Repaso intercalado entre idiomas: hasta 12 ítems vencidos por idioma,
+ * alternados (nunca dos seguidos del mismo idioma si se puede evitar). La
+ * sesión se registra en el idioma activo; cada respuesta actualiza el suyo.
+ */
+async function startMixedReview(learner: Learner, now: Date, day: string): Promise<BuiltSession> {
+  const langs = await repo.listUserLanguages(learner.userId);
+  const perLang = await Promise.all(
+    langs.map(async (ul) => {
+      const [due, skills] = await Promise.all([repo.getDueKnowledge(ul.id, now, 12), getSkills(ul.id)]);
+      const stage = learnerStage(skills.get("vocabulary")!.theta);
+      const listen = learnerStage(skills.get("listening")!.theta);
+      const rand = mulberry32(sessionSeed(ul.id, day, "mixed"));
+      return due.flatMap((k) => {
+        const v = k.itemType === "vocab" ? catalog.vocabById(k.itemId) : undefined;
+        if (!v) return [];
+        const type = pickVocabExerciseType(k.reps, rand, true, undefined, Boolean(v.conjugation), stage, listen);
+        const ex = buildVocabExercise(type, v, catalog, learner.native) ?? buildVocabExercise("meaning_mc", v, catalog, learner.native);
+        return ex ? [{ kind: "exercise" as const, block: "review" as const, exercise: ex }] : [];
+      });
+    }),
+  );
+  // Reparto por turnos: fr, en, it, fr, en…
+  const steps: SessionStep[] = [];
+  for (let i = 0; perLang.some((l) => l.length > i); i++) for (const l of perLang) if (l[i]) steps.push(l[i]!);
+  const plan: SessionPlan = { totalMinutes: Math.max(5, Math.ceil(steps.length * 0.3)), blocks: [{ kind: "review", minutes: Math.max(5, Math.ceil(steps.length * 0.3)), reason: "Repaso intercalado de todos tus idiomas." }] };
+  const session = await repo.createSession(learner.ul.id, "review", plan.totalMinutes, plan);
+  await repo.track(learner.userId, "session_started", { kind: "mixed", steps: steps.length });
+  return { sessionId: session.id, plan, steps };
 }

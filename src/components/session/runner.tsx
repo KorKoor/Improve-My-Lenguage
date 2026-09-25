@@ -40,10 +40,12 @@ interface Props {
   gentle?: boolean;
   /** Nombre del idioma (para el aviso de voz ausente). */
   languageName?: string;
+  /** Repaso intercalado: datos de cada idioma para cambiar voz y dirección por ejercicio. */
+  languages?: Record<string, { locale: string; rtl: boolean; name: string }>;
 }
 
 
-export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15, smartBreaks = true, gentle = false, languageName = "" }: Props) {
+export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15, smartBreaks = true, gentle = false, languageName = "", languages }: Props) {
   // ── Temporizador inteligente ──
   const focusEvents = useRef<FocusEvent[]>([]);
   const lastBreakAt = useRef(0);
@@ -390,18 +392,24 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         {step.kind === "tip" && <TipStep step={step} language={language} onNext={next} />}
         {step.kind === "tutor" && <TutorStep minutes={step.minutes} onSkip={next} onGo={() => void finish()} />}
         {step.kind === "exercise" && (
+          <>
+          {languages && languages[step.exercise.language] && (
+            <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-0.5 text-xs font-semibold text-muted">🌍 {languages[step.exercise.language]!.name}</p>
+          )}
           <ExerciseStep
+            key={step.uid}
             gentle={gentle}
             exercise={step.exercise}
-            locale={locale}
-            language={language}
-            rtl={rtl}
+            locale={languages?.[step.exercise.language]?.locale ?? locale}
+            language={step.exercise.language ?? language}
+            rtl={languages?.[step.exercise.language]?.rtl ?? rtl}
             disabled={submitting || !!feedback}
             submitting={submitting}
             feedback={feedback}
             onSubmit={submit}
             onSkip={next}
           />
+          </>
         )}
       </div>
 

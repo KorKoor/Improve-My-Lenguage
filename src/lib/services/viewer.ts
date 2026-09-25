@@ -42,6 +42,18 @@ export async function requireViewer(): Promise<Viewer> {
   return viewer;
 }
 
+/**
+ * Alumno para un idioma concreto que estudia (no necesariamente el activo):
+ * lo usa el repaso intercalado para que cada respuesta actualice SU idioma.
+ */
+export async function requireLearnerFor(code: string): Promise<Learner> {
+  const viewer = await requireViewer();
+  const language = getLanguage(code);
+  const ul = language ? await getUserLanguage(viewer.userId, code) : null;
+  if (!language || !ul) throw new Error("No estudias ese idioma");
+  return { ...viewer, ul, language, native: viewer.profile.nativeLanguage };
+}
+
 /** Requiere usuario con onboarding completo e idioma activo. */
 export const requireLearner = cache(async (): Promise<Learner> => {
   const viewer = await requireViewer();

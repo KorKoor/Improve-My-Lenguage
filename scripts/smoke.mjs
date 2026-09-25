@@ -41,6 +41,7 @@ const PRIVATE = [
   "/app/admin",
   "/app/stories",
   "/app/course",
+  "/app/review/all",
   "/app/session?lesson=1",
   "/app/first-steps/greetings",
   "/app/more",

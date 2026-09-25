@@ -12,7 +12,8 @@ import { deleteAccount } from "@/lib/services/account";
 import { finishSession, lowerLevel, RateLimitedError, reviseConfidence, startSession, submitAnswer, type AnswerFeedback, type BuiltSession, type SessionFocus, type SessionSummary } from "@/lib/services/learning";
 import { AiQuotaError, endConversation, explainMistake, sendTutorMessage, startConversation } from "@/lib/services/tutor";
 import type { ConversationFeedback } from "@/lib/ai/prompts";
-import { requireLearner, requireViewer } from "@/lib/services/viewer";
+import { requireLearner, requireLearnerFor, requireViewer } from "@/lib/services/viewer";
+import { languageOfKey } from "@/lib/engine/exercises";
 import { logError } from "@/lib/log";
 
 /**
@@ -167,7 +168,7 @@ export async function startSessionAction(opts: { minutes?: number; focus?: strin
     const learner = await requireLearner();
     const f = str(opts.focus, 80);
     const focus: SessionFocus =
-      f === "new_words" || f === "listening" || f === "review" || f === "leeches" ? f
+      f === "new_words" || f === "listening" || f === "review" || f === "leeches" || f === "mixed" ? f
       : f.startsWith("grammar:") ? (f as `grammar:${string}`)
       : /^lesson:\d{1,2}$/.test(f) ? (f as `lesson:${number}`)
       : null;
@@ -185,7 +186,10 @@ export async function submitAnswerAction(input: {
   confidence?: number;
 }): Promise<ActionResult<AnswerFeedback>> {
   return run("session.answer", async () => {
-    const learner = await requireLearner();
+    // Repaso intercalado: el ejercicio puede ser de otro idioma que estudias.
+    const active = await requireLearner();
+    const keyLang = languageOfKey(str(input.key, 400));
+    const learner = keyLang && keyLang !== active.language.code ? await requireLearnerFor(keyLang) : active;
     const pairs: Record<string, string> = {};
     if (input.pairs && typeof input.pairs === "object") {
       for (const [k, v] of Object.entries(input.pairs).slice(0, 10)) pairs[str(k, 100)] = str(v, 100);

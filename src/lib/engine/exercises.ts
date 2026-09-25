@@ -475,6 +475,18 @@ export function buildPhraseExercise(language: LanguageCode, unitIdx: number, phr
     : { ...base, skill: "vocabulary", instruction: "Frase útil · ¿cómo se dice?", prompt: ph.es, options: shuffle([ph.text, ...others.map((o) => o.text)], rand) };
 }
 
+/**
+ * Idioma al que pertenece un ejercicio, sacado de su key («reverse_mc|fr:w:chat»
+ * → «fr»). Todos los ítems deben ser del mismo idioma; si no, null.
+ */
+export function languageOfKey(key: string): string | null {
+  const [, id] = key.split("|");
+  if (!id) return null;
+  const langs = new Set(id.split(",").map((x) => x.split(":")[0]));
+  const [lang] = [...langs];
+  return langs.size === 1 && lang && /^[a-z]{2,3}$/.test(lang) ? lang : null;
+}
+
 /** Resuelve una key a sus respuestas aceptadas (sólo en el servidor). */
 export function resolveExercise(
   key: string,

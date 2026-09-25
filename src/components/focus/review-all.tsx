@@ -3,6 +3,7 @@
 import { Loader2, Repeat } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { orderForInterference, reviewMinutes } from "@/lib/engine/multilang";
 import type { PlanBlock } from "@/lib/engine/study-plan";
@@ -33,9 +34,12 @@ export function ReviewAll({ langs }: { langs: { code: string; name: string; flag
     });
 
   return (
-    <Button variant="secondary" onClick={go} disabled={pending} className="w-full">
-      {pending ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Repeat size={16} aria-hidden />}
-      Repasar todos · {due} en {withDue.length} idiomas (≈ {total} min)
-    </Button>
+    <>
+      <Button variant="secondary" onClick={go} disabled={pending} className="w-full">
+        {pending ? <Loader2 size={16} className="animate-spin" aria-hidden /> : <Repeat size={16} aria-hidden />}
+        Repasar todos · {due} en {withDue.length} idiomas (≈ {total} min)
+      </Button>
+      <Link href="/app/review/all" className="text-center text-xs font-semibold text-primary hover:underline">o mezclados en una sola sesión (intercalado)</Link>
+    </>
   );
 }

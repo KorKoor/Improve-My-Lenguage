@@ -72,3 +72,15 @@ test("errores dirigidos: con 3 fallos de género en francés, la sesión practic
     assert.ok(gender.length >= 2, `seed ${seed}: ${gender.length} ejercicios de género · bloques ${plan.blocks.map((b) => b.kind + ":" + (b.target ?? "")).join(",")}`);
   }
 });
+
+test("repaso intercalado: el idioma de cada respuesta sale de su key", async () => {
+  const { languageOfKey } = await import("../src/lib/engine/exercises");
+  assert.equal(languageOfKey("reverse_mc|fr:w:chat"), "fr");
+  assert.equal(languageOfKey("listen_mc|en:w:dog"), "en");
+  assert.equal(languageOfKey("match|fr:w:a,fr:w:b,fr:w:c"), "fr");
+  assert.equal(languageOfKey("match|fr:w:a,en:w:b"), null, "mezcla de idiomas en una key: rechazada");
+  assert.equal(languageOfKey("phrase_pick|ja:p:greetings:1"), "ja");
+  assert.equal(languageOfKey("roto"), null);
+  // Un ejercicio de francés nunca se atribuye al inglés (y viceversa).
+  assert.notEqual(languageOfKey("meaning_mc|fr:w:maison"), "en");
+});
