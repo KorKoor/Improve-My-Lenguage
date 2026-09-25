@@ -21,7 +21,8 @@ export type QuestMetric =
   | "listening"
   | "speaking"
   | "writing"
-  | "conversation";
+  | "conversation"
+  | "verbs";
 
 export interface Quest {
   id: string;
@@ -49,6 +50,7 @@ const EVENT: Partial<Record<QuestMetric, string>> = {
   speaking: "speaking_completed",
   writing: "writing_submitted",
   conversation: "conversation_started",
+  verbs: "verbs_completed",
 };
 
 export function questValue(q: Quest, s: DayStats): number {
@@ -76,6 +78,8 @@ export interface QuestInput {
   /** Habilidad con más margen (si se sabe). */
   weakest: "reading" | "listening" | "speaking" | "writing" | "pronunciation" | "vocabulary" | "grammar" | null;
   aiAvailable: boolean;
+  /** El idioma tiene tablas de conjugación (entrenador de verbos). */
+  hasVerbs?: boolean;
 }
 
 const SKILL_QUEST: Record<string, Omit<Quest, "id">> = {
@@ -84,6 +88,7 @@ const SKILL_QUEST: Record<string, Omit<Quest, "id">> = {
   speak: { metric: "speaking", target: 1, title: "Lee 8 frases en voz alta", icon: "🎙️", href: "/app/speak", xp: 50 },
   write: { metric: "writing", target: 1, title: "Escribe y corrige un texto", icon: "🖋️", href: "/app/write", xp: 70 },
   tutor: { metric: "conversation", target: 1, title: "Conversa con tu tutor", icon: "💬", href: "/app/tutor", xp: 60 },
+  verbs: { metric: "verbs", target: 1, title: "Completa una ronda de verbos", icon: "🔤", href: "/app/verbs", xp: 50 },
 };
 
 const WEAK_TO_KIND: Record<string, string> = {
@@ -93,7 +98,7 @@ const WEAK_TO_KIND: Record<string, string> = {
   speaking: "speak",
   pronunciation: "speak",
   writing: "write",
-  grammar: "write",
+  grammar: "verbs",
 };
 
 export function dailyQuests(input: QuestInput): Quest[] {
@@ -103,11 +108,12 @@ export function dailyQuests(input: QuestInput): Quest[] {
   ];
 
   // Segunda: la habilidad débil (70 %) o una favorita; nunca el tutor sin IA.
-  const kinds = Object.keys(SKILL_QUEST).filter((k) => k !== "tutor" || input.aiAvailable);
+  const kinds = Object.keys(SKILL_QUEST).filter((k) => (k !== "tutor" || input.aiAvailable) && (k !== "verbs" || input.hasVerbs));
   const fav = input.favorites.filter((f) => kinds.includes(f));
   const weakKind = input.weakest ? WEAK_TO_KIND[input.weakest] : undefined;
   let kind: string;
-  if (weakKind && kinds.includes(weakKind) && rand() < 0.7) kind = weakKind;
+  const weak = weakKind && !kinds.includes(weakKind) && weakKind === "verbs" ? "write" : weakKind;
+  if (weak && kinds.includes(weak) && rand() < 0.7) kind = weak;
   else if (fav.length) kind = fav[Math.floor(rand() * fav.length)]!;
   else kind = kinds[Math.floor(rand() * kinds.length)]!;
   quests.push({ id: `skill-${kind}`, ...SKILL_QUEST[kind]! });

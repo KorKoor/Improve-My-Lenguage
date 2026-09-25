@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { aiAvailable } from "../ai/provider";
+import { vocabFor } from "../content";
 import * as repo from "../db/repositories";
 import { localDay, MAX_STREAK_FREEZES } from "../engine/progress";
 import { dailyQuests, levelFromXp, levelTitle, questValue, totalXp, type DayStats, type Quest, type QuestInput } from "../engine/quests";
@@ -93,6 +94,7 @@ async function generate(learner: Learner, today: string, dueReviews: number): Pr
     favorites: learner.profile.personality?.tuning.favorites ?? [],
     weakest,
     aiAvailable: aiAvailable() && learner.profile.aiConsent,
+    hasVerbs: vocabFor(learner.language.code).some((v) => v.conjugation),
   });
   await repo.saveQuestSet(learner.userId, today, quests);
   return quests;

@@ -51,3 +51,13 @@ test("protector de racha: cubre los días perdidos sólo si alcanza", async () =
   // Sin historial nunca se consume.
   assert.deepEqual(freezeDaysNeeded([], "2026-09-23", 2), []);
 });
+
+test("misiones: la de verbos sólo aparece si el idioma conjuga", () => {
+  for (let d = 1; d <= 28; d++) {
+    const day = `2026-03-${String(d).padStart(2, "0")}`;
+    const no = dailyQuests({ ...base, day, weakest: "grammar", hasVerbs: false });
+    assert.ok(no.every((q) => q.metric !== "verbs"));
+  }
+  const some = Array.from({ length: 28 }, (_, d) => dailyQuests({ ...base, day: `2026-03-${String(d + 1).padStart(2, "0")}`, weakest: "grammar", hasVerbs: true }));
+  assert.ok(some.some((qs) => qs.some((q) => q.metric === "verbs")));
+});

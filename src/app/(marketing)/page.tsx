@@ -1,4 +1,4 @@
-import { ArrowRight, Brain, CircleHelp, Compass, Gauge, Headphones, MessageCircle, Mic, Newspaper, PenLine, Repeat, Snail, Sparkles, Target, Type, UserRound } from "lucide-react";
+import { ArrowRight, Users, CircleHelp, Compass, Gauge, Headphones, MessageCircle, Mic, Newspaper, PenLine, Repeat, Snail, Sparkles, Target, Type, UserRound } from "lucide-react";
 import { LanguageMark } from "@/components/language-mark";
 import Link from "next/link";
 import { Mascot } from "@/components/mascot";
@@ -14,7 +14,7 @@ const FEATURES = [
   { icon: Gauge, color: "var(--skill-vocabulary)", title: "Diagnóstico adaptativo", text: "Un test que se ajusta a cada respuesta (modelo de Rasch) para encontrar tu nivel real en pocos minutos, habilidad por habilidad." },
   { icon: Repeat, color: "var(--skill-reading)", title: "Repetición espaciada FSRS", text: "Cada palabra vuelve justo antes de que la olvides. El algoritmo usa tu velocidad, tus intentos y tu confianza." },
   { icon: Target, color: "var(--danger)", title: "Inteligencia de errores", text: "No sólo 'incorrecto': clasificamos cada error (pasado, artículos, traducción literal…) y detectamos los que repites." },
-  { icon: Brain, color: "var(--skill-grammar)", title: "Vector de habilidades", text: "Tu nivel no es una letra: vocabulario, gramática, listening, speaking… cada una con su propio CEFR." },
+  { icon: Users, color: "var(--skill-speaking)", title: "Aprende en familia", text: "Crea un grupo con tu familia o amigos, mirad quién ya estudió hoy y mandaos ánimos. Cada uno con su idioma y su nivel." },
   { icon: MessageCircle, color: "var(--skill-speaking)", title: "Tutor personal", text: "Conversa con un tutor que conoce tu nivel, tus intereses y tus errores. Te da feedback al final, sin interrumpirte." },
   { icon: Compass, color: "var(--skill-listening)", title: "Recomendaciones explicadas", text: "\"Practica preposiciones: fallaste en 4 de tus últimas 6 sesiones.\" Siempre sabrás por qué." },
   { icon: Newspaper, color: "var(--skill-reading)", title: "Lecturas reales", text: "Artículos de Wikipedia, Wikinews y Wikivoyage ordenados según cuánto entiendes. Toca cualquier palabra y verás qué significa." },
