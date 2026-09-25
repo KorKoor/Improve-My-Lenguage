@@ -2,6 +2,7 @@ import { AlertTriangle, CalendarDays, Globe2, Plus, Timer } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LanguageCards } from "@/components/focus/language-cards";
+import { ReviewAll } from "@/components/focus/review-all";
 import { LanguageMark } from "@/components/language-mark";
 import { ButtonLink } from "@/components/ui/button";
 import { languagesOverview, type LanguageCard } from "@/lib/services/multilang";
@@ -44,8 +45,9 @@ export default async function LanguagesPage() {
               <p className="mt-2 text-xs text-muted">Los idiomas en «Mantener» que están al día descansan hoy: la repetición espaciada los protege.</p>
             )}
           </div>
-          <div className="flex flex-col gap-2 sm:w-56">
+          <div className="flex flex-col gap-2 sm:w-64">
             <ButtonLink href="/app/study">Abrir modo estudio</ButtonLink>
+            <ReviewAll langs={o.cards.map((c) => ({ code: c.code, name: c.name, flag: c.flag, due: c.due }))} />
             <p className="text-center text-xs text-muted">Con temporizador y descansos</p>
           </div>
         </div>
