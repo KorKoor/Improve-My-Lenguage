@@ -1,5 +1,6 @@
 "use client";
-import { CheckCircle2, Loader2, Mic, MicOff, Send, Sparkles } from "lucide-react";
+import { Check, CheckCircle2, Loader2, Mic, MicOff, Send, Sparkles } from "lucide-react";
+import { Confetti } from "@/components/celebrate";
 import { useEffect, useRef, useState } from "react";
 import { endConversationAction, sendTutorMessageAction, startConversationAction } from "@/app/app/actions";
 import { SpeakButton } from "@/components/speak-button";
@@ -11,11 +12,15 @@ import type { ConversationFeedback } from "@/lib/ai/prompts";
 
 interface Msg { role: "user" | "assistant"; content: string }
 interface Past { id: string; topic: string | null; createdAt: string; feedback: ConversationFeedback | null }
+export interface ScenarioCard { id: string; level: string; icon: string; title: string; situation: string; goals: string[] }
 
 // Tipos mínimos del reconocimiento de voz del navegador (no estándar en TS).
 type SpeechRec = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null };
 
-export function TutorChat({ language, languageName, locale, suggestions, past }: { language: string; languageName: string; locale: string; suggestions: string[]; past: Past[] }) {
+export function TutorChat({ language, languageName, locale, suggestions, past, scenarios = [] }: { language: string; languageName: string; locale: string; suggestions: string[]; past: Past[]; scenarios?: ScenarioCard[] }) {
+  const [scenario, setScenario] = useState<ScenarioCard | null>(null);
+  const [goalsDone, setGoalsDone] = useState<number[]>([]);
+  const [party, setParty] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
@@ -31,13 +36,26 @@ export function TutorChat({ language, languageName, locale, suggestions, past }:
     const w = window as unknown as { SpeechRecognition?: new () => SpeechRec; webkitSpeechRecognition?: new () => SpeechRec };
     setMicSupported(Boolean(w.SpeechRecognition ?? w.webkitSpeechRecognition));
   }, []);
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), [messages, busy]);
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, busy]);
 
-  async function start(topic: string | null) {
+  function mergeGoals(g: number[]) {
+    setGoalsDone((prev) => {
+      const next = [...new Set([...prev, ...g])].sort();
+      if (scenario && next.length === scenario.goals.length && prev.length < next.length) setParty(true);
+      return next;
+    });
+  }
+
+  async function start(topic: string | null, sc: ScenarioCard | null = null) {
     setBusy(true);
     setError(null);
     setFeedback(null);
-    const res = await startConversationAction(topic);
+    setScenario(sc);
+    setGoalsDone([]);
+    setParty(false);
+    const res = await startConversationAction(sc ? `scenario:${sc.id}` : topic);
     setBusy(false);
     if (!res.ok) return setError(res.error);
     setConversationId(res.data.conversationId);
@@ -56,6 +74,7 @@ export function TutorChat({ language, languageName, locale, suggestions, past }:
     setBusy(false);
     if (!res.ok) return setError(res.error);
     setMessages((m) => [...m, { role: "assistant", content: res.data.message }]);
+    if (scenario) mergeGoals(res.data.goals);
   }
 
   async function end() {
@@ -87,6 +106,13 @@ export function TutorChat({ language, languageName, locale, suggestions, past }:
     rec.start();
   }
 
+  function pastTitle(topic: string | null) {
+    if (!topic) return "Tema libre";
+    if (!topic.startsWith("scenario:")) return topic;
+    const sc = scenarios.find((x) => `scenario:${x.id}` === topic);
+    return sc ? `${sc.icon} ${sc.title}` : "Escenario";
+  }
+
   if (!conversationId && !feedback) {
     return (
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -102,6 +128,25 @@ export function TutorChat({ language, languageName, locale, suggestions, past }:
             {busy ? <Loader2 className="animate-spin" size={16} aria-hidden /> : <Sparkles size={16} aria-hidden />} Sorpréndeme
           </Button>
           {error && <p role="alert" className="mt-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">{error}</p>}
+          {scenarios.length > 0 && (
+            <div className="mt-8">
+              <h2 className="font-display text-xl font-extrabold">Escenarios con misión</h2>
+              <p className="mt-1 text-sm text-muted">Situaciones reales con 3 objetivos. El tutor interpreta un papel y marca lo que vas logrando.</p>
+              <ul className="stagger mt-4 grid gap-3 sm:grid-cols-2">
+                {scenarios.map((sc) => (
+                  <li key={sc.id}>
+                    <button type="button" disabled={busy} onClick={() => void start(null, sc)} className="card lift flex h-full w-full items-start gap-3 p-4 text-left hover:border-primary">
+                      <span className="text-3xl" aria-hidden>{sc.icon}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-2 font-semibold">{sc.title} <Chip tone="muted">{sc.level}</Chip></span>
+                        <span className="mt-0.5 block text-sm text-muted">{sc.situation}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </Card>
         <Card>
           <h2 className="font-display text-lg font-extrabold">Conversaciones anteriores</h2>
@@ -109,7 +154,7 @@ export function TutorChat({ language, languageName, locale, suggestions, past }:
             <ul className="mt-3 space-y-3 text-sm">
               {past.map((p) => (
                 <li key={p.id} className="rounded-xl bg-surface-muted p-3">
-                  <p className="font-semibold">{p.topic ?? "Tema libre"}</p>
+                  <p className="font-semibold">{pastTitle(p.topic)}</p>
                   <p className="text-xs text-muted">{new Date(p.createdAt).toLocaleDateString("es-MX", { day: "numeric", month: "short" })}{p.feedback ? ` · ${p.feedback.mistakes.length} correcciones` : ""}</p>
                 </li>
               ))}
@@ -153,11 +198,31 @@ export function TutorChat({ language, languageName, locale, suggestions, past }:
   }
 
   return (
-    <Card className="flex h-[min(70dvh,720px)] flex-col p-0">
+    <Card className="flex h-[min(78dvh,760px)] flex-col p-0">
+      {party && <Confetti />}
       <div className="flex items-center gap-3 border-b border-border px-5 py-3">
-        <p className="flex-1 text-sm font-semibold">Conversación en {languageName.toLowerCase()}</p>
+        <p className="flex-1 text-sm font-semibold">{scenario ? `${scenario.icon} ${scenario.title}` : `Conversación en ${languageName.toLowerCase()}`}</p>
         <Button size="sm" variant="secondary" disabled={busy || messages.filter((m) => m.role === "user").length === 0} onClick={() => void end()}>Terminar y ver feedback</Button>
       </div>
+      {scenario && (
+        <div className="border-b border-border bg-surface-muted/50 px-5 py-3">
+          <p className="hidden text-xs text-muted sm:block">{scenario.situation}</p>
+          <ul className="mt-2 flex gap-1.5 overflow-x-auto pb-1 sm:grid sm:grid-cols-3 sm:overflow-visible sm:pb-0" aria-label="Objetivos del escenario">
+            {scenario.goals.map((g, i) => {
+              const ok = goalsDone.includes(i + 1);
+              return (
+                <li key={g} className={cn("flex max-w-[75%] shrink-0 items-start gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors sm:max-w-none", ok ? "bg-success-soft text-success" : "bg-surface text-muted")}>
+                  <span className={cn("mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border", ok ? "animate-pop-in border-success bg-success text-white" : "border-border")} aria-hidden>
+                    {ok && <Check size={10} strokeWidth={3} />}
+                  </span>
+                  <span className={ok ? "line-through decoration-1" : ""}>{g}</span>
+                </li>
+              );
+            })}
+          </ul>
+          {party && <p className="mt-2 text-center text-sm font-bold text-success animate-pop-in">🎉 ¡Escenario superado! Termina para ver tu feedback.</p>}
+        </div>
+      )}
       <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4" aria-live="polite">
         {messages.map((m, i) => (
           <div key={i} className={cn("flex items-end gap-2", m.role === "user" && "justify-end")}>

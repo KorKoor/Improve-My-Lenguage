@@ -375,6 +375,7 @@ export async function checkAchievements(learner: Learner) {
     repo.countEvents(learner.userId, "listening_completed"),
     repo.countEvents(learner.userId, "speaking_completed"),
   ]);
+  const scenarios = await repo.countEvents(learner.userId, "scenario_completed");
   const vocab = summarizeVocabulary(
     knowledge.map((k) => ({ ...knowledgeToCard(k, now), itemId: k.itemId, itemType: k.itemType })),
     now,
@@ -393,6 +394,7 @@ export async function checkAchievements(learner: Learner) {
       writingsCompleted: writings,
       listeningSessions: listening,
       speakingSessions: speaking,
+      scenariosCompleted: scenarios,
       personalityDone: Boolean(learner.profile.personality),
     },
     new Set(unlocked.map((u) => u.achievementId)),

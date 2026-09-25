@@ -75,6 +75,17 @@ Core goals:
 - **Pronunciation**: read real sentences aloud; the browser's speech recognition transcribes them and the server grades each word (no audio is stored)
 - **Writing studio**: CEFR prompts (A1 → C1), instant heuristic checks (spelling, accents, capitalization, repetitions, lexical level) and optional AI correction validated against the original text
 
+### Role-play scenarios
+
+- 12 real-life scenarios from A1 to C1 (café, directions, doctor, job interview, debate, salary negotiation…)
+- the tutor plays a role and tracks 3 communicative goals live; completing all three is celebrated and unlocks an achievement
+
+### Daily quests and XP
+
+- three deterministic quests per day, frozen once generated (session, weakest or favourite skill, reviews or volume)
+- progress computed from real activity; claiming is transactional and idempotent
+- XP derived from lifetime activity plus claimed quests, with levels and titles
+
 ### Learning-style profile
 
 - "¿Cómo aprendes mejor?": a 15-question preference questionnaire (pace, challenge, structure, explanation depth, feedback tone, motivation, channel, goal) — framed as preferences, not "learning styles"
@@ -237,7 +248,11 @@ Then open:
 npm run typecheck
 npm run test
 npm run build
+npm run dev:emulated                 # Firebase emulators + seeded demo user
+npm run dev:emulated -- --mock-ai    # same, plus a local OpenAI-compatible AI simulator
 ```
+
+`--mock-ai` starts `scripts/mock-ai.mjs`, a deterministic fake LLM that honours every AI contract of the app (tutor chat, role-play goal markers, conversation feedback JSON, writing correction JSON). It lets you exercise and test all AI flows offline, with no keys and no cost.
 
 ---
 

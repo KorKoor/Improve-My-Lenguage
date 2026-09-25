@@ -3,6 +3,7 @@
 // (usa el proyecto ficticio "demo-iml"). Requiere Java 11+.
 // Siembra un usuario demo con historial: demo@improve.local / demo-password
 //   npm run dev:emulated
+//   npm run dev:emulated -- --mock-ai   (con IA simulada, sin claves)
 import { spawn } from "node:child_process";
 
 const PROJECT = "demo-iml";
@@ -18,6 +19,18 @@ const env = {
   FIREBASE_SERVICE_ACCOUNT: "",
   GOOGLE_APPLICATION_CREDENTIALS: "",
 };
+
+// --mock-ai: tutor, escenarios y corrección con IA contra un simulador local.
+const mockAi = process.argv.includes("--mock-ai");
+if (mockAi) {
+  Object.assign(env, {
+    AI_PROVIDER: "openai-compatible",
+    OPENAI_COMPAT_BASE_URL: "http://127.0.0.1:8787/v1",
+    OPENAI_COMPAT_API_KEY: "mock",
+  });
+  const ai = spawn(process.execPath, ["scripts/mock-ai.mjs"], { stdio: "inherit" });
+  process.on("exit", () => ai.kill());
+}
 
 const shell = process.platform === "win32";
 const port = process.env.PORT ?? "3000";

@@ -196,11 +196,11 @@ export async function setWordStatusAction(itemId: string, status: "known" | "dif
 }
 
 // ── Tutor ──────────────────────────────────────────────────────────────────
-export async function startConversationAction(topic: string | null): Promise<ActionResult<{ conversationId: string; message: string }>> {
+export async function startConversationAction(topic: string | null): Promise<ActionResult<{ conversationId: string; message: string; goals: number[] }>> {
   return run("tutor.start", async () => startConversation(await requireLearner(), topic ? str(topic, 200) : null));
 }
 
-export async function sendTutorMessageAction(conversationId: string, text: string): Promise<ActionResult<{ message: string }>> {
+export async function sendTutorMessageAction(conversationId: string, text: string): Promise<ActionResult<{ message: string; goals: number[] }>> {
   return run("tutor.send", async () => sendTutorMessage(await requireLearner(), str(conversationId, 64), str(text, 1000)));
 }
 

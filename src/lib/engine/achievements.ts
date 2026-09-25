@@ -17,6 +17,8 @@ export interface AchievementStats {
   writingsCompleted?: number;
   /** Sesiones de escucha terminadas. */
   listeningSessions?: number;
+  /** Escenarios de role-play completados (3/3 objetivos). */
+  scenariosCompleted?: number;
   /** Sesiones de pronunciación terminadas. */
   speakingSessions?: number;
   /** Hizo el cuestionario «¿Cómo aprendes mejor?». */
@@ -45,6 +47,7 @@ export const ACHIEVEMENT_RULES: AchievementRule[] = [
   { id: "first-writing", title: "Primera redacción", description: "Escribiste y corregiste tu primer texto.", icon: "🖋️", unlocked: (s) => (s.writingsCompleted ?? 0) >= 1 },
   { id: "first-listening", title: "Buen oído", description: "Completaste tu primera sesión de escucha.", icon: "🎧", unlocked: (s) => (s.listeningSessions ?? 0) >= 1 },
   { id: "first-speaking", title: "Primera voz", description: "Leíste frases en voz alta y te entendimos.", icon: "🎙️", unlocked: (s) => (s.speakingSessions ?? 0) >= 1 },
+  { id: "first-scenario", title: "Primera misión", description: "Cumpliste los 3 objetivos de un escenario con el tutor.", icon: "🎭", unlocked: (s) => (s.scenariosCompleted ?? 0) >= 1 },
   { id: "self-aware", title: "Te conoces", description: "Descubriste cómo aprendes mejor.", icon: "🪞", unlocked: (s) => Boolean(s.personalityDone) },
   { id: "polyglot", title: "Políglota en progreso", description: "Empezaste a estudiar un segundo idioma.", icon: "🌍", unlocked: (s) => s.languagesStarted >= 2 },
 ];

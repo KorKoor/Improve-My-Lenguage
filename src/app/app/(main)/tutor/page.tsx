@@ -7,7 +7,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { topicLabel } from "@/lib/content";
 import { aiAvailable } from "@/lib/ai/provider";
 import type { ConversationFeedback } from "@/lib/ai/prompts";
-import { listConversations } from "@/lib/db/repositories";
+import { getSkillEstimates, listConversations } from "@/lib/db/repositories";
+import { SCENARIOS } from "@/lib/content/scenarios";
+import { overallTheta, thetaToCefr } from "@/lib/engine/levels";
 import { requireLearner } from "@/lib/services/viewer";
 
 export const metadata: Metadata = { title: "Tutor" };
@@ -16,6 +18,13 @@ export default async function TutorPage() {
   const learner = await requireLearner();
   const available = aiAvailable();
   const past = available ? await listConversations(learner.ul.id, 6) : [];
+  const skills = (await getSkillEstimates(learner.ul.id)).filter((x) => x.evidence > 0);
+  const order = ["A1", "A2", "B1", "B2", "C1", "C2"];
+  const mine = order.indexOf(thetaToCefr(overallTheta(skills) ?? -1.5));
+  // Primero los de tu nivel y el siguiente; los demás después.
+  const scenarios = [...SCENARIOS]
+    .sort((a, b) => Math.abs(order.indexOf(a.level) - mine - 0.4) - Math.abs(order.indexOf(b.level) - mine - 0.4))
+    .map(({ id, level, icon, title, situation, goals }) => ({ id, level, icon, title, situation, goals: [...goals] }));
   const suggestions = [
     ...learner.profile.interests.slice(0, 3).map((t) => topicLabel(t)),
     "Mi día de hoy",
@@ -49,6 +58,7 @@ export default async function TutorPage() {
           languageName={learner.language.name}
           locale={learner.language.speechLocale}
           suggestions={[...new Set(suggestions)]}
+          scenarios={scenarios}
           past={past.map((c) => ({ id: c.id, topic: c.topic, createdAt: c.createdAt.toISOString(), feedback: (c.feedback as ConversationFeedback | null) ?? null }))}
         />
       )}

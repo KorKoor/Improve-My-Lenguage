@@ -1,3 +1,4 @@
+import { scenarioFromTopic, type Scenario } from "../content/scenarios";
 /**
  * Prompts estructurados. Nunca "Teach me English": siempre el perfil del
  * alumno como contexto explícito y salidas acotadas (JSON con categorías
@@ -60,6 +61,8 @@ const LEVEL_GUIDE: Record<string, string> = {
 };
 
 export function tutorSystemPrompt(c: LearnerContext, topic: string | null): string {
+  const sc = scenarioFromTopic(topic);
+  if (sc) return scenarioSystemPrompt(c, sc);
   return [
     `You are the personal ${c.languageEnglishName} tutor of this specific learner, not a generic chatbot.`,
     learnerProfileBlock(c),
@@ -135,6 +138,8 @@ export function sanitizeFeedback(raw: unknown, allowed: Set<string>, learnerText
 }
 
 export function openingPrompt(c: LearnerContext, topic: string | null): string {
+  const sc = scenarioFromTopic(topic);
+  if (sc) return `Start the role-play in character with one short line that sets the scene and invites the learner to act. End with the goals marker.`;
   return topic
     ? `Start the conversation about: ${topic}. Greet ${c.displayName ?? "the learner"} briefly and ask an opening question.`
     : `Greet ${c.displayName ?? "the learner"} briefly and propose a topic from their interests with an opening question.`;
@@ -190,4 +195,31 @@ export function sanitizeWritingFeedback(raw: unknown, allowed: Set<string>, text
   const corrected = str(r.corrected, 6000);
   if (!corrected && mistakes.length === 0) return null;
   return { corrected: corrected || text, mistakes, strengths: list(r.strengths, 3), suggestions: list(r.suggestions, 3), level };
+}
+
+// ── Role-play con objetivos ─────────────────────────────────────────────────
+export const GOALS_MARKER = /\[\[goals:([0-9,\s]*)\]\]\s*$/i;
+
+export function scenarioSystemPrompt(c: LearnerContext, sc: Scenario): string {
+  return [
+    `You are role-playing in ${c.languageEnglishName} with a language learner. You play ${sc.role}`,
+    learnerProfileBlock(c),
+    "",
+    "ROLE-PLAY RULES",
+    `- Stay in character. Reply ONLY in ${c.languageEnglishName}, 1–3 short sentences, adapted to level: ${LEVEL_GUIDE[c.level] ?? LEVEL_GUIDE.desconocido}`,
+    "- The learner must accomplish these goals by themselves (do not accomplish them for the learner, but create natural openings):",
+    ...sc.goalsEn.map((g, i) => `  ${i + 1}. ${g}`),
+    "- If the learner is stuck, give a tiny hint in character (e.g. ask a question that invites the goal).",
+    "- Do not correct mistakes explicitly; recast naturally if meaning is unclear.",
+    "- At the VERY END of every reply, on its own line, write the goals the learner has accomplished so far in the whole conversation, e.g. [[goals:1,3]] or [[goals:]] if none. Only count a goal when the learner clearly did it in the target language.",
+    "- When all goals are accomplished, wrap up the scene warmly in character.",
+  ].join("\n");
+}
+
+/** Separa la respuesta visible del marcador de objetivos (validado: sólo 1..3). */
+export function splitGoals(reply: string): { text: string; goals: number[] } {
+  const m = reply.match(GOALS_MARKER);
+  if (!m) return { text: reply.trim(), goals: [] };
+  const goals = [...new Set(m[1]!.split(",").map((x) => Number(x.trim())).filter((n) => Number.isInteger(n) && n >= 1 && n <= 3))].sort();
+  return { text: reply.slice(0, m.index).trim(), goals };
 }

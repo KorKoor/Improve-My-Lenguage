@@ -9,10 +9,12 @@ import {
   feedbackSystemPrompt,
   openingPrompt,
   sanitizeFeedback,
+  splitGoals,
   tutorSystemPrompt,
   type ConversationFeedback,
   type LearnerContext,
 } from "../ai/prompts";
+import { scenarioFromTopic } from "../content/scenarios";
 import { checkAchievements, getSkills, getWeaknesses } from "./learning";
 import type { Learner } from "./viewer";
 
@@ -75,9 +77,10 @@ export async function startConversation(learner: Learner, topic: string | null) 
     messages: [{ role: "user", content: openingPrompt(ctx, topic) }],
     maxTokens: 200,
   });
-  await repo.addMessage(learner.ul.id, conv.id, "assistant", opening.trim());
+  const first = splitGoals(opening);
+  await repo.addMessage(learner.ul.id, conv.id, "assistant", first.text);
   await repo.track(learner.userId, "conversation_started", { topic: topic ?? null });
-  return { conversationId: conv.id, message: opening.trim() };
+  return { conversationId: conv.id, message: first.text, goals: first.goals };
 }
 
 export async function sendTutorMessage(learner: Learner, conversationId: string, text: string) {
@@ -92,9 +95,11 @@ export async function sendTutorMessage(learner: Learner, conversationId: string,
   // Sólo los últimos 12 turnos: controla coste y latencia.
   const recent = history.slice(-12).map((m) => ({ role: m.role, content: m.content }));
   if (recent[0]?.role === "assistant") recent.unshift({ role: "user", content: "(conversation start)" });
-  const reply = await generate({ tier: "smart", system: tutorSystemPrompt(ctx, conv.topic), messages: recent, maxTokens: 220 });
-  await repo.addMessage(learner.ul.id, conv.id, "assistant", reply.trim());
-  return { message: reply.trim() };
+  const reply = await generate({ tier: "smart", system: tutorSystemPrompt(ctx, conv.topic), messages: recent, maxTokens: 240 });
+  const { text: visible, goals } = splitGoals(reply);
+  await repo.addMessage(learner.ul.id, conv.id, "assistant", visible);
+  if (scenarioFromTopic(conv.topic) && goals.length === 3) await repo.track(learner.userId, "scenario_completed", { scenario: conv.topic });
+  return { message: visible, goals };
 }
 
 export async function endConversation(learner: Learner, conversationId: string): Promise<ConversationFeedback> {
