@@ -3,7 +3,7 @@ import { ArrowRight, BookmarkPlus, Check, ExternalLink, Eye, EyeOff, Minus, Paus
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { setWordStatusAction } from "@/app/app/actions";
-import { completeReadingAction } from "@/app/app/skills-actions";
+import { completeReadingAction, lookupWordAction } from "@/app/app/skills-actions";
 import { POS_ES } from "@/components/app/labels";
 import { Confetti } from "@/components/celebrate";
 import { speechRate } from "@/components/comfort";
@@ -11,6 +11,7 @@ import { SpeakButton } from "@/components/speak-button";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
+import type { DictionaryEntry } from "@/lib/reading/dictionary-parse";
 import type { ReaderData } from "@/lib/services/reading";
 
 type Phase = "reading" | "quiz" | "done";
@@ -26,6 +27,8 @@ export function Reader({ data }: { data: ReaderData }) {
   const [progress, setProgress] = useState(0);
   const [phase, setPhase] = useState<Phase>("reading");
   const [shownTr, setShownTr] = useState<Set<number>>(new Set());
+  // Palabras fuera de nuestro vocabulario: definición en vivo de Wiktionary.
+  const [lookup, setLookup] = useState<{ word: string; state: "loading" | "done" | "error"; entry?: DictionaryEntry | null; error?: string } | null>(null);
   const started = useRef(Date.now());
   const article = useRef<HTMLDivElement>(null);
 
@@ -45,8 +48,16 @@ export function Reader({ data }: { data: ReaderData }) {
   useEffect(() => () => window.speechSynthesis?.cancel(), []);
 
   const open = useCallback((id: string) => {
+    setLookup(null);
     setActive(id);
     setLooked((s) => new Set(s).add(id));
+  }, []);
+
+  const lookupUnknown = useCallback(async (word: string) => {
+    setActive(null);
+    setLookup({ word, state: "loading" });
+    const r = await lookupWordAction(word);
+    setLookup((cur) => (cur?.word !== word ? cur : r.ok ? { word, state: "done", entry: r.data } : { word, state: "error", error: r.error }));
   }, []);
 
   const speakParagraph = (i: number) => {
@@ -133,6 +144,15 @@ export function Reader({ data }: { data: ReaderData }) {
                   >
                     {t.t}
                   </button>
+                ) : t.w && /\p{L}/u.test(t.t) ? (
+                  <button
+                    key={j}
+                    type="button"
+                    onClick={() => void lookupUnknown(t.t)}
+                    className={cn("rounded-[4px] px-[1px] text-left transition-colors hover:bg-surface-muted", lookup?.word === t.t && "bg-surface-muted")}
+                  >
+                    {t.t}
+                  </button>
                 ) : (
                   <span key={j}>{t.t}</span>
                 ),
@@ -190,6 +210,40 @@ export function Reader({ data }: { data: ReaderData }) {
               )}
               <Link href={`/app/vocabulary/${encodeURIComponent(active)}`} className="ml-auto self-center text-sm font-semibold text-primary hover:underline">Ficha</Link>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {lookup && !active ? (
+        <div role="dialog" aria-label={`Palabra: ${lookup.word}`} className="fixed inset-x-0 bottom-0 z-40 px-3 pb-[max(env(safe-area-inset-bottom),12px)] sm:bottom-6 sm:left-auto sm:right-6 sm:w-96 sm:px-0">
+          <div className="card animate-sheet max-h-[60dvh] overflow-y-auto p-5 shadow-[0_20px_60px_rgb(31_27_46/0.2)]">
+            <div className="flex items-start gap-3">
+              <p className="min-w-0 flex-1 font-display text-2xl font-extrabold" lang={data.locale}>{lookup.word}</p>
+              <SpeakButton text={lookup.word} locale={data.locale} size={40} />
+              <button type="button" onClick={() => setLookup(null)} className="grid size-9 place-items-center rounded-full text-muted hover:bg-surface-muted" aria-label="Cerrar"><X size={18} /></button>
+            </div>
+            {lookup.state === "loading" && <p className="mt-3 text-sm text-muted">Buscando en el diccionario…</p>}
+            {lookup.state === "error" && <p className="mt-3 text-sm text-danger">{lookup.error}</p>}
+            {lookup.state === "done" && !lookup.entry && (
+              <p className="mt-3 text-sm text-muted">No está en nuestro vocabulario ni en Wiktionary. Puede ser un nombre propio o una forma poco común.</p>
+            )}
+            {lookup.entry && (
+              <>
+                {lookup.entry.formOf && <p className="mt-1 text-sm">Forma de <strong lang={data.locale}>{lookup.entry.word}</strong></p>}
+                <p className="mt-1 text-xs text-muted">Fuera de tu vocabulario · definición del Wiktionary (en inglés)</p>
+                <dl className="mt-3 space-y-3">
+                  {lookup.entry.senses.map((s, k) => (
+                    <div key={k}>
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-primary">{s.pos}</dt>
+                      {s.definitions.map((d, n) => <dd key={n} className="mt-1 text-sm" lang="en">{n + 1}. {d}</dd>)}
+                    </div>
+                  ))}
+                </dl>
+                <a href={lookup.entry.url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline">
+                  Ver en Wiktionary <ExternalLink size={13} />
+                </a>
+              </>
+            )}
           </div>
         </div>
       ) : null}

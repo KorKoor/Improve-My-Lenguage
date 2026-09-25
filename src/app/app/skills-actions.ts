@@ -6,6 +6,7 @@ import { answerListening, buildListening, finishListening, type ListeningFeedbac
 import { completeReading, readerForOwnText, type ReaderData } from "@/lib/services/reading";
 import { answerSpeaking, buildSpeaking, finishSpeaking, type SpeakingFeedback, type SpeakingItem } from "@/lib/services/speaking";
 import { submitWriting, type WritingResult } from "@/lib/services/writing";
+import { lookupWord, type DictionaryEntry } from "@/lib/reading/dictionary";
 import { answerVerb, finishVerbDrill, startVerbDrill, type VerbFeedback, type VerbQuestion } from "@/lib/services/verbs";
 import { requireLearner } from "@/lib/services/viewer";
 
@@ -136,5 +137,17 @@ export async function finishVerbDrillAction(correct: number, total: number): Pro
   return run("verbs.finish", async () => {
     const t = int(total, 0, 50, 0);
     return finishVerbDrill(await requireLearner(), int(correct, 0, t, 0), t);
+  });
+}
+
+// ── Diccionario en vivo (palabras fuera del vocabulario) ────────────────────
+export async function lookupWordAction(word: string): Promise<SkillResult<DictionaryEntry | null>> {
+  return run("reading.lookup", async () => {
+    const learner = await requireLearner();
+    if (!(await rateLimit(`lookup:${learner.userId}`, 60, 3600))) throw new UserFacingError("Has consultado muchas palabras seguidas. Espera un poco.");
+    const w = str(word, 60);
+    // Sólo letras (cualquier alfabeto), apóstrofos y guiones: nada de rutas ni parámetros.
+    if (!/^[\p{L}\p{M}'’-]{1,60}$/u.test(w)) throw new UserFacingError("Esa palabra no se puede buscar.");
+    return lookupWord(learner.language.code, w);
   });
 }
