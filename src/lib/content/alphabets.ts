@@ -594,6 +594,59 @@ export function charBreakdown(lang: LanguageCode, text: string): CharPiece[] {
   return out.some((p) => p.r) ? out : [];
 }
 
+// ── Transcripción de una palabra entera ───────────────────────────────────
+const RU_TR: Record<string, string> = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "yo", ж: "zh", з: "z", и: "i", й: "y", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "j", ц: "ts", ч: "ch", ш: "sh", щ: "shch", ъ: "", ы: "y", ь: "'", э: "e", ю: "yu", я: "ya" };
+const MACRON: Record<string, string> = { a: "ā", i: "ī", u: "ū", e: "ē", o: "ō" };
+
+/**
+ * Cómo se lee una palabra, en letras latinas, coherente con las letras que se
+ * enseñan (ruso, coreano, japonés) o con la lectura del diccionario (árabe,
+ * chino). null si no se puede (una palabra con kanji, por ejemplo).
+ */
+export function transliterate(lang: LanguageCode, text: string, reading?: string): string | null {
+  const clean = text.normalize("NFC").replace(/\u0301/g, "");
+  if (lang === "ar") return reading?.split("·").pop()?.trim() || null;
+  if (lang === "zh") return reading?.replace(/\s*\(.*$/, "").trim() || null;
+  if (lang === "ru") {
+    let out = "";
+    let prev = "";
+    for (const c of clean.toLowerCase()) {
+      const t = RU_TR[c];
+      if (t === undefined) {
+        if (/\p{L}/u.test(c)) return null;
+        out += c;
+      } else out += c === "е" && (!prev || /[аеёиоуыэюяьъ\s-]/.test(prev)) ? "ye" : t;
+      prev = c;
+    }
+    return out;
+  }
+  if (lang === "ko") {
+    let out = "";
+    for (const c of clean) {
+      const r = romanizeSyllable(c);
+      if (r === null && /\p{L}/u.test(c)) return null;
+      out += r ?? c;
+    }
+    return out;
+  }
+  if (lang === "ja") {
+    const pieces = charBreakdown(lang, clean);
+    if (!pieces.length || pieces.some((p) => !p.r)) return null;
+    let out = "";
+    let pause = false;
+    for (const p of pieces) {
+      if (p.r === "(pausa)") pause = true;
+      else if (p.r === "(larga)") out = out.replace(/[aiueo]$/, (v) => MACRON[v]!);
+      else {
+        out += pause ? (p.r!.startsWith("ch") ? "t" : p.r![0]) + p.r! : p.r!;
+        pause = false;
+      }
+    }
+    return out;
+  }
+  return clean;
+}
+
 // ── Respuestas escritas en transcripción latina ────────────────────────────
 /**
  * Formas latinas aceptables de una lectura del diccionario

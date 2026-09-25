@@ -6,7 +6,7 @@ import { currentRetrievability, type CardMemory } from "./fsrs";
 
 export interface KnowledgeRow extends CardMemory {
   itemId: string;
-  itemType: "vocab" | "grammar";
+  itemType: "vocab" | "grammar" | "letter" | "rule";
 }
 
 /** Aprendida: ≥ 2 repasos, estabilidad ≥ 3 días y R actual ≥ 0.8. */

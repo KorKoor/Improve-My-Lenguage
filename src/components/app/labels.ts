@@ -1,4 +1,4 @@
-import { BookOpen, Ear, Headphones, Layers, Mic, Newspaper, PenLine, Repeat, MessageCircle, Sparkles, type LucideIcon } from "lucide-react";
+import { BookOpen, Ear, Headphones, Layers, Mic, Newspaper, PenLine, Repeat, MessageCircle, Sparkles, type LucideIcon, CaseSensitive } from "lucide-react";
 import type { Skill } from "@/lib/content/types";
 import type { BlockKind } from "@/lib/engine/planner";
 
@@ -18,6 +18,7 @@ export const BLOCK_META: Record<BlockKind, { label: string; color: string; icon:
   grammar: { label: "Gramática", color: "var(--skill-grammar)", icon: Layers },
   listening: { label: "Listening", color: "var(--skill-listening)", icon: Headphones },
   tutor: { label: "Conversación", color: "var(--skill-speaking)", icon: MessageCircle },
+  reading: { label: "Aprender a leer", color: "var(--skill-reading)", icon: CaseSensitive },
 };
 
 export function greeting(timezone: string): string {

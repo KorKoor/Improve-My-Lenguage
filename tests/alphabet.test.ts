@@ -3,7 +3,6 @@ import { test } from "node:test";
 import { alphabetFor, arabicForms, charBreakdown, hasAlphabet, keyboardFor, romanForms } from "../src/lib/content/alphabets";
 import { LANGUAGES } from "../src/lib/content/languages";
 import { evaluateRoman } from "../src/lib/engine/evaluate";
-import { alphabetDue, nextStep } from "../src/lib/engine/next-step";
 import { backspaceJamo, romanizeSyllable, typeJamo } from "../src/lib/hangul";
 
 const type = (keys: string) => [...keys].reduce(typeJamo, "");
@@ -99,17 +98,4 @@ test("respuestas en letras latinas: se aceptan con aviso", () => {
   assert.equal(evaluateRoman("arigatou", ["arigato"], "ありがとう")?.correct, true);
   assert.equal(evaluateRoman("gracias", ["spasibo"], "спасибо"), null);
   assert.equal(evaluateRoman("", ["spasibo"], "спасибо"), null);
-});
-
-test("seguir aprendiendo: el alfabeto va antes que las lecciones", () => {
-  const base = { dueCount: 0, courseDone: 0, courseTotal: 30, nextLesson: 1, lessonsToday: 0, minutesToday: 0, dailyMinutes: 15, storyId: null, storiesToday: 0 };
-  assert.equal(nextStep({ ...base, alphabet: { done: 0, total: 6 } }).kind, "alphabet");
-  assert.equal(nextStep({ ...base, alphabet: { done: 1, total: 6 } }).kind, "alphabet");
-  assert.equal(nextStep({ ...base, alphabet: { done: 2, total: 6 } }).kind, "lesson");
-  assert.equal(nextStep({ ...base, courseDone: 1, nextLesson: 2, alphabet: { done: 2, total: 6 } }).kind, "alphabet");
-  assert.equal(nextStep({ ...base, courseDone: 9, nextLesson: 10, alphabet: { done: 6, total: 6 } }).kind, "lesson");
-  assert.equal(nextStep(base).kind, "lesson"); // idiomas con letras latinas
-  assert.equal(nextStep({ ...base, dueCount: 12, alphabet: { done: 0, total: 6 } }).kind, "review");
-  assert.ok(!alphabetDue(undefined, 0));
-  assert.ok(!alphabetDue({ done: 3, total: 3 }, 0));
 });

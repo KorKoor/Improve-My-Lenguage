@@ -90,6 +90,31 @@
   --radius-card: 22px;
 }
 
+/* Alto contraste (Comodidad): texto más oscuro, bordes marcados, foco muy visible. */
+html[data-contrast="high"] {
+  --text: #000000;
+  --text-muted: #2d2a3a;
+  --border: #4a4560;
+  --primary: #3236a8;
+  --primary-hover: #262a8c;
+  --success: #1c6b48;
+  --warning: #7a4a05;
+  --danger: #9c2420;
+}
+html[data-contrast="high"].dark {
+  --text: #ffffff;
+  --text-muted: #e2dff0;
+  --border: #b7b1d4;
+  --primary: #b9bcff;
+  --primary-hover: #d2d4ff;
+  --success: #7de3b5;
+  --warning: #ffd27a;
+  --danger: #ffaaa6;
+}
+html[data-contrast="high"] a { text-decoration: underline; text-underline-offset: 3px; }
+html[data-contrast="high"] :focus-visible { outline: 3px solid var(--text); outline-offset: 3px; }
+html[data-contrast="high"] .card { border-width: 2px; box-shadow: none; }
+
 /* Comodidad: tamaño de letra global (toda la UI está en rem). */
 html[data-text="large"] { font-size: 112.5%; }
 html[data-text="xl"] { font-size: 125%; }
@@ -189,3 +214,9 @@ html[data-text="xl"] { font-size: 125%; }
     scroll-behavior: auto !important;
   }
 }
+
+/* Orden de trazos (Fase 0): cada trazo se dibuja en su dirección. */
+@keyframes stroke-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+.stroke-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: stroke-draw 0.8s ease-in-out forwards; }
+@keyframes stroke-dot { from { opacity: 0; } to { opacity: 1; } }
+.stroke-dot { opacity: 0; animation: stroke-dot 0.2s ease-out forwards; }

@@ -26,8 +26,8 @@ import { requireLearner } from "@/lib/services/viewer";
 import { MultiLangToday } from "@/components/dashboard/multilang-today";
 import { CourseCard } from "@/components/dashboard/course-card";
 import { hasFirstSteps } from "@/lib/content/first-steps";
-import { getAlphabet, getCourse } from "@/lib/db/repositories";
-import { alphabetFor } from "@/lib/content/alphabets";
+import { getCourse } from "@/lib/db/repositories";
+import { phaseZeroState } from "@/lib/services/phase-zero";
 import { nextLesson } from "@/lib/engine/course";
 import { courseFor } from "@/lib/services/learning";
 import { simpleNextStep } from "@/lib/services/next-step";
@@ -66,12 +66,11 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const courseProgress = hasFirstSteps(learner.language.code) ? await getCourse(learner.ul.id) : null;
   const courseDone = courseProgress && (vocabTheta < -1.6 || Object.keys(courseProgress).length > 0) ? courseProgress : null;
   const course = courseDone ? courseFor(learner) : [];
-  const abc = courseDone ? alphabetFor(learner.language.code) : null;
-  const abcLetters = abc ? await getAlphabet(learner.ul.id) : null;
-  const abcProgress = abc && abcLetters ? { done: abc.groups.filter((g) => abcLetters[g.id]).length, total: abc.groups.length, name: abc.name } : null;
+  const phaseState = courseDone ? await phaseZeroState(learner, Object.keys(courseDone).length) : null;
+  const phase = phaseState ? { next: phaseState.progress.next, done: phaseState.progress.done, total: phaseState.progress.total, diagnosed: phaseState.diagnosed } : undefined;
   const firstStepsCard =
     courseDone && Object.keys(courseDone).length < course.length ? (
-      <CourseCard lesson={course[nextLesson(courseDone, course.length) - 1]!} done={Object.keys(courseDone).length} total={course.length} language={learner.language.name} big={learner.profile.simpleMode} alphabet={abcProgress ?? undefined} />
+      <CourseCard lesson={course[nextLesson(courseDone, course.length) - 1]!} done={Object.keys(courseDone).length} total={course.length} language={learner.language.name} big={learner.profile.simpleMode} phase={phase} />
     ) : null;
   const lang = learner.language;
   // Tutorial: la primera vez que llega al inicio (o bajo demanda con ?tutorial=1).

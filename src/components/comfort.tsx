@@ -3,26 +3,28 @@ import { useEffect } from "react";
 import type { TextSize } from "@/lib/db/types";
 
 /**
- * Comodidad (accesibilidad): tamaño de letra y audio lento para toda la app.
- * Se guarda en el perfil y se refleja en una cookie para aplicarse antes del
- * primer pintado (sin parpadeo), igual que el tema.
- *   <html data-text="large" data-slow-audio="1">
+ * Comodidad (accesibilidad): tamaño de letra, audio lento y alto contraste
+ * para toda la app. Se guarda en el perfil y se refleja en una cookie para
+ * aplicarse antes del primer pintado (sin parpadeo), igual que el tema.
+ *   <html data-text="large" data-slow-audio="1" data-contrast="high">
  * Todo el diseño usa rem, así que cambiar el tamaño base escala la interfaz.
  */
 const COOKIE = "comfort";
 
-export const comfortScript = `(function(){try{var m=document.cookie.match(/(?:^|; )comfort=(normal|large|xl)\.(0|1)/);if(!m)return;var h=document.documentElement;h.dataset.text=m[1];h.dataset.slowAudio=m[2];}catch(e){}})();`;
+export const comfortScript = `(function(){try{var m=document.cookie.match(/(?:^|; )comfort=(normal|large|xl)\.(0|1)(?:\.(0|1))?/);if(!m)return;var h=document.documentElement;h.dataset.text=m[1];h.dataset.slowAudio=m[2];if(m[3]==="1")h.dataset.contrast="high";}catch(e){}})();`;
 
-export function applyComfort(textSize: TextSize, slowAudio: boolean) {
+export function applyComfort(textSize: TextSize, slowAudio: boolean, highContrast = false) {
   const h = document.documentElement;
   h.dataset.text = textSize;
   h.dataset.slowAudio = slowAudio ? "1" : "0";
-  document.cookie = `${COOKIE}=${textSize}.${slowAudio ? 1 : 0}; path=/; max-age=31536000; samesite=lax`;
+  if (highContrast) h.dataset.contrast = "high";
+  else delete h.dataset.contrast;
+  document.cookie = `${COOKIE}=${textSize}.${slowAudio ? 1 : 0}.${highContrast ? 1 : 0}; path=/; max-age=31536000; samesite=lax`;
 }
 
 /** Sincroniza las preferencias guardadas en el perfil con el documento. */
-export function ComfortSync({ textSize, slowAudio }: { textSize: TextSize; slowAudio: boolean }) {
-  useEffect(() => applyComfort(textSize, slowAudio), [textSize, slowAudio]);
+export function ComfortSync({ textSize, slowAudio, highContrast = false }: { textSize: TextSize; slowAudio: boolean; highContrast?: boolean }) {
+  useEffect(() => applyComfort(textSize, slowAudio, highContrast), [textSize, slowAudio, highContrast]);
   return null;
 }
 

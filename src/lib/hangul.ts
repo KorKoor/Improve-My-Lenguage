@@ -99,3 +99,22 @@ export function romanizeSyllable(ch: string): string | null {
   const s = decompose(ch);
   return s ? R_CHO[s.cho]! + R_JUNG[s.jung]! + R_JONG[s.jong]! : null;
 }
+
+/** Letras (jamo) de una sílaba, con las finales dobles separadas: 없 → ㅇ ㅓ ㅂ ㅅ. */
+export function jamoOf(ch: string): string[] | null {
+  const s = decompose(ch);
+  if (!s) return null;
+  const out = [CHO[s.cho]!, JUNG[s.jung]!];
+  if (s.jong) {
+    const pair = split(FINAL_PAIRS, JONG[s.jong]!);
+    out.push(...(pair ?? [JONG[s.jong]!]));
+  }
+  return out;
+}
+
+/** La misma sílaba con otra consonante inicial (para ejercicios de «¿cómo se lee?»). */
+export function withInitial(ch: string, cho: string): string | null {
+  const s = decompose(ch);
+  const i = CHO.indexOf(cho);
+  return s && i >= 0 ? compose({ ...s, cho: i }) : null;
+}

@@ -28,7 +28,7 @@ export default async function AppShell({ children }: { children: React.ReactNode
 
   return (
     <div className="flex min-h-dvh">
-      <ComfortSync textSize={learner.profile.textSize} slowAudio={learner.profile.slowAudio} />
+      <ComfortSync textSize={learner.profile.textSize} slowAudio={learner.profile.slowAudio} highContrast={learner.profile.highContrast} />
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-6 border-r border-border bg-surface/60 px-4 py-6 lg:flex">
         <div className="px-1"><Logo href="/app" /></div>
         <SidebarNav due={due} simple={learner.profile.simpleMode} alphabet={hasAlphabet(learner.language.code)} />

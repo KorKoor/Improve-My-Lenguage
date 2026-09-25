@@ -21,10 +21,13 @@ import {
 import { CEFR_CENTER, itemTheta } from "./levels";
 import { exercisesForBlock, type BlockKind, type SessionPlan } from "./planner";
 import { hashString, mulberry32, shuffle } from "./random";
+import type { Letter } from "../content/alphabets";
+import { letterItemId, type RuleExample } from "../content/phase-zero";
+import { buildLetterExercise, buildLetterPairExercise, buildRuleExercise } from "./letter-exercises";
 
 export interface KnowledgeLite {
   itemId: string;
-  itemType: "vocab" | "grammar";
+  itemType: "vocab" | "grammar" | "letter" | "rule";
   reps: number;
   stability: number;
   status: "learning" | "known" | "difficult" | "saved";
@@ -54,8 +57,24 @@ export interface GrammarTip {
   mistake?: { wrong: string; right: string; why: string };
 }
 
+/** Ficha de una letra (o combinación de letras) nueva. */
+export interface LetterCard extends Letter {
+  id: string;
+  groupId: string;
+}
+
+/** Ficha de una regla de lectura u ortografía. */
+export interface RuleCard {
+  id: string;
+  title: string;
+  explain: string;
+  examples: RuleExample[];
+}
+
 export type SessionStep =
   | { kind: "intro"; block: BlockKind; word: WordCard }
+  | { kind: "letter"; block: BlockKind; letter: LetterCard }
+  | { kind: "rule"; block: BlockKind; rule: RuleCard }
   | { kind: "tip"; block: BlockKind; grammar: GrammarTip }
   | { kind: "exercise"; block: BlockKind; exercise: Exercise }
   | { kind: "tutor"; block: BlockKind; minutes: number };
@@ -77,6 +96,10 @@ export interface BuildInput {
   seed: number;
   /** Preferencias del cuestionario de perfil (opcional). */
   style?: ExerciseStyle;
+  /** Modo accesible: nada que dependa de ver la forma de una letra. */
+  audioFirst?: boolean;
+  /** Parejas de letras que el alumno confunde (más frecuentes primero). */
+  confusions?: [string, string][];
 }
 
 export function wordCard(v: VocabItem, native: LanguageCode): WordCard {
@@ -173,6 +196,17 @@ export function buildSessionSteps(input: BuildInput): SessionStep[] {
         const items = input.due.slice(0, n);
         const reviewedVocab: VocabItem[] = [];
         for (const k of items) {
+          // Letras y reglas de lectura (Fase 0) también se repasan.
+          if (k.itemType === "letter") {
+            const kind = input.audioFirst || k.reps % 2 === 1 ? "letter_hear" : "letter_see";
+            push("review", buildLetterExercise(kind, k.itemId, input.seed));
+            continue;
+          }
+          if (k.itemType === "rule") {
+            const [lang, , id] = k.itemId.split(":");
+            push("review", buildRuleExercise(lang!, id!, input.seed));
+            continue;
+          }
           if (k.itemType === "grammar") {
             const g = input.catalog.grammarById(k.itemId);
             if (g) push("review", buildGrammarExercise(g, k.reps % g.exercises.length));
@@ -185,6 +219,8 @@ export function buildSessionSteps(input: BuildInput): SessionStep[] {
           const ok = push("review", buildVocabExercise(type, v, input.catalog, input.native, input.seed));
           if (!ok) push("review", buildVocabExercise("meaning_mc", v, input.catalog, input.native));
         }
+        // Letras que se confunden: un contraste de cada pareja más frecuente.
+        for (const [a, b] of (input.confusions ?? []).slice(0, 2)) push("review", buildLetterPairExercise(letterItemId(input.language, a), b, input.seed));
         break;
       }
       case "new_words": {

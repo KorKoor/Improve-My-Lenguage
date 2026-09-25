@@ -17,7 +17,12 @@ users/{uid}                                perfil y preferencias (idioma nativo/
 │  │                                       · skills.{skill} = { theta, se, evidence }   (vector de habilidades)
 │  │                                       · goal = { targetLevel, deadline, minutesPerDay }  (objetivo activo)
 │  │                                       · openAssessmentId (diagnóstico en curso)
-│  ├─ knowledge/{itemId}                   memoria FSRS por ítem + estado (guardada, sabida, difícil)
+│  │                                       · course / firstSteps / alphabet = { id: estrellas }  (Camino guiado, Primeros pasos, alfabeto)
+│  │                                       · phaseZero = { unidad: estrellas }, phaseZeroSkipped, phaseZeroDiagnosed  (Fase 0: aprender a leer)
+│  │                                       · confusions = { "ш|щ": veces }  (letras que el alumno confunde)
+│  │                                       · milestones = [ "first-word", "letters-10", … ]  (hitos ya celebrados)
+│  ├─ knowledge/{itemId}                   memoria FSRS por ítem + estado (guardada, sabida, difícil);
+│  │                                       itemType: vocab | grammar | letter («ru:l:ш») | rule («ru:r:stress»)
 │  ├─ attempts/{auto}                      cada respuesta: tipo, habilidad, categoría, tiempo, dificultad
 │  ├─ mistakes/{auto}                      errores clasificados (ejercicio, tutor, diagnóstico)
 │  ├─ sessions/{auto}                      plan, duración y contadores de cada sesión

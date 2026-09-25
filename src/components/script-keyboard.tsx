@@ -2,7 +2,7 @@
 import { Delete, Keyboard, Space } from "lucide-react";
 import { useState } from "react";
 import { useSpeech } from "@/components/speak-button";
-import { keyboardFor } from "@/lib/content/alphabets";
+import { alphabetFor, charBreakdown, keyboardFor } from "@/lib/content/alphabets";
 import { cn } from "@/lib/cn";
 import { backspaceJamo, typeJamo } from "@/lib/hangul";
 
@@ -22,6 +22,8 @@ export function ScriptKeyboard({ lang, locale, value, onChange, disabled = false
     return <p className="mt-2 text-xs text-muted">{romanOk ? "Puedes escribir en pinyin (con o sin tildes), por ejemplo «nihao»." : "Para escribir caracteres, usa el teclado chino (pinyin) de tu dispositivo."}</p>;
   }
   const layout = layouts[Math.min(tab, layouts.length - 1)]!;
+  const letters = alphabetFor(lang)?.groups.flatMap((g) => g.letters) ?? [];
+  const soundOf = (k: string) => letters.find((l) => l.g === k)?.r ?? charBreakdown(lang, k)[0]?.r ?? "signo";
   const press = (k: string) => {
     onChange(lang === "ko" ? typeJamo(value, k) : value + k);
     speak(lang === "ko" ? typeJamo("", k).slice(-1) : k, 0.9);
@@ -51,9 +53,11 @@ export function ScriptKeyboard({ lang, locale, value, onChange, disabled = false
                   type="button"
                   disabled={disabled}
                   onClick={() => press(k)}
-                  className="h-10 min-w-0 max-w-11 flex-1 rounded-lg border border-border bg-surface text-lg font-medium shadow-sm transition active:scale-95 active:bg-primary-soft disabled:opacity-50"
+                  className="h-11 min-w-0 max-w-11 flex-1 rounded-lg border border-border bg-surface text-lg font-medium shadow-sm transition active:scale-95 active:bg-primary-soft disabled:opacity-50"
                 >
                   {k}
+                  {/* Con lector de pantalla: la letra y cómo suena. */}
+                  <span className="sr-only" lang="es">, {soundOf(k)}</span>
                 </button>
               ))}
             </div>

@@ -103,7 +103,6 @@ export function AlphabetTrainer({ alphabet, locale, rtl, languageName, initialPr
               type="button"
               onClick={() => { setSelected(l); say(l); }}
               aria-pressed={selected?.g === l.g}
-              aria-label={`${l.g}: ${l.r}`}
               className={cn("card lift flex flex-col items-center gap-0.5 px-2 py-3 transition active:scale-95", selected?.g === l.g && "border-2 border-primary bg-primary-soft/50")}
             >
               <span className="font-display text-3xl font-extrabold" lang={lang}>{l.upper ? `${l.upper} ${l.g}` : l.g}</span>
