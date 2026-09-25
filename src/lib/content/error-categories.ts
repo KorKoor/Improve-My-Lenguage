@@ -195,6 +195,13 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "ja:giving", label: "dar y recibir (あげる, くれる, もらう)", language: "ja", grammarId: "ja:g:giving" },
   { id: "ja:evidentials", label: "そうだ, らしい, ようだ", language: "ja", grammarId: "ja:g:evidentials" },
   { id: "ja:hazu-wake", label: "はず y わけ", language: "ja", grammarId: "ja:g:hazu-wake" },
+  { id: "ru:dative", label: "dativo", language: "ru", grammarId: "ru:g:dative" },
+  { id: "ru:numbers", label: "números y caso", language: "ru", grammarId: "ru:g:numbers-case" },
+  { id: "ru:imperative", label: "imperativo", language: "ru", grammarId: "ru:g:imperative" },
+  { id: "ru:instrumental", label: "instrumental", language: "ru", grammarId: "ru:g:instrumental" },
+  { id: "ru:reflexive", label: "verbos en -ся", language: "ru", grammarId: "ru:g:reflexive" },
+  { id: "ru:conditional", label: "condicional con бы", language: "ru", grammarId: "ru:g:conditional" },
+  { id: "ru:relative", label: "relativo который", language: "ru", grammarId: "ru:g:kotoryi" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {
