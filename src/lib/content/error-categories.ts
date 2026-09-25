@@ -231,6 +231,12 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "sv:imperative", label: "imperativo", language: "sv", grammarId: "sv:g:imperative" },
   { id: "sv:possessive-reflexive", label: "sin / hans / hennes", language: "sv", grammarId: "sv:g:sin-hans" },
   { id: "sv:relative", label: "relativo som", language: "sv", grammarId: "sv:g:som" },
+  { id: "ar:future", label: "futuro (سـ / سوف / لن)", language: "ar", grammarId: "ar:g:future" },
+  { id: "ar:negation", label: "negación (لا، لم، لن، ليس)", language: "ar", grammarId: "ar:g:negation" },
+  { id: "ar:idafa", label: "iḍāfa (posesión)", language: "ar", grammarId: "ar:g:idafa" },
+  { id: "ar:comparative", label: "comparativo y superlativo", language: "ar", grammarId: "ar:g:comparative" },
+  { id: "ar:relative", label: "relativos (الذي، التي)", language: "ar", grammarId: "ar:g:relative" },
+  { id: "ar:verb-forms", label: "formas verbales derivadas", language: "ar", grammarId: "ar:g:verb-forms" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {
