@@ -31,6 +31,9 @@ export interface ProfileRow {
   avatar: string | null;
   /** Resultado del cuestionario «¿Cómo aprendes mejor?». */
   personality: PersonalityResult | null;
+  /** Protectores de racha disponibles (0–2) y días que ya cubrieron. */
+  streakFreezes: number;
+  frozenDays: string[];
   createdAt: Date;
 }
 

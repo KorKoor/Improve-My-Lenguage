@@ -44,6 +44,8 @@ export default async function ProgressPage() {
         ))}
       </section>
 
+      <WeekCard week={p.week} />
+
       {p.insights.length > 0 && (
         <section aria-labelledby="insights-title" className="space-y-3">
           <h2 id="insights-title" className="font-display text-xl font-bold">Lo que dicen tus datos</h2>
@@ -135,5 +137,62 @@ export default async function ProgressPage() {
         </dl>
       </Card>
     </div>
+  );
+}
+
+function Delta({ now, before, unit = "" }: { now: number; before: number; unit?: string }) {
+  if (before === 0 && now === 0) return <span className="text-xs text-muted">—</span>;
+  const diff = now - before;
+  const up = diff >= 0;
+  // En porcentajes se comparan puntos; en cantidades, variación relativa.
+  const pct = unit.trim() === "%" ? null : before > 0 ? Math.round((diff / before) * 100) : null;
+  const label = unit.trim() === "%" ? `${Math.abs(diff)} pts` : pct === null ? `+${diff}` : `${Math.abs(pct)} %`;
+  return (
+    <span className={`text-xs font-semibold ${up ? "text-success" : "text-danger"}`}>
+      {up ? "▲" : "▼"} {label}
+    </span>
+  );
+}
+
+function WeekCard({ week }: { week: import("@/lib/engine/insights").WeekReport }) {
+  const c = week.current;
+  const b = week.previous;
+  const acc = (t: typeof c) => (t.exercises ? Math.round((t.correct / t.exercises) * 100) : 0);
+  const max = Math.max(10, ...week.daily.map((d) => d.minutes));
+  const labels = ["L", "M", "X", "J", "V", "S", "D"];
+  const rows: [string, number, number, string][] = [
+    ["Minutos", c.minutes, b.minutes, ""],
+    ["Ejercicios", c.exercises, b.exercises, ""],
+    ["Días activos", c.days, b.days, ""],
+    ["Precisión", acc(c), acc(b), " %"],
+  ];
+  return (
+    <section className="card p-5 sm:p-6" aria-labelledby="week-title">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <h2 id="week-title" className="font-display text-xl font-bold">Tu semana</h2>
+        <p className="text-sm text-muted">Comparada con la semana pasada a estas alturas</p>
+      </div>
+      <div className="mt-4 grid gap-5 lg:grid-cols-[1fr_280px]">
+        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {rows.map(([label, now, before, unit]) => (
+            <div key={label} className="rounded-2xl bg-surface-muted p-3">
+              <dt className="text-xs text-muted">{label}</dt>
+              <dd className="font-display text-2xl font-extrabold tabular-nums">{now}{unit}</dd>
+              <dd><Delta now={now} before={before} unit={unit} /> <span className="text-[11px] text-muted">vs {before}{unit}</span></dd>
+            </div>
+          ))}
+        </dl>
+        <div className="flex h-32 gap-2" aria-label="Minutos por día esta semana">
+          {week.daily.map((d, i) => (
+            <div key={d.day} className="flex flex-1 flex-col items-center gap-1">
+              <div className="relative w-full flex-1 overflow-hidden rounded-lg bg-surface-muted" title={`${d.minutes} min`}>
+                <div className="absolute inset-x-0 bottom-0 rounded-lg bg-primary transition-[height] duration-700" style={{ height: `${(d.minutes / max) * 100}%` }} />
+              </div>
+              <span className="text-[11px] text-muted">{labels[i]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

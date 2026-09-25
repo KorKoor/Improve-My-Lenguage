@@ -16,7 +16,7 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
       locale={learner.language.speechLocale}
       language={learner.language.code}
       rtl={learner.language.rtl}
-      title="Sesión de estudio"
+      title={sp.focus === "leeches" ? "Palabras rebeldes" : "Sesión de estudio"}
     />
   );
 }

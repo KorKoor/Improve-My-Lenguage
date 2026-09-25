@@ -13,10 +13,13 @@
     "un",
     "una"
   ],
-  "on": [
-    "en",
-    "sobre"
-  ],
+  "on": {
+    "t": [
+      "en",
+      "sobre"
+    ],
+    "p": "preposition"
+  },
   "that": [
     "que",
     "ese",
@@ -39,11 +42,14 @@
     "(auxiliar de futuro)",
     "voluntad"
   ],
-  "just": [
-    "solo",
-    "justo",
-    "acabar de"
-  ],
+  "just": {
+    "t": [
+      "solo",
+      "justo",
+      "acabar de"
+    ],
+    "p": "adverb"
+  },
   "up": [
     "arriba",
     "hacia arriba"
@@ -84,17 +90,24 @@
     "la",
     "su (de ella)"
   ],
-  "like": [
-    "como",
-    "gustar"
-  ],
+  "like": {
+    "t": [
+      "gustar",
+      "como"
+    ],
+    "p": "verb"
+  },
   "by": [
     "por",
     "junto a"
   ],
-  "but": [
-    "pero"
-  ],
+  "but": {
+    "t": [
+      "pero",
+      "sino"
+    ],
+    "p": "conjunction"
+  },
   "all": [
     "todo",
     "todos"
@@ -104,10 +117,14 @@
     "tan",
     "entonces"
   ],
-  "as": [
-    "como",
-    "mientras"
-  ],
+  "as": {
+    "t": [
+      "como",
+      "mientras",
+      "ya que"
+    ],
+    "p": "conjunction"
+  },
   "have": [
     "tener",
     "haber"
@@ -154,5 +171,34 @@
   ],
   "what": [
     "qué"
-  ]
+  ],
+  "after": {
+    "t": [
+      "después de",
+      "después"
+    ],
+    "p": "preposition"
+  },
+  "over": {
+    "t": [
+      "sobre",
+      "encima de",
+      "terminado"
+    ],
+    "p": "preposition"
+  },
+  "through": {
+    "t": [
+      "a través de",
+      "por"
+    ],
+    "p": "preposition"
+  },
+  "off": {
+    "t": [
+      "apagado",
+      "fuera"
+    ],
+    "p": "adverb"
+  }
 }

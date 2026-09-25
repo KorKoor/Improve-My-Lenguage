@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { aiAvailable } from "../ai/provider";
 import * as repo from "../db/repositories";
-import { localDay } from "../engine/progress";
+import { localDay, MAX_STREAK_FREEZES } from "../engine/progress";
 import { dailyQuests, levelFromXp, levelTitle, questValue, totalXp, type DayStats, type Quest, type QuestInput } from "../engine/quests";
 import { getSkills } from "./learning";
 import type { Learner } from "./viewer";
@@ -108,10 +108,14 @@ export async function claimDailyQuest(learner: Learner, questId: string, dueRevi
   const total = before.total + (ok ? q.xp : 0);
   const after = levelFromXp(total);
   if (ok) await repo.track(learner.userId, "quest_claimed", { quest: q.id, xp: q.xp });
+  const allDone = board.quests.every((x) => x.id === q.id || x.claimed);
+  // Completar las tres misiones del día regala un protector de racha.
+  const freezes = ok && allDone ? await repo.grantStreakFreeze(learner.userId, MAX_STREAK_FREEZES) : null;
   return {
+    freezeEarned: freezes !== null,
     xpGained: ok ? q.xp : 0,
     xp: { total, ...after, title: levelTitle(after.level) } satisfies XpView,
     leveledUp: after.level > before.level,
-    allDone: board.quests.every((x) => x.id === q.id || x.claimed),
+    allDone,
   };
 }

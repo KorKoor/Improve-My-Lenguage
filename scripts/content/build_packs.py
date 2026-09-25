@@ -185,7 +185,41 @@ def short_chunks(gloss: str, max_words: int = 5, max_len: int = 40) -> list[str]
     return out
 
 
+ARTICLE_TAG = re.compile(r"^\[(el|la|los|las|un|una)\]\s*", re.I)
+WITH_TAG = re.compile(r"\s*\[with ([^\]]+)\]\s*$", re.I)
+TAIL_TAG = re.compile(r"\s*\[([^\]]+)\]\s*$")
+INNER_TAG = re.compile(r"(\w)\[(\w+)\]")
+
+
+def tidy_translation(c: str) -> str:
+    """Anotaciones de las tablas de traducción de Wiktionary → texto natural:
+    «pertenecer [with en or a]» → «pertenecer a» · «[el] ala» → «ala» ·
+    «mermar[se]» → «mermar» · «sin precedente[s]» → «sin precedentes» ·
+    «jugar / juguetear [con]» → «jugar con» · «[a] tiempo completo» → «a tiempo completo»."""
+    c = ARTICLE_TAG.sub("", c.strip())
+    # Primero lo pegado a la palabra: «mermar[se]», «precedente[s]».
+    c = INNER_TAG.sub(lambda x: x.group(1) + ("" if x.group(2) == "se" else x.group(2)), c)
+    tail = ""
+    m = WITH_TAG.search(c)
+    if m:
+        tail = re.split(r"\s+or\s+|/", m.group(1))[-1].strip()
+        c = c[: m.start()]
+    else:
+        m = TAIL_TAG.search(c)
+        if m and m.start() > 0:
+            tail = re.split(r"\s*/\s*", m.group(1))[0].strip()
+            c = c[: m.start()]
+    c = re.sub(r"^\[(\w+)\]\s*", lambda x: x.group(1) + " ", c)  # «[a] tiempo completo»
+    c = re.sub(r"\s*\[[^\]]*\]\s*", " ", c)  # «echar [el / tanto] ojo» → «echar ojo»
+    parts = re.split(r"\s*/\s*", c)
+    if len(parts) > 1 and all(len(x) >= 3 for x in parts):
+        c = parts[0]  # «jugar / juguetear» → «jugar» (pero «y/o» se queda)
+    c = re.sub(r"[\[\]{}|=]+", " ", f"{c} {tail}")  # restos sueltos: «someterse ]», «doce docenas =»
+    return re.sub(r"\s+", " ", c).strip()
+
+
 def clean_candidate(c: str) -> str:
+    c = tidy_translation(c)
     c = re.sub(r"[₀-₉⁰-⁹\d]+$", "", c).strip(" .;:·-")
     return c if c and len(c) <= 60 else ""
 

@@ -36,3 +36,18 @@ test("XP y nivel: curva coherente", () => {
   assert.ok(l.progress > 0 && l.progress < 1);
   assert.equal(totalXp({ exercises: 10, correct: 5, readings: 1, writings: 0, listening: 0, speaking: 0, conversations: 0, achievements: 1, questXp: 50 }), 50 + 25 + 40 + 100 + 50);
 });
+
+test("protector de racha: cubre los días perdidos sólo si alcanza", async () => {
+  const { computeStreak, freezeDaysNeeded } = await import("../src/lib/engine/progress");
+  const active = ["2026-09-20", "2026-09-21", "2026-09-22"];
+  // Hoy 24, ayer (23) sin actividad → 1 protector lo cubre.
+  assert.deepEqual(freezeDaysNeeded(active, "2026-09-24", 1), ["2026-09-23"]);
+  assert.equal(computeStreak([...active, "2026-09-23"], "2026-09-24"), 4);
+  // Dos días perdidos con un solo protector: no alcanza, no se gasta.
+  assert.deepEqual(freezeDaysNeeded(active, "2026-09-25", 1), []);
+  assert.deepEqual(freezeDaysNeeded(active, "2026-09-25", 2), ["2026-09-24", "2026-09-23"]);
+  // Ayer estudiaste: no hace falta.
+  assert.deepEqual(freezeDaysNeeded(active, "2026-09-23", 2), []);
+  // Sin historial nunca se consume.
+  assert.deepEqual(freezeDaysNeeded([], "2026-09-23", 2), []);
+});

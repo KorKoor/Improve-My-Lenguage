@@ -3,11 +3,11 @@ import { catalog, errorLabel, getVocab, grammarForCategory, topicLabel } from ".
 import type { CefrLevel, Skill } from "../content/types";
 import { overallTheta, progressWithinLevel, thetaToCefr, type SkillEstimate } from "../engine/levels";
 import { planSession, type SessionPlan } from "../engine/planner";
-import { buildInsights, pickWordOfDay, type Insight } from "../engine/insights";
+import { buildInsights, pickWordOfDay, weekReport, type Insight, type WeekReport } from "../engine/insights";
 import { hashString } from "../engine/random";
 import { wordCard, type WordCard } from "../engine/session-builder";
 import { knownRankForTheta } from "../reading/text";
-import { addDays, accuracy, computeStreak, consistency, isLearned, localDay, longestStreak, summarizeVocabulary } from "../engine/progress";
+import { addDays, accuracy, computeStreak, freezeDaysNeeded, consistency, isLearned, localDay, longestStreak, summarizeVocabulary } from "../engine/progress";
 import { practicePicks, recommend, type PracticePick, type Recommendation } from "../engine/recommender";
 import type { Weakness } from "../engine/weakness";
 import * as repo from "../db/repositories";
@@ -34,6 +34,9 @@ export interface DashboardData {
   recommendation: Recommendation;
   streak: number;
   bestStreak: number;
+  /** Protectores de racha disponibles y días que se acaban de cubrir. */
+  streakFreezes: number;
+  freezeUsed: string[];
   minutesTotal: number;
   minutesThisMonth: number;
   wordsLearned: number;
@@ -87,6 +90,15 @@ export async function getDashboard(learner: Learner): Promise<DashboardData> {
   const skills = [...skillsMap.values()];
   const measured = skills.filter((s) => s.evidence > 0);
   const theta = overallTheta(measured);
+  // Protector de racha: cubre automáticamente los días perdidos si alcanza.
+  const covered = [...days, ...learner.profile.frozenDays];
+  const need = freezeDaysNeeded(covered, today, learner.profile.streakFreezes);
+  let freezeUsed: string[] = [];
+  if (need.length && (await repo.consumeStreakFreezes(learner.userId, need))) {
+    freezeUsed = need;
+    covered.push(...need);
+    await repo.track(learner.userId, "streak_freeze_used", { days: need.length });
+  }
   const vocab = summarizeVocabulary(
     knowledge.map((k) => ({ ...knowledgeToCard(k, now), itemId: k.itemId, itemType: k.itemType })),
     now,
@@ -141,8 +153,10 @@ export async function getDashboard(learner: Learner): Promise<DashboardData> {
     plan,
     dueCount,
     recommendation,
-    streak: computeStreak(days, today),
-    bestStreak: longestStreak(days),
+    streak: computeStreak(covered, today),
+    bestStreak: longestStreak(covered),
+    streakFreezes: learner.profile.streakFreezes - freezeUsed.length,
+    freezeUsed,
     minutesTotal,
     minutesThisMonth,
     wordsLearned: vocab.learned,
@@ -187,6 +201,7 @@ export interface ProgressData {
   achievements: { achievementId: string; unlockedAt: Date }[];
   totals: { attempts: number; correct: number };
   insights: Insight[];
+  week: WeekReport;
 }
 
 export async function getProgress(learner: Learner): Promise<ProgressData> {
@@ -214,12 +229,13 @@ export async function getProgress(learner: Learner): Promise<ProgressData> {
     weekly,
     skillAccuracy: skillAcc,
     activity,
-    streak: computeStreak(days, today),
-    bestStreak: longestStreak(days),
+    streak: computeStreak([...days, ...learner.profile.frozenDays], today),
+    bestStreak: longestStreak([...days, ...learner.profile.frozenDays]),
     consistency28: consistency(days, today, 28),
     weaknesses: topWeaknesses(weaknesses),
     achievements,
     totals: { attempts: totals.total, correct: totals.correct },
+    week: weekReport(activity, today),
     insights: buildInsights({
       now,
       today,

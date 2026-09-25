@@ -47,3 +47,16 @@ test("insights: sin datos suficientes no inventa nada", () => {
   const ins = buildInsights({ now, today: "2026-09-25", activeDays: [], vocab: [], weekly: [], level: null, languageName: "Inglés" });
   assert.deepEqual(ins, []);
 });
+
+test("informe semanal: separa esta semana de la anterior (lunes a domingo)", async () => {
+  const { weekReport } = await import("../src/lib/engine/insights");
+  const row = (day: string, min: number) => ({ day, seconds: min * 60, exercises: min, correct: Math.floor(min / 2), wordsReviewed: 1 });
+  // 2026-09-25 es viernes → semana desde el lunes 21.
+  const r = weekReport([row("2026-09-21", 10), row("2026-09-25", 20), row("2026-09-20", 5), row("2026-09-14", 7)], "2026-09-25");
+  assert.equal(r.current.minutes, 30);
+  assert.equal(r.current.days, 2);
+  // La semana anterior sólo cuenta hasta el viernes 18: el domingo 20 no entra.
+  assert.equal(r.previous.minutes, 7);
+  assert.equal(r.daily[0]!.day, "2026-09-21");
+  assert.equal(r.daily[4]!.minutes, 20);
+});

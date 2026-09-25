@@ -65,8 +65,8 @@ export async function profileOverview(viewer: Viewer): Promise<ProfileOverview> 
     memberSince: viewer.profile.createdAt.toISOString(),
     languages: languages.sort((a, b) => Number(b.active) - Number(a.active)),
     stats: {
-      streak: computeStreak(days, today),
-      bestStreak: longestStreak(days),
+      streak: computeStreak([...days, ...viewer.profile.frozenDays], today),
+      bestStreak: longestStreak([...days, ...viewer.profile.frozenDays]),
       activeDays: days.length,
       minutes: Math.round(activity.reduce((a, r) => a + r.seconds, 0) / 60),
       exercises,

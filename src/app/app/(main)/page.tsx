@@ -102,12 +102,19 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         {d.streak > 0 && (
           <Chip tone="warning" className="shrink-0 px-3 py-1 text-sm">
             <Flame size={15} aria-hidden className="animate-flame" /> {d.streak}<span className="hidden sm:inline"> {d.streak === 1 ? "día" : "días"}</span>
+            {d.streakFreezes > 0 && <span title={`${d.streakFreezes} protector(es) de racha`} className="ml-1 border-l border-warning/30 pl-1.5">🛡️{d.streakFreezes > 1 ? d.streakFreezes : ""}</span>}
           </Chip>
         )}
         <Link href="/app/profile" aria-label="Mi perfil" className={`hidden size-11 shrink-0 place-items-center rounded-full font-display font-extrabold transition-transform hover:scale-105 lg:grid ${learner.profile.avatar ? "bg-primary-soft text-2xl" : "bg-primary text-base text-on-primary"}`}>
           {learner.profile.avatar ?? (learner.profile.displayName ?? learner.email ?? "?").slice(0, 1).toUpperCase()}
         </Link>
       </header>
+
+      {d.freezeUsed.length > 0 && (
+        <p className="rounded-2xl bg-warning-soft px-4 py-3 text-sm font-semibold text-warning animate-pop-in" role="status">
+          🛡️ Tu protector de racha cubrió {d.freezeUsed.length === 1 ? "el día que no estudiaste" : `${d.freezeUsed.length} días sin estudiar`}: tu racha de {d.streak} {d.streak === 1 ? "día" : "días"} sigue viva. ¡A por hoy!
+        </p>
+      )}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         {/* Sesión de hoy — acción principal */}

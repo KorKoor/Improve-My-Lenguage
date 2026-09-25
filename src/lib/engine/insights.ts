@@ -46,6 +46,11 @@ export interface InsightInput {
 
 const dayMs = 86_400_000;
 
+/** Palabra «rebelde»: se olvida una y otra vez, o se falla más de lo que se acierta. */
+export function isLeech(k: { lapses: number; incorrect: number; correct: number }): boolean {
+  return k.lapses >= 3 || (k.incorrect >= 3 && k.incorrect > k.correct);
+}
+
 export function buildInsights(input: InsightInput): Insight[] {
   const out: Insight[] = [];
   const learned = input.vocab.filter((v) => v.learned);
@@ -89,7 +94,7 @@ export function buildInsights(input: InsightInput): Insight[] {
 
   // 3. Palabras rebeldes: fallos repetidos.
   const leeches = seen
-    .filter((v) => v.lapses >= 3 || (v.incorrect >= 3 && v.incorrect > v.correct))
+    .filter(isLeech)
     .sort((a, b) => b.lapses + b.incorrect - (a.lapses + a.incorrect))
     .slice(0, 5);
   if (leeches.length >= 2) {
@@ -98,8 +103,8 @@ export function buildInsights(input: InsightInput): Insight[] {
       icon: "🧲",
       title: `${leeches.length} palabras se te resisten`,
       body: `${leeches.map((l) => `«${l.lemma}»`).join(", ")}. Truco: inventa una frase personal con cada una o búscalas en una lectura; el contexto las fija mejor que repetir.`,
-      href: "/app/review",
-      cta: "Repasarlas ahora",
+      href: "/app/session?focus=leeches&minutes=5",
+      cta: "Reaprenderlas ahora",
       tone: "warn",
     });
   }
@@ -174,4 +179,46 @@ export function pickWordOfDay<T extends { id: string; rank?: number; examples: u
   const list = withAudio.length >= 10 ? withAudio : pool;
   if (list.length === 0) return null;
   return list[Math.abs(seed) % list.length]!;
+}
+
+// ── Informe semanal ─────────────────────────────────────────────────────────
+export interface WeekTotals {
+  minutes: number;
+  exercises: number;
+  correct: number;
+  days: number;
+  words: number;
+}
+
+export interface WeekReport {
+  current: WeekTotals;
+  previous: WeekTotals;
+  /** Días del lunes al domingo de esta semana (minutos por día). */
+  daily: { day: string; minutes: number }[];
+}
+
+const addDaysIso = (day: string, n: number) => new Date(Date.parse(`${day}T12:00:00Z`) + n * dayMs).toISOString().slice(0, 10);
+
+/** Semana natural (lunes → domingo) en la zona del usuario, frente a la anterior a estas alturas. */
+export function weekReport(activity: { day: string; seconds: number; exercises: number; correct: number; wordsReviewed: number }[], today: string): WeekReport {
+  const dow = (new Date(`${today}T12:00:00Z`).getUTCDay() + 6) % 7;
+  const monday = addDaysIso(today, -dow);
+  const prevMonday = addDaysIso(monday, -7);
+  const sum = (from: string, to: string): WeekTotals => {
+    const rows = activity.filter((a) => a.day >= from && a.day < to);
+    const byDay = new Set(rows.filter((r) => r.exercises > 0 || r.seconds > 0).map((r) => r.day));
+    return {
+      minutes: Math.round(rows.reduce((a, r) => a + r.seconds, 0) / 60),
+      exercises: rows.reduce((a, r) => a + r.exercises, 0),
+      correct: rows.reduce((a, r) => a + r.correct, 0),
+      days: byDay.size,
+      words: rows.reduce((a, r) => a + r.wordsReviewed, 0),
+    };
+  };
+  const daily = Array.from({ length: 7 }, (_, i) => {
+    const d = addDaysIso(monday, i);
+    return { day: d, minutes: Math.round(activity.filter((a) => a.day === d).reduce((s, r) => s + r.seconds, 0) / 60) };
+  });
+  // Comparación justa: la semana anterior hasta el mismo día de la semana.
+  return { current: sum(monday, addDaysIso(monday, 7)), previous: sum(prevMonday, addDaysIso(prevMonday, dow + 1)), daily };
 }

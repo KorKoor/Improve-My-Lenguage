@@ -106,6 +106,8 @@ function toProfile(snap: DocumentSnapshot): ProfileRow {
     tutorialDoneAt: date(d.tutorialDoneAt),
     avatar: str(d.avatar),
     personality: parsePersonality(json(d.personality)),
+    streakFreezes: num(d.streakFreezes),
+    frozenDays: Array.isArray(d.frozenDays) ? (d.frozenDays as string[]).filter((x) => typeof x === "string") : [],
     createdAt: date(d.createdAt) ?? new Date(0),
   };
 }
@@ -155,6 +157,32 @@ export async function updateProfile(userId: string, patch: ProfileUpdate): Promi
   const entries = Object.entries(patch).filter(([, v]) => v !== undefined);
   if (entries.length === 0) return;
   await userRef(userId).set({ ...Object.fromEntries(entries), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+}
+
+/** Gana un protector de racha (máx. 2). Devuelve el total resultante. */
+export async function grantStreakFreeze(userId: string, max: number): Promise<number> {
+  return db().runTransaction(async (tx) => {
+    const ref = userRef(userId);
+    const snap = await tx.get(ref);
+    const next = Math.min(max, num(snap.get("streakFreezes")) + 1);
+    tx.set(ref, { streakFreezes: next }, { merge: true });
+    return next;
+  });
+}
+
+/** Consume protectores para cubrir días sin actividad (idempotente por día). */
+export async function consumeStreakFreezes(userId: string, days: string[]): Promise<boolean> {
+  return db().runTransaction(async (tx) => {
+    const ref = userRef(userId);
+    const snap = await tx.get(ref);
+    const frozen: string[] = Array.isArray(snap.get("frozenDays")) ? snap.get("frozenDays") : [];
+    const todo = days.filter((d) => !frozen.includes(d));
+    const have = num(snap.get("streakFreezes"));
+    if (todo.length === 0 || todo.length > have) return false;
+    // Guardamos sólo los últimos 60 días cubiertos: suficiente para rachas y récords recientes.
+    tx.set(ref, { streakFreezes: have - todo.length, frozenDays: [...frozen, ...todo].sort().slice(-60) }, { merge: true });
+    return true;
+  });
 }
 
 export async function savePersonality(userId: string, result: PersonalityResult | null): Promise<void> {

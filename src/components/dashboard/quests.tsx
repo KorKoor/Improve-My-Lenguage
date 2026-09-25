@@ -39,6 +39,7 @@ export function QuestBoard({ quests: initial, xp: initialXp }: { quests: QuestVi
   const [xp, setXp] = useState(initialXp);
   const [gain, setGain] = useState<{ id: string; xp: number } | null>(null);
   const [levelUp, setLevelUp] = useState(false);
+  const [freeze, setFreeze] = useState(false);
   const [party, setParty] = useState(0);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +57,7 @@ export function QuestBoard({ quests: initial, xp: initialXp }: { quests: QuestVi
       setXp(r.data.xp);
       setGain({ id, xp: r.data.xpGained });
       setLevelUp(r.data.leveledUp);
+      setFreeze(r.data.freezeEarned);
       if (r.data.leveledUp || r.data.allDone) setParty((p) => p + 1);
       setTimeout(() => setGain(null), 1600);
     });
@@ -77,6 +79,11 @@ export function QuestBoard({ quests: initial, xp: initialXp }: { quests: QuestVi
       {levelUp && (
         <p className="mt-3 rounded-xl bg-primary-soft px-3 py-2 text-center text-sm font-bold text-primary animate-pop-in" role="status">
           🎉 ¡Subiste al nivel {xp.level}! Ahora eres «{xp.title}».
+        </p>
+      )}
+      {freeze && (
+        <p className="mt-3 rounded-xl bg-warning-soft px-3 py-2 text-center text-sm font-bold text-warning animate-pop-in" role="status">
+          🛡️ ¡Ganaste un protector de racha! Si un día no puedes estudiar, tu racha sigue a salvo.
         </p>
       )}
       <ul className="mt-4 space-y-2.5">
@@ -122,7 +129,11 @@ export function QuestBoard({ quests: initial, xp: initialXp }: { quests: QuestVi
         })}
       </ul>
       {error && <p className="mt-2 text-sm text-danger" role="alert">{error}</p>}
-      {done === quests.length && <p className="mt-3 text-center text-sm font-semibold text-success">¡Todas las misiones cumplidas! Vuelve mañana por más.</p>}
+      {done === quests.length ? (
+        <p className="mt-3 text-center text-sm font-semibold text-success">¡Todas las misiones cumplidas! Vuelve mañana por más.</p>
+      ) : (
+        <p className="mt-3 text-center text-xs text-muted">Completa las tres y ganas un 🛡️ protector de racha.</p>
+      )}
     </section>
   );
 }

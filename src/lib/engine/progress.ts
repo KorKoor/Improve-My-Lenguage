@@ -119,3 +119,24 @@ export function consistency(activeDays: Iterable<string>, today: string, windowD
 }
 
 export { addDays };
+
+// ── Protector de racha ──────────────────────────────────────────────────────
+export const MAX_STREAK_FREEZES = 2;
+
+/**
+ * Días que un protector debe cubrir para salvar la racha: los días sin
+ * actividad entre ayer y el último día activo, si caben en los protectores
+ * disponibles y hay racha que salvar. Devuelve [] si no hace falta o no alcanza.
+ */
+export function freezeDaysNeeded(covered: Iterable<string>, today: string, freezes: number): string[] {
+  if (freezes <= 0) return [];
+  const set = new Set(covered);
+  const missing: string[] = [];
+  let cursor = addDays(today, -1);
+  while (!set.has(cursor)) {
+    missing.push(cursor);
+    if (missing.length > freezes) return [];
+    cursor = addDays(cursor, -1);
+  }
+  return missing;
+}

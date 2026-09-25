@@ -7,7 +7,7 @@ import { claimDailyQuest, type XpView } from "@/lib/services/quests";
 import { requireLearner } from "@/lib/services/viewer";
 
 export type QuestClaimResult =
-  | { ok: true; data: { xpGained: number; xp: XpView; leveledUp: boolean; allDone: boolean } }
+  | { ok: true; data: { xpGained: number; xp: XpView; leveledUp: boolean; allDone: boolean; freezeEarned: boolean } }
   | { ok: false; error: string };
 
 export async function claimQuestAction(questId: string): Promise<QuestClaimResult> {

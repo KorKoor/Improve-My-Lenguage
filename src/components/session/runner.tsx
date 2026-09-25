@@ -253,7 +253,7 @@ function IntroStep({ step, locale, language, rtl, onNext }: { step: Extract<Sess
   }, [speak, w.lemma]);
   return (
     <div>
-      <p className="text-sm font-semibold text-muted">Palabra nueva</p>
+      <p className="text-sm font-semibold text-muted">{step.block === "review" ? "Vuelve a mirarla con calma" : "Palabra nueva"}</p>
       <div className="card mt-3 p-6">
         <div className="flex items-start gap-3">
           <div className="flex-1" lang={language} dir={rtl ? "rtl" : "ltr"}>

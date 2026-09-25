@@ -8,7 +8,8 @@ import { Fsrs, newCard, ratingFromOutcome, type CardMemory } from "../engine/fsr
 import { defaultEstimate, updateSkillOnline, type SkillEstimate } from "../engine/levels";
 import { planSession, type SessionPlan } from "../engine/planner";
 import { computeStreak, localDay, summarizeVocabulary } from "../engine/progress";
-import { buildSessionSteps, sessionSeed, type SessionStep } from "../engine/session-builder";
+import { buildSessionSteps, sessionSeed, wordCard, type SessionStep } from "../engine/session-builder";
+import { isLeech } from "../engine/insights";
 import { detectWeaknesses, type Weakness } from "../engine/weakness";
 import * as repo from "../db/repositories";
 import { rateLimit } from "../db/limits";
@@ -53,7 +54,7 @@ export async function getWeaknesses(ulId: string, now = new Date()): Promise<Wea
   return detectWeaknesses(mistakes, stats, sessions, now).filter((w) => w.category !== "vocabulary");
 }
 
-export type SessionFocus = "new_words" | "listening" | "review" | `grammar:${string}` | null;
+export type SessionFocus = "new_words" | "listening" | "review" | "leeches" | `grammar:${string}` | null;
 
 export interface BuiltSession {
   sessionId: string;
@@ -75,13 +76,24 @@ export async function startSession(
     repo.getAllKnowledge(ulId),
     repo.countDue(ulId, now),
   ]);
-  const due = await repo.getDueKnowledge(ulId, now, 40);
+  let due = await repo.getDueKnowledge(ulId, now, 40);
+  // Palabras rebeldes: se reaprenden (ficha + ejercicios) aunque no toque repasarlas.
+  const leeches =
+    opts.focus === "leeches"
+      ? knowledge
+          .filter((k) => k.itemType === "vocab" && k.reps > 0 && isLeech({ lapses: k.lapses, incorrect: k.incorrectCount, correct: k.correctCount }))
+          .sort((a, b) => b.lapses + b.incorrectCount - (a.lapses + a.incorrectCount))
+          .slice(0, 10)
+      : [];
+  if (leeches.length) due = leeches;
   const vocabTotal = catalog.vocab(learner.language.code).length;
   const seenIds = new Set(knowledge.filter((k) => k.reps > 0).map((k) => k.itemId));
 
   let plan: SessionPlan;
   const focus = opts.focus ?? null;
-  if (focus === "review") {
+  if (focus === "leeches" && leeches.length) {
+    plan = { totalMinutes: minutes, blocks: [{ kind: "review", minutes, reason: "Reaprendemos las palabras que más se te resisten: primero la ficha con un ejemplo, luego práctica." }] };
+  } else if (focus === "review" || focus === "leeches") {
     plan = { totalMinutes: minutes, blocks: [{ kind: "review", minutes, reason: "Repaso de los elementos que están a punto de olvidarse." }] };
   } else if (focus === "new_words") {
     plan = { totalMinutes: minutes, blocks: [{ kind: "new_words", minutes, reason: "Vocabulario nuevo adaptado a tu nivel e intereses." }] };
@@ -123,6 +135,15 @@ export async function startSession(
     seed: sessionSeed(ulId, day, opts.surprise ? String(now.getTime()) : String(knowledge.length)),
     style: learner.profile.personality ? { ear: learner.profile.personality.dims.ear, challenge: learner.profile.personality.dims.challenge } : undefined,
   });
+
+  // Palabras rebeldes: su ficha va delante, como si fueran nuevas.
+  if (leeches.length) {
+    const intros = leeches
+      .map((k) => catalog.vocabById(k.itemId))
+      .filter((v): v is NonNullable<typeof v> => Boolean(v))
+      .map((v) => ({ kind: "intro" as const, block: "review" as const, word: wordCard(v, learner.native) }));
+    steps.unshift(...intros);
+  }
 
   const kind = focus === "review" ? "review" : focus ? "focus" : opts.surprise ? "surprise" : "daily";
   const session = await repo.createSession(ulId, kind, plan.totalMinutes, plan);
@@ -384,7 +405,7 @@ export async function checkAchievements(learner: Learner) {
     {
       sessionsCompleted: sessions.completed,
       wordsLearned: vocab.learned,
-      currentStreak: computeStreak(days, localDay(now, learner.profile.timezone)),
+      currentStreak: computeStreak([...days, ...learner.profile.frozenDays], localDay(now, learner.profile.timezone)),
       exercisesCompleted: exercises,
       conversations,
       minutesStudied: sessions.minutes,
