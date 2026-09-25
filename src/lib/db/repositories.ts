@@ -1044,6 +1044,24 @@ export async function countWritings(userId: string): Promise<number> {
   return counts.reduce((n, c) => n + c.data().count, 0);
 }
 
+// ── Primeros pasos (mejor puntuación por unidad, en el documento del idioma) ─
+export async function getFirstSteps(ulId: string): Promise<Record<string, number>> {
+  const v = (await ulRef(ulId).get()).get("firstSteps");
+  const out: Record<string, number> = {};
+  if (v && typeof v === "object") for (const [k, n] of Object.entries(v as Record<string, unknown>)) if (typeof n === "number") out[k] = n;
+  return out;
+}
+
+export async function saveFirstStepsUnit(ulId: string, unitId: string, score: number): Promise<void> {
+  await db().runTransaction(async (tx) => {
+    const ref = ulRef(ulId);
+    const snap = await tx.get(ref);
+    const prev = (snap.get("firstSteps") ?? {}) as Record<string, number>;
+    if ((prev[unitId] ?? -1) >= score) return;
+    tx.set(ref, { firstSteps: { [unitId]: score } }, { merge: true });
+  });
+}
+
 export async function countEvents(userId: string, name: string): Promise<number> {
   const agg = await userRef(userId).collection("events").where("name", "==", name).count().get();
   return agg.data().count;

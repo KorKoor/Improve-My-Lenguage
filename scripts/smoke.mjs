@@ -35,6 +35,8 @@ const PRIVATE = [
   "/app/languages",
   "/app/study",
   "/app/study/break",
+  "/app/first-steps",
+  "/app/first-steps/greetings",
   "/app/more",
 ];
 // Textos de las pantallas de error de la app (error.tsx / not-found).

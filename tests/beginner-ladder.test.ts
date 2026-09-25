@@ -47,3 +47,16 @@ test("ejercicios de escucha con opciones: sin texto visible y con respuesta en e
   assert.equal(letterHint("maison"), "m _ _ _ _ _");
   assert.equal(letterHint("l'eau"), "l ' _ _ _");
 });
+
+test("primeros pasos: 6 unidades completas en los 12 idiomas, con transcripción en escrituras no latinas", async () => {
+  const { FIRST_STEPS, hasFirstSteps, unitPhrases } = await import("../src/lib/content/first-steps");
+  assert.equal(FIRST_STEPS.length, 6);
+  for (const lang of ["en", "fr", "de", "it", "pt", "nl", "sv", "ru", "ja", "ko", "zh", "ar"] as const) {
+    assert.ok(hasFirstSteps(lang), lang);
+    for (const u of FIRST_STEPS) {
+      const ps = unitPhrases(u, lang);
+      assert.equal(new Set(ps.map((p) => p.text)).size, ps.length, `${lang}/${u.id}: frases repetidas`);
+      if (["ru", "ja", "ko", "zh", "ar"].includes(lang)) assert.ok(ps.every((p) => p.roman), `${lang}/${u.id}: falta transcripción`);
+    }
+  }
+});

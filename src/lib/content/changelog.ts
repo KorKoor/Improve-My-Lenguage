@@ -9,6 +9,8 @@ export interface ChangelogItem {
 export const CHANGELOG_VERSION = "2026-09-26";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "👣", title: "Primeros pasos", text: "Seis unidades para quien no sabe nada: saludar, presentarte, cuando no entiendes, números, cafetería y orientarte. Audio lento, escuchar y elegir, ordenar frases, y transcripción en ruso, japonés, coreano, chino y árabe.", href: "/app/first-steps" },
+  { icon: "🧹", title: "Palabras básicas corregidas", text: "Arreglamos traducciones y confusiones en las palabras más frecuentes (por ejemplo «tu», «sous», «cela» o «maintenant» en francés, y contracciones en italiano y portugués).", href: "/app/vocabulary" },
   { icon: "🌱", title: "Pensado para quien empieza de cero", text: "Diagnóstico con «No lo sé» (y que ya no premia adivinar), opción «Empiezo desde cero», ejercicios de escuchar y elegir antes de escribir, pistas 💡, audio más lento y el botón «Esto es muy difícil» para bajar el nivel al momento.", href: "/app/session" },
   { icon: "⏱️", title: "Modo estudio", text: "Dices cuánto tiempo tienes y lo repartimos entre tus idiomas en bloques, con un temporizador que te guía y descansos en el momento justo.", href: "/app/study" },
   { icon: "🌍", title: "Varios idiomas a la vez", text: "Elige tu idioma principal, los que están en progreso y los que sólo quieres mantener. Cada día repartimos tus minutos y evitamos que se mezclen los parecidos.", href: "/app/languages" },

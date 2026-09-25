@@ -27,7 +27,7 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
     setPhase("loading");
     const res = await startFromZeroAction();
     if (!res.ok) { setError(res.error); setPhase("error"); return; }
-    router.push("/app");
+    router.push("/app/first-steps");
   }
 
   async function begin() {
@@ -113,7 +113,14 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
           </ul>
           <p className="mt-3 text-xs text-muted">Listening y speaking se estimarán con tus primeras sesiones y conversaciones.</p>
         </div>
-        <ButtonLink href="/app" size="lg">Ver mi plan personalizado <ArrowRight size={18} aria-hidden /></ButtonLink>
+        {r.level === "A1" ? (
+          <>
+            <ButtonLink href="/app/first-steps" size="lg">Empezar por los primeros pasos <ArrowRight size={18} aria-hidden /></ButtonLink>
+            <Link href="/app" className="text-sm text-muted hover:text-text">Ir a mi plan</Link>
+          </>
+        ) : (
+          <ButtonLink href="/app" size="lg">Ver mi plan personalizado <ArrowRight size={18} aria-hidden /></ButtonLink>
+        )}
         <div className="grid w-full max-w-md gap-2 sm:grid-cols-2">
           <Link href="/app/profile/test" className="card lift flex items-center gap-3 p-3 text-left text-sm">
             <span className="text-2xl" aria-hidden>🪞</span>

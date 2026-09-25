@@ -80,7 +80,118 @@
     "quién",
     "que"
   ],
+  "pari": null,
+  "jean": null,
+  "sou": null,
+  "celer": null,
+  "au": {
+    "t": [
+      "al",
+      "a la"
+    ],
+    "p": "determiner"
+  },
+  "aux": {
+    "t": [
+      "a los",
+      "a las"
+    ],
+    "p": "determiner"
+  },
+  "tu": {
+    "t": [
+      "tú"
+    ],
+    "p": "pronoun"
+  },
+  "sous": {
+    "t": [
+      "bajo",
+      "debajo de"
+    ],
+    "p": "preposition"
+  },
+  "cela": {
+    "t": [
+      "eso",
+      "esto"
+    ],
+    "p": "pronoun"
+  },
+  "maintenant": {
+    "t": [
+      "ahora"
+    ],
+    "p": "adverb"
+  },
+  "juste": [
+    "justo",
+    "solo (adv.)"
+  ],
+  "soir": [
+    "tarde",
+    "noche"
+  ],
+  "toi": [
+    "tú",
+    "te"
+  ],
+  "te": [
+    "te"
+  ],
+  "système": [
+    "sistema"
+  ],
+  "face": [
+    "cara",
+    "frente"
+  ],
+  "rapport": [
+    "relación",
+    "informe"
+  ],
+  "chez": [
+    "en casa de",
+    "donde"
+  ],
+  "votre": [
+    "su (de usted)",
+    "vuestro"
+  ],
+  "mes": [
+    "mis"
+  ],
+  "tes": [
+    "tus"
+  ],
+  "ton": [
+    "tu"
+  ],
+  "ta": [
+    "tu"
+  ],
+  "cet": [
+    "este",
+    "ese"
+  ],
+  "celui": [
+    "el que",
+    "aquel"
+  ],
+  "quel": [
+    "qué",
+    "cuál"
+  ],
+  "pourquoi": [
+    "por qué"
+  ],
+  "certain": [
+    "cierto",
+    "seguro"
+  ],
   "_forms": {
-    "est": "être"
+    "est": "être",
+    "donne": "donner",
+    "passe": "passer"
   }
 }

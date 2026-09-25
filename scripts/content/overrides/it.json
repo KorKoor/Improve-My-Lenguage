@@ -87,5 +87,70 @@
   "lei": [
     "ella",
     "usted"
-  ]
+  ],
+  "al": {
+    "t": [
+      "al",
+      "a la"
+    ],
+    "p": "preposition"
+  },
+  "agli": {
+    "t": [
+      "a los"
+    ],
+    "p": "preposition"
+  },
+  "stesso": [
+    "mismo",
+    "igual"
+  ],
+  "fine": [
+    "fin",
+    "fino"
+  ],
+  "davvero": [
+    "de verdad",
+    "realmente"
+  ],
+  "nessuno": [
+    "nadie",
+    "ninguno"
+  ],
+  "verso": {
+    "t": [
+      "hacia",
+      "verso"
+    ],
+    "p": "preposition"
+  },
+  "quanto": [
+    "cuánto",
+    "cuanto"
+  ],
+  "caso": [
+    "caso"
+  ],
+  "ciò": [
+    "eso",
+    "esto"
+  ],
+  "durare": [
+    "durar"
+  ],
+  "invece": [
+    "en cambio",
+    "en vez de"
+  ],
+  "tipo": [
+    "tipo",
+    "como (coloquial)"
+  ],
+  "grande": [
+    "grande"
+  ],
+  "_forms": {
+    "ha": "avere",
+    "giorni": "giorno"
+  }
 }

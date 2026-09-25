@@ -87,6 +87,7 @@ POS = {
 }
 POS_ES = {"noun": "noun", "verb": "verb", "adj": "adj", "adv": "adv", "pron": "pron", "prep": "prep", "conj": "conj",
           "intj": "intj", "article": "det", "det": "det", "num": "num", "particle": "particle", "phrase": "phrase"}
+FUNCTION_POS = {"pron", "adv", "prep", "conj", "det", "article", "particle", "num", "intj", "postp", "contraction"}
 FORM_SKIP_TAGS = {"regional", "colloquial", "misspelling", "nonstandard", "dialectal", "eye-dialect", "pronunciation-spelling", "obsolete", "archaic", "rare", "informal", "slang", "Internet", "abbreviation", "UK-dialect", "Scotland"}
 SKIP_TAGS = {"obsolete", "archaic", "rare", "dated", "historical", "dialectal", "nonstandard", "misspelling",
              "Cantonese", "Hokkien", "Min-Nan", "Hakka", "Wu", "Classical", "Literary-Chinese", "Teochew"}
@@ -584,6 +585,10 @@ def load_en_kaikki(lang: str, surface: set[str]):
     # Formas con rasgos gramaticales (pasado, plural…), frente a meras variantes
     # («och» como variante proscrita de «att» no es una forma de «att»).
     inflected: set[str] = set()
+    # Palabras con un sentido propio de clase cerrada (pronombre, preposición…):
+    # «tu» (tú), «sous» (bajo), «cela» (eso) nunca son sobre todo una forma de
+    # otro verbo aunque Wiktionary liste antes ese uso (participio de «taire»).
+    function_word: set[str] = set()
 
     def parse_entry(r: dict) -> EnEntry | None:
         pos = r.get("pos", "")
@@ -651,6 +656,8 @@ def load_en_kaikki(lang: str, surface: set[str]):
                     form_first.add(w)
                 elif not links:
                     own_senses[w] += 1
+                    if r.get("pos") in FUNCTION_POS:
+                        function_word.add(w)
                 if links and tags & GRAMMAR_TAGS:
                     inflected.add(w)
                 for lemma in links:
@@ -666,7 +673,7 @@ def load_en_kaikki(lang: str, surface: set[str]):
             if e:
                 lemma_entries[w].append(e)
     log(f"[{lang}] {len(lemma_entries):,} lemas con datos, {len(form_to_lemma):,} formas flexionadas")
-    primary_form = {w for w in form_first if own_senses[w] <= 1}
+    primary_form = {w for w in form_first if own_senses[w] <= 1 and w not in function_word}
     variant_only = {w for w in form_to_lemma if w not in inflected and own_senses[w] >= 2}
     return form_to_lemma, lemma_entries, primary_form, variant_only
 

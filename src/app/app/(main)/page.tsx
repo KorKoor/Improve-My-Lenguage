@@ -24,6 +24,9 @@ import { CHANGELOG, CHANGELOG_VERSION } from "@/lib/content/changelog";
 import { QuestBoard } from "@/components/dashboard/quests";
 import { requireLearner } from "@/lib/services/viewer";
 import { MultiLangToday } from "@/components/dashboard/multilang-today";
+import { FirstStepsCard } from "@/components/dashboard/first-steps-card";
+import { FIRST_STEPS, hasFirstSteps } from "@/lib/content/first-steps";
+import { getFirstSteps } from "@/lib/db/repositories";
 import { listUserLanguages } from "@/lib/db/repositories";
 import { languagesOverview } from "@/lib/services/multilang";
 
@@ -53,6 +56,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     ) : null;
   const board = d.assessed ? await questBoard(learner, d.dueCount) : null;
   const multi = (await listUserLanguages(learner.userId)).length > 1 ? await languagesOverview(learner, { forecast: false }) : null;
+  // Principiante total con «Primeros pasos» sin terminar: se lo proponemos arriba del todo.
+  const firstSteps = hasFirstSteps(learner.language.code) && (d.skills.find((s) => s.skill === "vocabulary")?.theta ?? -3) < -2.1 ? await getFirstSteps(learner.ul.id) : null;
+  const firstStepsCard =
+    firstSteps && FIRST_STEPS.some((u) => !firstSteps[u.id]) ? (
+      <FirstStepsCard done={FIRST_STEPS.filter((u) => firstSteps[u.id]).length} total={FIRST_STEPS.length} next={FIRST_STEPS.find((u) => !firstSteps[u.id])!} language={learner.language.name} />
+    ) : null;
   const lang = learner.language;
   // Tutorial: la primera vez que llega al inicio (o bajo demanda con ?tutorial=1).
   const tour = (
@@ -69,6 +78,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <>
         {tour}
         {cheerBanner && <div className="mx-auto mb-4 max-w-2xl">{cheerBanner}</div>}
+        {firstStepsCard && <div className="mx-auto mb-4 max-w-2xl">{firstStepsCard}</div>}
         <SimpleHome d={d} languageName={lang.name} dailyMinutes={learner.profile.dailyMinutes} greeting={greeting(learner.profile.timezone)} />
         {board && <div className="mx-auto mt-6 max-w-2xl"><QuestBoard quests={board.quests} xp={xp} /></div>}
       </>
@@ -128,6 +138,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       </header>
 
       {cheerBanner}
+      {firstStepsCard}
       <WhatsNew version={CHANGELOG_VERSION} count={CHANGELOG.length} />
 
       {d.freezeUsed.length > 0 && (

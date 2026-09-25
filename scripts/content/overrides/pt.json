@@ -90,5 +90,67 @@
   ],
   "vocês": [
     "ustedes"
-  ]
+  ],
+  "pelo": {
+    "t": [
+      "por el"
+    ],
+    "p": "preposition"
+  },
+  "pela": {
+    "t": [
+      "por la"
+    ],
+    "p": "preposition"
+  },
+  "cara": [
+    "cara",
+    "tío (coloquial)"
+  ],
+  "além": [
+    "además",
+    "más allá"
+  ],
+  "quanto": [
+    "cuánto",
+    "cuanto"
+  ],
+  "volta": [
+    "vuelta",
+    "regreso"
+  ],
+  "conta": [
+    "cuenta"
+  ],
+  "presidente": [
+    "presidente"
+  ],
+  "ficar": [
+    "quedarse",
+    "quedar",
+    "volverse"
+  ],
+  "assim": [
+    "así"
+  ],
+  "você": [
+    "tú",
+    "usted"
+  ],
+  "nem": [
+    "ni",
+    "ni siquiera"
+  ],
+  "lado": [
+    "lado"
+  ],
+  "após": [
+    "después de",
+    "tras"
+  ],
+  "_forms": {
+    "foi": "ser",
+    "era": "ser",
+    "fui": "ser"
+  }
 }
