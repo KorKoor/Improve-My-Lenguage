@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
-import type { CefrLevel, ContentSourceTag, LanguageCode, PartOfSpeech, VocabItem } from "./types";
+import type { CefrLevel, ContentSourceTag, LanguageCode, PartOfSpeech, TenseKey, VocabItem } from "./types";
 
 /**
  * Paquetes de vocabulario generados desde datos públicos
@@ -28,6 +28,7 @@ interface PackWord {
   rd?: string;
   n?: string;
   f?: string[];
+  cj?: Partial<Record<TenseKey, (string | null)[]>>;
 }
 
 export interface PackSource {
@@ -78,6 +79,7 @@ function toVocab(language: LanguageCode, w: PackWord): VocabItem {
     register: "neutral",
     usageNote: w.n,
     forms: w.f,
+    conjugation: w.cj,
     sources: [...sources],
   };
 }

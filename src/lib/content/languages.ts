@@ -38,7 +38,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["gender", "articles", "liaison", "subjunctive"],
     spaceSeparated: true,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇫🇷",
   },
   {
@@ -54,7 +54,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["particles", "sov-order", "politeness-levels", "counters"],
     spaceSeparated: false,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇯🇵",
   },
   {
@@ -86,7 +86,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["cases", "gender", "v2-order", "separable-verbs"],
     spaceSeparated: true,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇩🇪",
   },
   {
@@ -102,7 +102,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["gender", "articles", "subjunctive"],
     spaceSeparated: true,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇮🇹",
   },
   {
@@ -118,7 +118,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["gender", "nasal-vowels", "personal-infinitive"],
     spaceSeparated: true,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇧🇷",
   },
   {
@@ -134,7 +134,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["particles", "sov-order", "honorifics"],
     spaceSeparated: true,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇰🇷",
   },
   {
@@ -150,7 +150,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["tones", "measure-words", "aspect-particles"],
     spaceSeparated: false,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇨🇳",
   },
   {
@@ -166,7 +166,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["cases", "aspect", "gender"],
     spaceSeparated: true,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇷🇺",
   },
   {
@@ -182,7 +182,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["root-patterns", "dual", "gender", "vso-order"],
     spaceSeparated: true,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇸🇦",
   },
   {
@@ -198,7 +198,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["v2-order", "de-het", "separable-verbs"],
     spaceSeparated: true,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇳🇱",
   },
   {
@@ -214,7 +214,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["v2-order", "en-ett", "pitch-accent"],
     spaceSeparated: true,
-    status: "beta",
+    status: "available",
     flagEmoji: "🇸🇪",
   },
 ];

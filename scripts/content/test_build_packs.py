@@ -49,6 +49,36 @@ class GlossFormOf(unittest.TestCase):
         self.assertIsNone(bp.gloss_form_of("A diminutive of the female given names Eleanor, Ellen, and Helen"))
 
 
+class Conjugation(unittest.TestCase):
+    def test_table_from_tagged_forms(self):
+        forms = [
+            {"form": "ai", "tags": ["first-person", "indicative", "present", "singular"]},
+            {"form": "as", "tags": ["indicative", "present", "second-person", "singular"]},
+            {"form": "a", "tags": ["indicative", "present", "singular", "third-person"]},
+            {"form": "avons", "tags": ["first-person", "indicative", "plural", "present"]},
+            {"form": "avez", "tags": ["indicative", "plural", "present", "second-person"]},
+            {"form": "ont", "tags": ["indicative", "plural", "present", "third-person"]},
+            {"form": "aie", "tags": ["first-person", "present", "singular", "subjunctive"]},
+            {"form": "present indicative of avoir + past participle", "tags": ["indicative", "multiword-construction", "perfect", "present"]},
+            {"form": "ayant", "tags": ["gerund", "participle", "present"]},
+        ]
+        t = bp.conjugation_table(forms, "fr")
+        self.assertEqual(t["ind.pres"], ["ai", "as", "a", "avons", "avez", "ont"])
+        self.assertNotIn("subj.pres", t)  # una sola persona no basta para una fila
+
+    def test_shared_plural_and_marks(self):
+        forms = [
+            {"form": "ben", "tags": ["first-person", "present", "singular"]},
+            {"form": "bent", "tags": ["present", "second-person", "singular"]},
+            {"form": "is", "tags": ["present", "singular", "third-person"]},
+            {"form": "zijn", "tags": ["plural", "present"]},
+        ]
+        self.assertEqual(bp.conjugation_table(forms, "nl")["ind.pres"], ["ben", "bent", "is", "zijn", "zijn", "zijn"])
+        self.assertEqual(bp.display_form("ru", "де́лай"), "делай")
+        self.assertEqual(bp.display_form("it", "sóno"), "sono")
+        self.assertEqual(bp.display_form("it", "sarò"), "sarò")
+
+
 class Singulars(unittest.TestCase):
     def test_plural_candidates(self):
         self.assertIn("city", bp.singulars("cities"))

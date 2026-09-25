@@ -21,6 +21,7 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "literal-translation", label: "traducción literal del español", language: "*" },
   { id: "register", label: "registro (formal/informal)", language: "*" },
   { id: "tense", label: "tiempos verbales", language: "*" },
+  { id: "conjugation", label: "conjugación verbal", language: "*" },
   // Inglés
   { id: "subject-verb-agreement", label: "concordancia sujeto-verbo", language: "en", grammarId: "en:g:third-person-s" },
   { id: "past-tense", label: "pasado simple", language: "en", grammarId: "en:g:past-simple" },

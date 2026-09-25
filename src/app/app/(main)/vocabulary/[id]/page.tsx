@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { getVocab, topicLabel } from "@/lib/content";
+import { pronouns, tenseLabel, TENSE_ORDER } from "@/lib/content/conjugation";
 import { translationOf } from "@/lib/engine/exercises";
 import { currentRetrievability } from "@/lib/engine/fsrs";
 import { mastery } from "@/lib/engine/progress";
@@ -93,6 +94,34 @@ export default async function WordPage({ params }: { params: Promise<{ id: strin
           </dl>
         ) : null}
       </Card>
+
+      {v.conjugation && Object.keys(v.conjugation).length > 0 && (
+        <Card>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-lg font-extrabold">Conjugación</h2>
+            <Link href={`/app/verbs?verb=${encodeURIComponent(v.id)}`} className="text-sm font-semibold text-primary hover:underline">Practicar este verbo →</Link>
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {TENSE_ORDER.filter((t) => v.conjugation?.[t]).map((t) => (
+              <div key={t} className="rounded-2xl bg-surface-muted p-3">
+                <h3 className="mb-1.5 text-sm font-bold text-primary">{tenseLabel(v.language, t)}</h3>
+                <table className="w-full text-sm">
+                  <caption className="sr-only">{tenseLabel(v.language, t)}</caption>
+                  <tbody>
+                    {v.conjugation![t]!.map((form, i) => (
+                      <tr key={i}>
+                        <td className="w-2/5 py-0.5 text-muted" lang={v.language}>{pronouns(v.language)[i]}</td>
+                        <td className="py-0.5 font-medium" lang={v.language}>{form ?? "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+          <p className="mt-3 text-xs text-muted">Tablas de Wiktionary (CC BY-SA).</p>
+        </Card>
+      )}
 
       {v.sources?.length ? (
         <p className="px-1 text-xs text-muted">

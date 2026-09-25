@@ -6,6 +6,7 @@ import { answerListening, buildListening, finishListening, type ListeningFeedbac
 import { completeReading, readerForOwnText, type ReaderData } from "@/lib/services/reading";
 import { answerSpeaking, buildSpeaking, finishSpeaking, type SpeakingFeedback, type SpeakingItem } from "@/lib/services/speaking";
 import { submitWriting, type WritingResult } from "@/lib/services/writing";
+import { answerVerb, finishVerbDrill, startVerbDrill, type VerbFeedback, type VerbQuestion } from "@/lib/services/verbs";
 import { requireLearner } from "@/lib/services/viewer";
 
 /**
@@ -119,5 +120,21 @@ export async function finishSpeakingAction(correct: number, total: number): Prom
   return run("speaking.finish", async () => {
     const t = int(total, 0, 50, 0);
     return finishSpeaking(await requireLearner(), int(correct, 0, t, 0), t);
+  });
+}
+
+// ── Verbos ──────────────────────────────────────────────────────────────────
+export async function startVerbDrillAction(verbId: string | null): Promise<SkillResult<{ questions: VerbQuestion[]; locale: string }>> {
+  return run("verbs.start", async () => startVerbDrill(await requireLearner(), verbId ? str(verbId, 120) : null));
+}
+
+export async function answerVerbAction(key: string, answer: string, timeMs: number): Promise<SkillResult<VerbFeedback>> {
+  return run("verbs.answer", async () => answerVerb(await requireLearner(), str(key, 200), str(answer, 120), int(timeMs, 0, 600_000, 0)));
+}
+
+export async function finishVerbDrillAction(correct: number, total: number): Promise<SkillResult<{ newAchievements: { id: string; title: string; icon: string }[] }>> {
+  return run("verbs.finish", async () => {
+    const t = int(total, 0, 50, 0);
+    return finishVerbDrill(await requireLearner(), int(correct, 0, t, 0), t);
   });
 }

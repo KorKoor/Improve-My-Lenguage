@@ -83,6 +83,9 @@ export interface ExampleSentence {
   reading?: string;
 }
 
+/** Tiempos de las tablas de conjugación (ver scripts/content/build_packs.py → CONJ_ROWS). */
+export type TenseKey = "ind.pres" | "ind.pret" | "ind.past" | "ind.impf" | "ind.fut" | "cond" | "subj.pres" | "imp";
+
 export interface VocabItem {
   id: string; // "<lang>:w:<slug>"
   language: LanguageCode;
@@ -107,6 +110,8 @@ export interface VocabItem {
   acceptedForms?: string[];
   /** Formas flexionadas frecuentes ("geht", "ging" → gehen), para el lector. */
   forms?: string[];
+  /** Tabla de conjugación (verbos): tiempo → [yo, tú, él/ella, nosotros, vosotros, ellos]. */
+  conjugation?: Partial<Record<TenseKey, (string | null)[]>>;
   /** Rango de frecuencia real (1 = la más usada). Define la dificultad fina. */
   rank?: number;
   /** Pronunciación grabada por una persona (Wikimedia Commons), si existe. */

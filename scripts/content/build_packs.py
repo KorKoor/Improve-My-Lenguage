@@ -472,6 +472,77 @@ class EnEntry:
     reading: str | None = None
     cats: list[str] = field(default_factory=list)
     examples: list[tuple[str, str | None]] = field(default_factory=list)
+    conj: dict[str, list[str | None]] | None = None
+
+
+# ── Conjugación (tablas de Wiktionary) ──────────────────────────────────────
+PERSONS = [("first-person", "singular"), ("second-person", "singular"), ("third-person", "singular"),
+           ("first-person", "plural"), ("second-person", "plural"), ("third-person", "plural")]
+# (clave, etiquetas que deben estar, etiquetas que NO deben estar), en orden de utilidad.
+MOODS = {"indicative", "subjunctive", "conditional", "imperative"}
+NON_FINITE = {"participle", "gerund", "adverbial", "infinitive", "noun-from-verb"}
+# (clave, etiquetas necesarias, etiquetas prohibidas), en orden de utilidad. El modo
+# indicativo es implícito: muchas tablas (ruso, neerlandés) no lo etiquetan.
+CONJ_ROWS = [
+    ("ind.pres", {"present"}, (MOODS - {"indicative"}) | {"perfect", "progressive"}),
+    ("ind.pret", {"preterite"}, (MOODS - {"indicative"}) | {"perfect"}),
+    ("ind.past", {"past"}, (MOODS - {"indicative"}) | {"perfect", "historic", "anterior", "progressive"}),
+    ("ind.impf", {"imperfect"}, (MOODS - {"indicative"}) | {"perfect", "progressive"}),
+    ("ind.fut", {"future"}, (MOODS - {"indicative"}) | {"perfect", "progressive"}),
+    ("cond", {"conditional"}, {"perfect", "subjunctive"}),
+    ("subj.pres", {"subjunctive", "present"}, {"perfect"}),
+    ("imp", {"imperative"}, {"negative"}),
+]
+CONJ_SKIP = {"multiword-construction", "table-tags", "inflection-template", "romanization", "rare", "archaic", "obsolete",
+             "dialectal", "colloquial", "formal", "majestic", "Flanders", "canonical"}
+
+
+IT_ACCENTED_MONO = {"è", "dà", "dì", "là", "lì", "né", "sé", "sì", "tè", "ciò", "già", "giù", "può", "più", "fé"}
+
+
+def display_form(lang: str, form: str) -> str:
+    """Quita marcas de pronunciación de las tablas: acento tónico ruso (де́лать)
+    y acentos italianos que no van en la ortografía (sóno → sono, sarò se queda)."""
+    if lang in ("ru", "uk"):
+        # Sólo el acento tónico (U+0301/U+0300); «й» y «ё» se conservan.
+        return form.replace("\u0301", "").replace("\u0300", "")
+    if lang == "it":
+        words = []
+        for w in form.split(" "):
+            head, last = w[:-1], w[-1:]
+            w = strip_marks(head) + last
+            # Monosílabos: sólo llevan tilde los diacríticos (è, dà, sì…); «fà» → «fa».
+            if len(re.findall(r"[aeiouàèéìòù]+", w)) <= 1 and w not in IT_ACCENTED_MONO:
+                w = strip_marks(w)
+            words.append(w)
+        return " ".join(words)
+    return form
+
+
+def conjugation_table(forms: list[dict], lang: str = "") -> dict[str, list[str | None]] | None:
+    """Tabla compacta {tiempo: [yo, tú, él, nosotros, vosotros, ellos]} (None si falta)."""
+    table: dict[str, list[str | None]] = {}
+    for key, need, avoid in CONJ_ROWS:
+        row: list[str | None] = [None] * 6
+        for f in forms:
+            tags = set(f.get("tags") or [])
+            form = (f.get("form") or "").strip()
+            if not form or form in ("-", "—", "–") or "+" in form or " of " in form or tags & CONJ_SKIP or tags & NON_FINITE or not need <= tags or tags & avoid:
+                continue
+            persons = [i for i, (person, number) in enumerate(PERSONS) if person in tags and number in tags]
+            if not persons and "plural" in tags and not any(t.endswith("-person") for t in tags):
+                persons = [3, 4, 5]  # neerlandés/alemán: una forma para todo el plural
+            for i in persons:
+                if row[i] is None:
+                    row[i] = display_form(lang, form)
+        filled = sum(1 for x in row if x)
+        # Imperativo: basta con 2 personas; el resto de tiempos necesita la mayoría.
+        if filled >= (2 if key == "imp" else 4):
+            table[key] = row
+    # «ind.past» y «ind.pret» son el mismo tiempo en idiomas distintos: nos quedamos con uno.
+    if "ind.pret" in table:
+        table.pop("ind.past", None)
+    return table or None
 
 
 def reading_for(lang: str, r: dict) -> str | None:
@@ -549,6 +620,8 @@ def load_en_kaikki(lang: str, surface: set[str]):
                     e.gender = {"m": "masculine", "f": "feminine", "n": "neuter", "c": "common"}[m.group(1)]
                     break
         e.reading = reading_for(lang, r)
+        if e.pos == "verb" and lang not in ("ja", "zh", "ko", "en"):
+            e.conj = conjugation_table(r.get("forms") or [], lang)
         e.cats += [c.get("name", "") if isinstance(c, dict) else str(c) for c in (r.get("categories") or [])][:20]
         return e
 
@@ -1007,6 +1080,10 @@ def build(lang: str, size: int, es_entries, reverse, english, triang, en_es) -> 
         reading = en.reading if en else None
         if reading:
             entry["rd"] = reading
+        # Tablas de conjugación de los verbos más útiles (hasta B2): el entrenador de verbos las usa.
+        conj = next((x.conj for x in en_lemmas.get(lemma, []) if x.pos == "verb" and x.conj), None) if pos == "verb" and rank <= 4730 else None
+        if conj:
+            entry["cj"] = conj
         # Formas flexionadas vistas en el corpus: permiten traducir al tocar
         # cualquier forma en el lector ("geht" → "gehen").
         forms = sorted({f for f in lemma_forms[lemma] if f and f != lemma.lower() and f != lemma}, key=lambda f: freq_pos.get(f, 10**9))[:15]
