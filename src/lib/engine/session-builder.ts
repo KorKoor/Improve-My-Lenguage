@@ -3,6 +3,7 @@
  * tarjetas de presentación, consejos de gramática y ejercicios.
  * Puro y determinista (semilla) → testeable y reproducible.
  */
+import { cognateInfo, type CognateInfo } from "./cognates";
 import type { GrammarConcept, LanguageCode, VocabItem } from "../content/types";
 import {
   buildGrammarExercise,
@@ -38,6 +39,8 @@ export interface WordCard {
   translation: string[];
   example?: { text: string; translation?: string; reading?: string };
   usageNote?: string;
+  /** Cognado («se parece al español») o falso amigo. */
+  friend?: CognateInfo | null;
 }
 
 export interface GrammarTip {
@@ -83,6 +86,7 @@ export function wordCard(v: VocabItem, native: LanguageCode): WordCard {
     translation: translationOf(v, native),
     example: ex ? { text: ex.text, translation: ex.translation?.[native], reading: ex.reading } : undefined,
     usageNote: v.usageNote,
+    friend: cognateInfo(v.lemma, v.language, translationOf(v, native), native),
   };
 }
 

@@ -342,6 +342,16 @@ function IntroStep({ step, locale, language, rtl, onNext }: { step: Extract<Sess
           <SpeakButton text={w.lemma} audioUrl={w.audioUrl} locale={locale} size={48} />
         </div>
         <p className="mt-4 text-xl font-semibold text-primary">{w.translation.join(", ")}</p>
+        {w.friend?.kind === "cognate" && (
+          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success animate-pop-in">
+            🤝 Se parece al español: «{w.friend.looksLike}». ¡Palabra regalo!
+          </p>
+        )}
+        {w.friend?.kind === "false_friend" && (
+          <p className="mt-3 rounded-2xl bg-danger-soft p-3 text-sm animate-pop-in">
+            <strong className="text-danger">⚠️ Falso amigo.</strong> Parece «{w.friend.looksLike}», pero significa <strong>{w.friend.means}</strong>.
+          </p>
+        )}
         {w.example && (
           <div className="mt-5 rounded-2xl bg-surface-muted p-4">
             <div className="flex items-start gap-2">
