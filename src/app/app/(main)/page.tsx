@@ -5,6 +5,7 @@ import { BLOCK_META, SKILL_META, formatMinutes, greeting } from "@/components/ap
 import { QuickSearch } from "@/components/app/quick-search";
 import { Heatmap } from "@/components/charts/heatmap";
 import { SimpleHome } from "@/components/dashboard/simple-home";
+import { WordOfDay } from "@/components/dashboard/word-of-day";
 import { WelcomeTour } from "@/components/tutorial/welcome-tour";
 import { Mascot } from "@/components/mascot";
 import { ButtonLink } from "@/components/ui/button";
@@ -53,6 +54,15 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   }
   const today = localDay(new Date(), learner.profile.timezone);
   const personality = learner.profile.personality;
+  const mascotLine = d.studiedToday
+    ? "¡Ya estudiaste hoy! Todo lo extra suma."
+    : d.streak >= 3
+      ? `¡Mantén tu racha de ${d.streak} días!`
+      : d.dueCount >= 20
+        ? "Tus repasos te esperan: son los más rentables."
+        : d.streak === 0 && d.bestStreak > 0
+          ? "¡Hoy es un gran día para volver!"
+          : "¿Empezamos? Solo son unos minutos.";
   const weekDays = ["L", "M", "X", "J", "V", "S", "D"];
   const goalMonths = d.goal?.deadline ? Math.max(0, Math.round((new Date(d.goal.deadline).getTime() - Date.now()) / (30 * 86_400_000))) : null;
   // Distancia recorrida en la escala θ desde el inicio (A1 bajo) hasta el umbral del nivel objetivo.
@@ -107,7 +117,12 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                 <h2 className="font-display text-xl font-extrabold sm:mt-3 sm:text-[26px]">Tu sesión de hoy</h2>
                 <p className="mt-1 hidden text-muted sm:block">{d.plan.totalMinutes} minutos repartidos según lo que más te ayuda ahora mismo.</p>
               </div>
-              <Mascot size={104} className="hidden shrink-0 sm:block" />
+              <div className="hidden shrink-0 flex-col items-center sm:flex">
+                <p className="relative mb-1 max-w-[180px] rounded-2xl bg-primary-soft px-3 py-2 text-center text-xs font-semibold text-primary animate-pop-in after:absolute after:-bottom-1.5 after:left-1/2 after:size-3 after:-translate-x-1/2 after:rotate-45 after:bg-primary-soft">
+                  {mascotLine}
+                </p>
+                <Mascot size={96} className="animate-float" />
+              </div>
               <Chip tone="muted" className="px-3 py-1 text-sm sm:hidden">{d.plan.totalMinutes} min</Chip>
             </div>
 
@@ -165,6 +180,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             <p className="mt-1.5 text-sm text-muted">{d.recommendation.reason}</p>
             <ButtonLink href={d.recommendation.href} size="sm" className="mt-4">Ir ahora <ArrowRight size={16} aria-hidden /></ButtonLink>
           </section>
+
+          {d.wordOfDay && <WordOfDay word={d.wordOfDay} locale={lang.speechLocale} language={lang.code} />}
 
           {/* Repaso */}
           <Card className="p-4 sm:p-6">

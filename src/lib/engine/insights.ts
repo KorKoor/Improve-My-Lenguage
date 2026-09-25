@@ -155,3 +155,23 @@ export function buildInsights(input: InsightInput): Insight[] {
 
   return out;
 }
+
+// ── Palabra del día ─────────────────────────────────────────────────────────
+/**
+ * Una palabra nueva, justo por encima de lo que ya sabes, con ejemplo real
+ * (y audio grabado si lo hay). Cambia cada día y es distinta para cada persona.
+ */
+export function pickWordOfDay<T extends { id: string; rank?: number; examples: unknown[]; audioUrl?: string }>(
+  vocab: T[],
+  seen: Set<string>,
+  knownRank: number,
+  seed: number,
+): T | null {
+  const lo = Math.max(1, Math.round(knownRank * 0.9));
+  const hi = Math.max(lo + 200, Math.round(knownRank * 1.8));
+  const pool = vocab.filter((v) => !seen.has(v.id) && v.examples.length > 0 && (v.rank ?? 0) >= lo && (v.rank ?? 0) <= hi);
+  const withAudio = pool.filter((v) => v.audioUrl);
+  const list = withAudio.length >= 10 ? withAudio : pool;
+  if (list.length === 0) return null;
+  return list[Math.abs(seed) % list.length]!;
+}

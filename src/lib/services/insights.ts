@@ -3,7 +3,10 @@ import { catalog, errorLabel, getVocab, grammarForCategory, topicLabel } from ".
 import type { CefrLevel, Skill } from "../content/types";
 import { overallTheta, progressWithinLevel, thetaToCefr, type SkillEstimate } from "../engine/levels";
 import { planSession, type SessionPlan } from "../engine/planner";
-import { buildInsights, type Insight } from "../engine/insights";
+import { buildInsights, pickWordOfDay, type Insight } from "../engine/insights";
+import { hashString } from "../engine/random";
+import { wordCard, type WordCard } from "../engine/session-builder";
+import { knownRankForTheta } from "../reading/text";
 import { addDays, accuracy, computeStreak, consistency, isLearned, localDay, longestStreak, summarizeVocabulary } from "../engine/progress";
 import { practicePicks, recommend, type PracticePick, type Recommendation } from "../engine/recommender";
 import type { Weakness } from "../engine/weakness";
@@ -45,6 +48,7 @@ export interface DashboardData {
   aiEnabled: boolean;
   /** Prácticas sugeridas (lectura/escucha/escritura/tutor), explicadas. */
   practice: PracticePick[];
+  wordOfDay: WordCard | null;
 }
 
 const NEXT: Record<CefrLevel, CefrLevel | null> = { A1: "A2", A2: "B1", B1: "B2", B2: "C1", C1: "C2", C2: null };
@@ -151,6 +155,12 @@ export async function getDashboard(learner: Learner): Promise<DashboardData> {
     activity,
     studiedToday,
     aiEnabled,
+    wordOfDay: (() => {
+      const vocabTheta = skillsMap.get("vocabulary");
+      const known = knownRankForTheta(vocabTheta && vocabTheta.evidence > 0 ? vocabTheta.theta : -2.5);
+      const v = pickWordOfDay(catalog.vocab(learner.language.code), seen, known, hashString(`${today}:${learner.userId}`));
+      return v ? wordCard(v, learner.native) : null;
+    })(),
     practice: practicePicks({ skills, favorites: learner.profile.personality?.tuning.favorites ?? [], aiAvailable: aiEnabled }),
   };
 }
