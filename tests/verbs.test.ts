@@ -54,3 +54,24 @@ test("verbos: en árabe las harakat no cuentan como error", () => {
   assert.equal(g.correct, true);
   assert.equal(g.nearMiss, false);
 });
+
+test("ejercicio «conjugar»: se genera y se resuelve con o sin pronombre", async () => {
+  const { buildVocabExercise, resolveExercise } = await import("../src/lib/engine/exercises");
+  const v = verb("avoir", 5);
+  const catalog = {
+    vocab: () => [v],
+    vocabById: (id: string) => (id === v.id ? v : undefined),
+    grammarById: () => undefined,
+    spaceSeparated: () => true,
+  } as unknown as Parameters<typeof buildVocabExercise>[2];
+  const ex = buildVocabExercise("conjugate", v, catalog, "es", 1)!;
+  assert.equal(ex.type, "conjugate");
+  assert.equal(ex.skill, "grammar");
+  const r = resolveExercise(ex.key, catalog, "es")!;
+  assert.equal(r.errorCategory, "conjugation");
+  const [, , variant] = ex.key.split("|");
+  const [tense, person] = variant!.split(":");
+  const form = v.conjugation![tense as "ind.pres"]![Number(person)]!;
+  assert.ok(r.accepted.includes(form));
+  assert.ok(r.accepted.length >= 2);
+});

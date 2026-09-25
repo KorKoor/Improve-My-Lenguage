@@ -170,7 +170,7 @@ export function buildSessionSteps(input: BuildInput): SessionStep[] {
           const v = input.catalog.vocabById(k.itemId);
           if (!v) continue;
           reviewedVocab.push(v);
-          const type = pickVocabExerciseType(k.reps, rand, true, input.style);
+          const type = pickVocabExerciseType(k.reps, rand, true, input.style, Boolean(v.conjugation));
           const ok = push("review", buildVocabExercise(type, v, input.catalog, input.native, input.seed));
           if (!ok) push("review", buildVocabExercise("meaning_mc", v, input.catalog, input.native));
         }
@@ -204,6 +204,12 @@ export function buildSessionSteps(input: BuildInput): SessionStep[] {
         const start = (k?.reps ?? 0) % g.exercises.length;
         const count = Math.min(n, g.exercises.length);
         for (let i = 0; i < count; i++) push("grammar", buildGrammarExercise(g, (start + i) % g.exercises.length));
+        // Conjugación de verbos que ya conoces (si el idioma tiene tablas).
+        const verbs = shuffle(
+          vocab.filter((v) => v.conjugation && (kmap.get(v.id)?.reps ?? 0) > 0),
+          rand,
+        ).slice(0, block.minutes >= 4 ? 2 : 1);
+        for (const v of verbs) push("grammar", buildVocabExercise("conjugate", v, input.catalog, input.native, input.seed));
         break;
       }
       case "listening": {

@@ -397,7 +397,7 @@ function ExerciseStep({
             </p>
             {ex.audioText ? <SpeakButton text={ex.audioText} locale={locale} size={46} /> : null}
           </div>
-          {ex.context && <p className="mt-2 text-sm text-muted" lang={ex.type === "cloze" ? "es" : language}>{ex.context}</p>}
+          {ex.context && <p className="mt-2 text-sm text-muted" lang={ex.type === "cloze" || ex.type === "conjugate" ? "es" : language}>{ex.context}</p>}
         </div>
       ) : null}
 

@@ -6,7 +6,8 @@
  * contra el catálogo para evaluar. Así la evaluación es server-side y no hace
  * falta guardar ejercicios generados en la base de datos.
  */
-import type { GrammarConcept, LanguageCode, Skill, VocabItem } from "../content/types";
+import { pronouns, tenseLabel, TENSE_ORDER, withPronoun } from "../content/conjugation";
+import type { GrammarConcept, LanguageCode, Skill, TenseKey, VocabItem } from "../content/types";
 import { CEFR_CENTER, itemTheta } from "./levels";
 import { hashString, mulberry32, sample, shuffle } from "./random";
 
@@ -19,6 +20,7 @@ export const EXERCISE_TYPES = [
   "rearrange",
   "match",
   "grammar",
+  "conjugate",
 ] as const;
 export type ExerciseType = (typeof EXERCISE_TYPES)[number];
 
@@ -71,6 +73,7 @@ const TYPE_OFFSET: Record<ExerciseType, number> = {
   rearrange: 0.2,
   dictation: 0.5,
   grammar: 0,
+  conjugate: 0.4,
 };
 
 const EXPECTED_MS: Record<ExerciseType, number> = {
@@ -82,6 +85,7 @@ const EXPECTED_MS: Record<ExerciseType, number> = {
   rearrange: 20000,
   dictation: 25000,
   grammar: 15000,
+  conjugate: 12000,
 };
 
 export function translationOf(item: VocabItem, native: LanguageCode): string[] {
@@ -222,6 +226,26 @@ export function buildVocabExercise(
         instruction: "Completa la frase",
         prompt: blankOut(ex.text, item.lemma, spaced)!,
         context: ex.translation?.[native],
+        input: "text",
+      };
+    }
+    case "conjugate": {
+      // Tiempos básicos primero: presente y pasado salen más a menudo.
+      const tenses = TENSE_ORDER.filter((t) => item.conjugation?.[t]);
+      if (tenses.length === 0) return null;
+      const weighted = tenses.flatMap((t) => (t === "ind.pres" ? [t, t, t] : t === "ind.pret" || t === "ind.past" ? [t, t] : [t]));
+      const tense = weighted[Math.floor(rand() * weighted.length)]!;
+      const row = item.conjugation![tense]!;
+      const persons = row.map((f, i) => (f ? i : -1)).filter((i) => i >= 0);
+      const person = persons[Math.floor(rand() * persons.length)]!;
+      return {
+        ...base,
+        key: `conjugate|${item.id}|${tense}:${person}`,
+        type,
+        skill: "grammar",
+        instruction: `Conjuga · ${tenseLabel(item.language, tense)}`,
+        prompt: `${item.lemma} → ${pronouns(item.language)[person]} …`,
+        context: translationOf(item, native)[0],
         input: "text",
       };
     }
@@ -391,6 +415,23 @@ export function resolveExercise(
       if (!ex) return null;
       return { accepted: [ex.text], display: ex.text, errorCategory: "listening", mode: "text", typos: true };
     }
+    case "conjugate": {
+      const [tense, personRaw] = (variant ?? "").split(":");
+      const person = Number(personRaw);
+      const form = item.conjugation?.[tense as TenseKey]?.[person];
+      if (!form) return null;
+      // Se acepta con o sin pronombre («avons» o «nous avons», «ai» o «j'ai»).
+      const full = withPronoun(item.language, person, form);
+      const extra = pronouns(item.language)[person]!.split("/").map((p) => `${p} ${form}`);
+      return {
+        accepted: [form, full, ...extra],
+        display: full,
+        explanation: `${item.lemma} · ${tenseLabel(item.language, tense as TenseKey)}`,
+        errorCategory: "conjugation",
+        mode: "text",
+        typos: false,
+      };
+    }
     case "rearrange": {
       const ex = item.examples[Number(variant)];
       if (!ex) return null;
@@ -430,11 +471,14 @@ export function pickVocabExerciseType(
   rand: () => number,
   allowAudio: boolean,
   style?: ExerciseStyle,
+  canConjugate = false,
 ): Exclude<ExerciseType, "grammar" | "match"> {
   if (reps === 0) return "meaning_mc";
   if (reps === 1) return rand() < ((style?.challenge ?? 0) > 0.3 ? 0.7 : 0.5) ? "reverse_mc" : "meaning_mc";
   const pool: Exclude<ExerciseType, "grammar" | "match">[] = ["recall", "cloze", "cloze", "reverse_mc", "rearrange"];
   if (allowAudio) pool.push("dictation");
+  // Verbos con tabla: a veces se repasan conjugándolos (gramática en contexto).
+  if (canConjugate) pool.push("conjugate", "conjugate");
   // La forma de aprender inclina la balanza, sin eliminar ningún tipo.
   if (style) {
     if (style.ear > 0.3 && allowAudio) pool.push("dictation");
