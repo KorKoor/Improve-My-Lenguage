@@ -76,7 +76,12 @@ test("ejercicios de vocabulario: generables, resolubles y coherentes", () => {
   const types = ["meaning_mc", "reverse_mc", "recall", "cloze", "dictation", "rearrange"] as const;
   let clozeCount = 0;
   for (const lang of available) {
-    for (const v of vocabFor(lang)) {
+    // Todo lo curado + una muestra de lo generado repartida por todos los niveles
+    // (recorrer ~90 000 palabras × 6 tipos no aporta más cobertura y tarda minutos).
+    const all = vocabFor(lang);
+    const step = Math.max(1, Math.floor(all.length / 400));
+    const sample = all.filter((v, i) => !v.sources || i % step === 0);
+    for (const v of sample) {
       for (const t of types) {
         const ex = buildVocabExercise(t, v, catalog, "es");
         if (!ex) continue;

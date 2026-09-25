@@ -1,0 +1,2 @@
+# Sólo para el generador de paquetes (no lo necesita la app en producción).
+wordfreq>=3.1

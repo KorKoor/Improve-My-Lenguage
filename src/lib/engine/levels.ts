@@ -5,7 +5,7 @@
  * modelo de Rasch. Los niveles CEFR son una proyección legible de θ, no la
  * fuente de verdad. Ver docs/ADAPTIVE_ENGINE.md.
  */
-import { CEFR_LEVELS, type CefrLevel, type Skill } from "../content/types";
+import { CEFR_LEVELS, type CefrLevel, type Skill, type VocabItem } from "../content/types";
 
 /** Centro (θ) de cada nivel. La dificultad de los ítems usa la misma escala. */
 export const CEFR_CENTER: Record<CefrLevel, number> = {
@@ -26,6 +26,22 @@ const UPPER: [CefrLevel, number][] = [
   ["C1", 2],
   ["C2", Infinity],
 ];
+
+/**
+ * Dificultad (θ) de una palabra según su rango de frecuencia real:
+ * θ = -2,5 + 1,27·ln(rango/300). Calibrada para que los umbrales CEFR caigan
+ * en ~450 (A1), ~1 000 (A2), ~2 150 (B1), ~4 750 (B2) y ~10 400 (C1) palabras,
+ * coherente con las estimaciones habituales de vocabulario por nivel.
+ * Misma curva que el generador de paquetes (scripts/content/build_packs.py).
+ */
+export function rankToTheta(rank: number): number {
+  return -2.5 + 1.27 * Math.log(Math.max(1, rank) / 300);
+}
+
+/** θ de una palabra: por frecuencia si la conocemos; si no, el centro de su nivel. */
+export function itemTheta(item: Pick<VocabItem, "cefr" | "rank">): number {
+  return item.rank ? Math.max(-3.5, Math.min(3.5, rankToTheta(item.rank))) : CEFR_CENTER[item.cefr];
+}
 
 export function thetaToCefr(theta: number): CefrLevel {
   for (const [level, upper] of UPPER) if (theta < upper) return level;

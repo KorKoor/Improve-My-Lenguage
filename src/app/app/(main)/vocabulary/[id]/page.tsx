@@ -1,4 +1,5 @@
 import { ArrowLeft, Lightbulb } from "lucide-react";
+import { POS_ES } from "@/components/app/labels";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -15,8 +16,18 @@ import { getKnowledge } from "@/lib/db/repositories";
 import { knowledgeToCard } from "@/lib/services/learning";
 import { requireLearner } from "@/lib/services/viewer";
 
-const POS_ES: Record<string, string> = { noun: "sustantivo", verb: "verbo", adjective: "adjetivo", adverb: "adverbio", pronoun: "pronombre", preposition: "preposición", conjunction: "conjunción", determiner: "determinante", interjection: "interjección", phrase: "expresión", particle: "partícula" };
 const REGISTER_ES: Record<string, string> = { neutral: "neutro", formal: "formal", informal: "informal", technical: "técnico", slang: "coloquial" };
+
+const SOURCE_LABEL: Record<string, string> = {
+  curated: "revisado por el equipo",
+  wordfreq: "frecuencia: wordfreq",
+  "wiktionary-es": "definición: Wiktionary en español",
+  "wiktionary-es-translations": "traducción: Wiktionary en español",
+  "pivot-en": "traducción vía Wiktionary en inglés",
+  "wiktionary-en": "Wiktionary en inglés",
+  tatoeba: "ejemplos: Tatoeba",
+  commons: "audio: Wikimedia Commons",
+};
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const v = getVocab(decodeURIComponent((await params).id));
@@ -42,14 +53,15 @@ export default async function WordPage({ params }: { params: Promise<{ id: strin
             <p className="mt-2 text-muted">{[v.reading, v.ipa, POS_ES[v.pos] ?? v.pos].filter(Boolean).join(" · ")}</p>
           </div>
           <div className="flex gap-2">
-            <SpeakButton text={v.lemma} locale={locale} size={52} />
-            <SpeakButton text={v.lemma} locale={locale} rate={0.6} size={40} label="Escuchar despacio" />
+            <SpeakButton text={v.lemma} audioUrl={v.audioUrl} locale={locale} size={52} />
+            <SpeakButton text={v.lemma} audioUrl={v.audioUrl} locale={locale} rate={0.6} size={40} label="Escuchar despacio" />
           </div>
         </div>
         <p className="mt-5 text-2xl font-semibold text-primary">{translationOf(v, learner.native).join(", ")}</p>
         {v.definition && <p className="mt-2 text-muted" lang={v.language}>{v.definition}</p>}
         <div className="mt-4 flex flex-wrap gap-2">
           <Chip>{v.cefr}</Chip>
+          {v.rank ? <Chip tone="muted">Nº {v.rank.toLocaleString("es")} en frecuencia</Chip> : null}
           <Chip tone="muted">Registro {REGISTER_ES[v.register]}</Chip>
           {v.topics.map((t) => <Chip key={t} tone="muted">{topicLabel(t)}</Chip>)}
         </div>
@@ -81,6 +93,12 @@ export default async function WordPage({ params }: { params: Promise<{ id: strin
           </dl>
         ) : null}
       </Card>
+
+      {v.sources?.length ? (
+        <p className="px-1 text-xs text-muted">
+          Fuentes: {v.sources.map((s) => SOURCE_LABEL[s]).filter(Boolean).join(" · ")}. <Link href="/creditos" className="underline">Créditos y licencias</Link>
+        </p>
+      ) : null}
 
       <Card>
         <h2 className="font-display text-lg font-extrabold">En tu memoria</h2>

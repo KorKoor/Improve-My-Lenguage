@@ -70,7 +70,8 @@ export type PartOfSpeech =
   | "determiner"
   | "interjection"
   | "phrase"
-  | "particle";
+  | "particle"
+  | "numeral";
 
 export type Register = "neutral" | "formal" | "informal" | "technical" | "slang";
 
@@ -104,7 +105,16 @@ export interface VocabItem {
   usageNote?: string;
   /** Formas aceptadas además del lema al escribir (kana, romaji, variantes). */
   acceptedForms?: string[];
+  /** Rango de frecuencia real (1 = la más usada). Define la dificultad fina. */
+  rank?: number;
+  /** Pronunciación grabada por una persona (Wikimedia Commons), si existe. */
+  audioUrl?: string;
+  /** Procedencia del contenido (atribución obligatoria de las licencias abiertas). */
+  sources?: ContentSourceTag[];
 }
+
+/** Origen de un dato generado desde fuentes públicas. */
+export type ContentSourceTag = "curated" | "wordfreq" | "wiktionary-es" | "wiktionary-es-translations" | "pivot-en" | "wiktionary-en" | "tatoeba" | "commons";
 
 export interface GrammarMistake {
   wrong: string;

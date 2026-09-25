@@ -1,5 +1,6 @@
 "use client";
 import { ArrowRight, Check, Headphones, Lightbulb, Loader2, MessageCircle, Snail, Trophy, Volume2, X } from "lucide-react";
+import { POS_ES } from "@/components/app/labels";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { finishSessionAction, reviseConfidenceAction, startSessionAction, submitAnswerAction } from "@/app/app/actions";
@@ -26,7 +27,6 @@ interface Props {
   title: string;
 }
 
-const POS_ES: Record<string, string> = { noun: "sustantivo", verb: "verbo", adjective: "adjetivo", adverb: "adverbio", pronoun: "pronombre", preposition: "preposición", conjunction: "conjunción", determiner: "determinante", interjection: "interjección", phrase: "expresión", particle: "partícula" };
 
 export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title }: Props) {
   const [status, setStatus] = useState<"loading" | "error" | "running" | "finishing" | "done" | "empty">("loading");
@@ -238,7 +238,7 @@ function IntroStep({ step, locale, language, rtl, onNext }: { step: Extract<Sess
             <p className="font-display text-4xl font-extrabold">{w.lemma}</p>
             <p className="mt-1 text-sm text-muted">{[w.reading, w.ipa, POS_ES[w.pos] ?? w.pos].filter(Boolean).join(" · ")}</p>
           </div>
-          <SpeakButton text={w.lemma} locale={locale} size={48} />
+          <SpeakButton text={w.lemma} audioUrl={w.audioUrl} locale={locale} size={48} />
         </div>
         <p className="mt-4 text-xl font-semibold text-primary">{w.translation.join(", ")}</p>
         {w.example && (

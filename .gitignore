@@ -81,3 +81,6 @@ service-account*.json
 .firebase/
 firestore-debug.log
 *-debug.log
+
+# Descargas del generador de contenido (≈1 GB)
+.cache/

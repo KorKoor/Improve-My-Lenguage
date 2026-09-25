@@ -7,7 +7,7 @@
  * falta guardar ejercicios generados en la base de datos.
  */
 import type { GrammarConcept, LanguageCode, Skill, VocabItem } from "../content/types";
-import { CEFR_CENTER } from "./levels";
+import { CEFR_CENTER, itemTheta } from "./levels";
 import { hashString, mulberry32, sample, shuffle } from "./random";
 
 export const EXERCISE_TYPES = [
@@ -107,6 +107,16 @@ export function blankOut(text: string, lemma: string, spaceSeparated: boolean): 
   return text.replace(re, (_m, pre: string) => `${pre}___`);
 }
 
+const positions = new WeakMap<VocabItem[], Map<string, number>>();
+function positionIn(pool: VocabItem[], id: string): number {
+  let m = positions.get(pool);
+  if (!m) {
+    m = new Map(pool.map((v, i) => [v.id, i]));
+    positions.set(pool, m);
+  }
+  return m.get(id) ?? -1;
+}
+
 function distractors(
   item: VocabItem,
   pool: VocabItem[],
@@ -115,13 +125,18 @@ function distractors(
   label: (v: VocabItem) => string,
 ): string[] {
   const own = label(item).toLowerCase();
-  const candidates = pool.filter(
+  // El pool está ordenado por frecuencia: los vecinos tienen un nivel parecido.
+  // Mirar sólo ~120 palabras cercanas hace los distractores más plausibles y
+  // evita ordenar miles de palabras en cada ejercicio.
+  const at = positionIn(pool, item.id);
+  const nearby = at < 0 ? pool.slice(0, 240) : pool.slice(Math.max(0, at - 60), at + 61);
+  const candidates = nearby.filter(
     (v) => v.id !== item.id && label(v).toLowerCase() !== own,
   );
   // Preferir misma categoría gramatical y nivel cercano: distractores plausibles.
   const scored = shuffle(candidates, rand).sort((a, b) => {
-    const sa = (a.pos === item.pos ? 0 : 2) + Math.abs(CEFR_CENTER[a.cefr] - CEFR_CENTER[item.cefr]);
-    const sb = (b.pos === item.pos ? 0 : 2) + Math.abs(CEFR_CENTER[b.cefr] - CEFR_CENTER[item.cefr]);
+    const sa = (a.pos === item.pos ? 0 : 2) + Math.abs(itemTheta(a) - itemTheta(item));
+    const sb = (b.pos === item.pos ? 0 : 2) + Math.abs(itemTheta(b) - itemTheta(item));
     return sa - sb;
   });
   const out: string[] = [];
@@ -146,7 +161,7 @@ export function buildVocabExercise(
   const base = {
     language: item.language,
     itemIds: [item.id],
-    difficulty: CEFR_CENTER[item.cefr] + TYPE_OFFSET[type],
+    difficulty: itemTheta(item) + TYPE_OFFSET[type],
     expectedMs: EXPECTED_MS[type],
   };
   const tr = (v: VocabItem) => translationOf(v, native)[0]!;
@@ -258,7 +273,7 @@ export function buildMatchExercise(
   if (items.length < 3) return null;
   const chosen = items.slice(0, 5);
   const rand = mulberry32(hashString(`match|${chosen.map((i) => i.id).join(",")}|${seed}`));
-  const avg = chosen.reduce((a, i) => a + CEFR_CENTER[i.cefr], 0) / chosen.length;
+  const avg = chosen.reduce((a, i) => a + itemTheta(i), 0) / chosen.length;
   return {
     key: `match|${chosen.map((i) => i.id).join(",")}`,
     type: "match",

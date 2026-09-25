@@ -31,3 +31,10 @@ export function formatMinutes(min: number): string {
   const m = min % 60;
   return m ? `${h} h ${m} min` : `${h} h`;
 }
+
+/** Categoría gramatical en español. */
+export const POS_ES: Record<string, string> = {
+  noun: "sustantivo", verb: "verbo", adjective: "adjetivo", adverb: "adverbio", pronoun: "pronombre",
+  preposition: "preposición", conjunction: "conjunción", determiner: "determinante", interjection: "interjección",
+  phrase: "expresión", particle: "partícula", numeral: "numeral",
+};

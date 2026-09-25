@@ -13,7 +13,7 @@ import {
   type Catalog,
   type Exercise,
 } from "./exercises";
-import { CEFR_CENTER } from "./levels";
+import { CEFR_CENTER, itemTheta } from "./levels";
 import { exercisesForBlock, type BlockKind, type SessionPlan } from "./planner";
 import { hashString, mulberry32, shuffle } from "./random";
 
@@ -31,6 +31,8 @@ export interface WordCard {
   lemma: string;
   reading?: string;
   ipa?: string;
+  /** Pronunciación grabada (Wikimedia Commons), si existe. */
+  audioUrl?: string;
   pos: string;
   translation: string[];
   example?: { text: string; translation?: string; reading?: string };
@@ -73,6 +75,7 @@ export function wordCard(v: VocabItem, native: LanguageCode): WordCard {
     lemma: v.lemma,
     reading: v.reading,
     ipa: v.ipa,
+    audioUrl: v.audioUrl,
     pos: v.pos,
     translation: translationOf(v, native),
     example: ex ? { text: ex.text, translation: ex.translation?.[native], reading: ex.reading } : undefined,
@@ -99,9 +102,9 @@ export function selectNewWords(
     .map((v) => {
       const k = knowledge.get(v.id);
       const topicMatch = v.topics.some((t) => interestSet.has(t)) ? 1 : 0;
-      const tooHard = CEFR_CENTER[v.cefr] - target > 1.2 ? 2 : 0;
+      const tooHard = itemTheta(v) - target > 1.2 ? 2 : 0;
       const score =
-        Math.abs(CEFR_CENTER[v.cefr] - target) -
+        Math.abs(itemTheta(v) - target) -
         0.9 * topicMatch -
         (k?.status === "saved" ? 1.5 : 0) +
         0.12 * v.frequencyBand +
@@ -202,7 +205,7 @@ export function buildSessionSteps(input: BuildInput): SessionStep[] {
       }
       case "listening": {
         const seen = vocab.filter((v) => (kmap.get(v.id)?.reps ?? 0) > 0);
-        const pool = seen.length >= n ? seen : [...seen, ...newWords, ...vocab.filter((v) => CEFR_CENTER[v.cefr] <= input.vocabTheta + 0.5)];
+        const pool = seen.length >= n ? seen : [...seen, ...newWords, ...vocab.filter((v) => itemTheta(v) <= input.vocabTheta + 0.5)];
         let added = 0;
         for (const v of shuffle(pool, rand)) {
           if (added >= n) break;

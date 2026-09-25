@@ -3,7 +3,7 @@
  * Todo lo que el motor necesita saber del contenido pasa por aquí, de modo que
  * migrarlo a base de datos o a un CMS en el futuro sólo cambia este módulo.
  */
-import { CEFR_CENTER } from "../engine/levels";
+import { CEFR_CENTER, itemTheta } from "../engine/levels";
 import type { Catalog } from "../engine/exercises";
 import { EN_ASSESSMENT } from "./en/assessment";
 import { EN_GRAMMAR } from "./en/grammar";
@@ -14,20 +14,77 @@ import { DE_GRAMMAR, DE_VOCAB } from "./de";
 import { IT_GRAMMAR, IT_VOCAB } from "./it";
 import { PT_GRAMMAR, PT_VOCAB } from "./pt";
 import { getLanguage } from "./languages";
+import { packVocab } from "./packs";
+import { AR_GRAMMAR } from "./ar/grammar";
+import { KO_GRAMMAR } from "./ko/grammar";
+import { NL_GRAMMAR } from "./nl/grammar";
+import { RU_GRAMMAR } from "./ru/grammar";
+import { SV_GRAMMAR } from "./sv/grammar";
+import { ZH_GRAMMAR } from "./zh/grammar";
 import type { AssessmentItem, GrammarConcept, LanguageCode, VocabItem } from "./types";
 import { translationOf } from "../engine/exercises";
 
-const VOCAB: Record<LanguageCode, VocabItem[]> = { en: EN_VOCAB, fr: FR_VOCAB, ja: JA_VOCAB, pt: PT_VOCAB, it: IT_VOCAB, de: DE_VOCAB };
-const GRAMMAR: Record<LanguageCode, GrammarConcept[]> = { en: EN_GRAMMAR, fr: FR_GRAMMAR, ja: JA_GRAMMAR, pt: PT_GRAMMAR, it: IT_GRAMMAR, de: DE_GRAMMAR };
+/** Vocabulario escrito y revisado a mano: tiene prioridad sobre el generado. */
+const CURATED_VOCAB: Record<LanguageCode, VocabItem[]> = { en: EN_VOCAB, fr: FR_VOCAB, ja: JA_VOCAB, pt: PT_VOCAB, it: IT_VOCAB, de: DE_VOCAB };
+const GRAMMAR: Record<LanguageCode, GrammarConcept[]> = {
+  en: EN_GRAMMAR,
+  fr: FR_GRAMMAR,
+  ja: JA_GRAMMAR,
+  pt: PT_GRAMMAR,
+  it: IT_GRAMMAR,
+  de: DE_GRAMMAR,
+  ar: AR_GRAMMAR,
+  ko: KO_GRAMMAR,
+  nl: NL_GRAMMAR,
+  ru: RU_GRAMMAR,
+  sv: SV_GRAMMAR,
+  zh: ZH_GRAMMAR,
+};
 const ASSESSMENT: Record<LanguageCode, AssessmentItem[]> = { en: EN_ASSESSMENT };
 
-const vocabIndex = new Map<string, VocabItem>();
-for (const list of Object.values(VOCAB)) for (const v of list) vocabIndex.set(v.id, v);
+/** Rango aproximado para contenido curado sin rango (mitad de su banda CEFR). */
+const DEFAULT_RANK: Record<string, number> = { A1: 250, A2: 700, B1: 1500, B2: 3400, C1: 7500, C2: 12000 };
+
+const merged = new Map<LanguageCode, VocabItem[]>();
+const vocabIndexes = new Map<LanguageCode, Map<string, VocabItem>>();
+
+/**
+ * Curado + generado desde datos públicos (data/packs), ordenado por
+ * frecuencia real. Si una palabra existe en ambos, gana la curada (que
+ * hereda el rango, la IPA y el audio de la generada si le faltan).
+ */
+function mergedVocab(language: LanguageCode): VocabItem[] {
+  let list = merged.get(language);
+  if (list) return list;
+  const curated = CURATED_VOCAB[language] ?? [];
+  const generated = packVocab(language);
+  const byLemma = new Map(generated.map((g) => [g.lemma.toLowerCase(), g]));
+  const curatedLemmas = new Set(curated.map((c) => c.lemma.toLowerCase()));
+  const curatedIds = new Set(curated.map((c) => c.id));
+  const enriched = curated.map((c) => {
+    const g = byLemma.get(c.lemma.toLowerCase());
+    return g ? { ...c, rank: c.rank ?? g.rank, ipa: c.ipa ?? g.ipa, audioUrl: c.audioUrl ?? g.audioUrl } : c;
+  });
+  const extra = generated.filter((g) => !curatedLemmas.has(g.lemma.toLowerCase()) && !curatedIds.has(g.id));
+  list = [...enriched, ...extra].sort((a, b) => (a.rank ?? DEFAULT_RANK[a.cefr]!) - (b.rank ?? DEFAULT_RANK[b.cefr]!));
+  merged.set(language, list);
+  return list;
+}
+
+function vocabIndexFor(language: LanguageCode): Map<string, VocabItem> {
+  let idx = vocabIndexes.get(language);
+  if (!idx) {
+    idx = new Map(mergedVocab(language).map((v) => [v.id, v]));
+    vocabIndexes.set(language, idx);
+  }
+  return idx;
+}
+
 const grammarIndex = new Map<string, GrammarConcept>();
 for (const list of Object.values(GRAMMAR)) for (const g of list) grammarIndex.set(g.id, g);
 
 export function vocabFor(language: LanguageCode): VocabItem[] {
-  return VOCAB[language] ?? [];
+  return mergedVocab(language);
 }
 
 export function grammarFor(language: LanguageCode): GrammarConcept[] {
@@ -35,7 +92,7 @@ export function grammarFor(language: LanguageCode): GrammarConcept[] {
 }
 
 export function getVocab(id: string): VocabItem | undefined {
-  return vocabIndex.get(id);
+  return vocabIndexFor(id.split(":")[0]!).get(id);
 }
 
 export function getGrammar(id: string): GrammarConcept | undefined {
@@ -60,22 +117,30 @@ export function assessmentBankFor(language: LanguageCode, native: LanguageCode):
 
   const items: AssessmentItem[] = [];
   const vocab = vocabFor(language);
-  for (const v of vocab) {
-    const answer = translationOf(v, native)[0]!;
-    const distractors = vocab
-      .filter((o) => o.id !== v.id)
-      .map((o) => translationOf(o, native)[0]!)
-      .filter((t, i, arr) => t !== answer && arr.indexOf(t) === i)
-      .slice(0, 12);
-    // Selección determinista de 3 distractores.
-    const start = v.id.length % Math.max(1, distractors.length - 3);
+  // Con miles de palabras basta una muestra de ~300 repartida por todo el rango
+  // de frecuencia: el test adaptativo sólo usa 8–18 ítems cercanos a tu nivel.
+  const step = Math.max(1, Math.floor(vocab.length / 300));
+  for (let i = 0; i < vocab.length; i += step) {
+    const v = vocab[i]!;
+    const answer = translationOf(v, native)[0];
+    if (!answer) continue;
+    // Distractores deterministas de frecuencia parecida (plausibles al mismo nivel).
+    const distractors: string[] = [];
+    for (let d = 1; distractors.length < 3 && d < 40; d++) {
+      for (const j of [i + d * 3, i - d * 3]) {
+        const o = vocab[j];
+        const t = o ? translationOf(o, native)[0] : undefined;
+        if (t && t.toLowerCase() !== answer.toLowerCase() && !distractors.includes(t) && distractors.length < 3) distractors.push(t);
+      }
+    }
+    if (distractors.length < 3) continue;
     items.push({
       id: `${language}:a:v:${v.id.split(":").pop()}`,
       language,
       skill: "vocabulary",
-      difficulty: CEFR_CENTER[v.cefr] - 0.3,
+      difficulty: itemTheta(v) - 0.3,
       prompt: `¿Qué significa «${v.lemma}»${v.reading ? ` (${v.reading})` : ""}?`,
-      options: [answer, ...distractors.slice(start, start + 3)].sort(),
+      options: [answer, ...distractors].sort(),
       answer,
     });
   }

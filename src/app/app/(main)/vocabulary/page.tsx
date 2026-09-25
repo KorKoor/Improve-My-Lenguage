@@ -28,7 +28,7 @@ const FILTERS = [
   ["known", "Sabidas"],
 ] as const;
 
-export default async function VocabularyPage({ searchParams }: { searchParams: Promise<{ q?: string; topic?: string; level?: string; filter?: string }> }) {
+export default async function VocabularyPage({ searchParams }: { searchParams: Promise<{ q?: string; topic?: string; level?: string; filter?: string; page?: string }> }) {
   const learner = await requireLearner();
   const sp = await searchParams;
   const now = new Date();
@@ -56,9 +56,15 @@ export default async function VocabularyPage({ searchParams }: { searchParams: P
       }
     });
 
+  const PAGE_SIZE = 48;
+  const pages = Math.max(1, Math.ceil(words.length / PAGE_SIZE));
+  const page = Math.min(pages, Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1));
+  const shown = words.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const qs = (patch: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
-    const merged = { q: sp.q, topic: sp.topic, level: sp.level, filter: sp.filter, ...patch };
+    // Cambiar un filtro vuelve a la página 1.
+    const merged = { q: sp.q, topic: sp.topic, level: sp.level, filter: sp.filter, page: undefined, ...patch };
     for (const [k, v] of Object.entries(merged)) if (v) p.set(k, v);
     return `/app/vocabulary?${p.toString()}`;
   };
@@ -68,7 +74,7 @@ export default async function VocabularyPage({ searchParams }: { searchParams: P
     <div className="space-y-6">
       <header>
         <h1 className="font-display text-3xl font-extrabold">Vocabulario</h1>
-        <p className="mt-1 text-muted">Cada palabra con contexto, pronunciación y su estado en tu memoria.</p>
+        <p className="mt-1 text-muted">Cada palabra con contexto, pronunciación y su estado en tu memoria. Ordenadas por frecuencia de uso: las primeras son las que más vas a oír.</p>
       </header>
 
       <form role="search" className="flex gap-2" action="/app/vocabulary">
@@ -98,11 +104,16 @@ export default async function VocabularyPage({ searchParams }: { searchParams: P
         </div>
       </nav>
 
+      <p className="text-sm text-muted" role="status">
+        {words.length.toLocaleString("es")} {words.length === 1 ? "palabra" : "palabras"}
+        {pages > 1 ? ` · página ${page} de ${pages}` : ""}
+      </p>
+
       {words.length === 0 ? (
         <Card><EmptyState title="Sin resultados">Prueba con otra búsqueda o quita algún filtro.</EmptyState></Card>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {words.map((v) => {
+          {shown.map((v) => {
             const k = knowledge.get(v.id);
             const m = k ? mastery(knowledgeToCard(k, now), now) : 0;
             return (
@@ -112,7 +123,7 @@ export default async function VocabularyPage({ searchParams }: { searchParams: P
                     <p className="font-display text-xl font-extrabold hover:text-primary" lang={v.language}>{v.lemma}</p>
                     <p className="text-xs text-muted">{[v.reading, v.ipa].filter(Boolean).join(" · ")}</p>
                   </Link>
-                  <SpeakButton text={v.lemma} locale={learner.language.speechLocale} size={34} />
+                  <SpeakButton text={v.lemma} audioUrl={v.audioUrl} locale={learner.language.speechLocale} size={34} />
                 </div>
                 <p className="text-sm font-medium">{translationOf(v, learner.native).join(", ")}</p>
                 {v.examples[0] && <p className="line-clamp-2 text-sm text-muted" lang={v.language}>{v.examples[0].text}</p>}
@@ -134,6 +145,18 @@ export default async function VocabularyPage({ searchParams }: { searchParams: P
             );
           })}
         </ul>
+      )}
+
+      {pages > 1 && (
+        <nav aria-label="Páginas" className="flex items-center justify-center gap-2">
+          {page > 1 ? (
+            <Link href={qs({ page: String(page - 1) })} className="rounded-xl border border-border bg-surface px-4 py-2 text-sm font-semibold text-primary hover:bg-surface-muted">← Anterior</Link>
+          ) : null}
+          <span className="px-2 text-sm text-muted">{page} / {pages}</span>
+          {page < pages ? (
+            <Link href={qs({ page: String(page + 1) })} className="rounded-xl border border-border bg-surface px-4 py-2 text-sm font-semibold text-primary hover:bg-surface-muted">Siguiente →</Link>
+          ) : null}
+        </nav>
       )}
     </div>
   );

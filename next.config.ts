@@ -11,6 +11,9 @@ const securityHeaders = [
 
 const config: NextConfig = {
   poweredByHeader: false,
+  // Los paquetes de vocabulario se leen con fs en el servidor: hay que
+  // incluirlos explícitamente en las funciones de Vercel.
+  outputFileTracingIncludes: { "/**": ["./data/packs/**"] },
   reactStrictMode: true,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

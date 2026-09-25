@@ -5,7 +5,7 @@ import { LANGUAGES } from "@/lib/content";
 export default function sitemap(): MetadataRoute.Sitemap {
   const base = siteUrl;
   const now = new Date();
-  const pages = ["", "/features", "/languages", "/about", "/privacy"].map((p) => ({
+  const pages = ["", "/features", "/languages", "/about", "/privacy", "/creditos"].map((p) => ({
     url: `${base}${p}`,
     lastModified: now,
     changeFrequency: "monthly" as const,
