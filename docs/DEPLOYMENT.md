@@ -24,13 +24,38 @@ Proyecto: `improve-my-lenguages` (ya creado, con la app web registrada y Firesto
 ## 2. Vercel
 
 1. Importa el repositorio de GitHub (framework: Next.js; sin cambios en build/output).
-2. **Settings → Environment Variables** (Production y Preview) — ver `.env.example`:
-   - `NEXT_PUBLIC_SITE_URL` = `https://tu-dominio.com`
-   - `NEXT_PUBLIC_FIREBASE_*` (API key, auth domain, project id, storage bucket, sender id, app id, VAPID key)
-   - `FIREBASE_SERVICE_ACCOUNT` (**sólo servidor**)
-   - `CRON_SECRET` (cadena aleatoria larga; Vercel la envía a los cron jobs)
-   - Opcional: `AI_PROVIDER`, `GEMINI_API_KEY`, `AI_DAILY_LIMIT_PER_USER`
-3. Despliega. `vercel.json` programa dos crons diarios (permitidos en Hobby): `/api/health` y `/api/cron/reminders` (01:00 UTC ≈ 19:00 en Ciudad de México).
+2. En **Settings → Environment Variables**, crea estas variables en **Production** y **Preview**. Usa exactamente estos nombres:
+
+   ```env
+   NEXT_PUBLIC_SITE_URL=https://tu-dominio.com
+   NEXT_PUBLIC_FIREBASE_API_KEY=valor-de-firebase-console
+   NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=improve-my-lenguages.firebaseapp.com
+   NEXT_PUBLIC_FIREBASE_PROJECT_ID=improve-my-lenguages
+   NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=improve-my-lenguages.firebasestorage.app
+   NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=valor-de-firebase-console
+   NEXT_PUBLIC_FIREBASE_APP_ID=valor-de-firebase-console
+   NEXT_PUBLIC_FIREBASE_VAPID_KEY=valor-de-firebase-console
+   FIREBASE_SERVICE_ACCOUNT={"type":"service_account","project_id":"improve-my-lenguages","private_key":"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n","client_email":"firebase-adminsdk-xxxxx@improve-my-lenguages.iam.gserviceaccount.com"}
+   CRON_SECRET=secreto-largo-generado-por-ti
+   AI_PROVIDER=gemini
+   GEMINI_API_KEY=tu-clave-de-google-ai-studio
+   AI_DAILY_LIMIT_PER_USER=60
+   ```
+
+   `FIREBASE_SERVICE_ACCOUNT`, `CRON_SECRET` y `GEMINI_API_KEY` son secretos: activa la opción **Sensitive** cuando Vercel la muestre y nunca los prefijes con `NEXT_PUBLIC_`. El JSON de `FIREBASE_SERVICE_ACCOUNT` debe ser el archivo completo de la cuenta de servicio, convertido a una sola línea; el ejemplo anterior sólo muestra el formato.
+
+   Los valores `NEXT_PUBLIC_FIREBASE_*` salen de **Firebase Console → Configuración del proyecto → General → Tus apps → app web → Configuración del SDK**. La `NEXT_PUBLIC_FIREBASE_VAPID_KEY` sale de **Cloud Messaging → Configuración web → Certificados push web**. Genera `CRON_SECRET` con un valor aleatorio largo.
+
+   Variables opcionales para proveedores compatibles con OpenAI:
+
+   ```env
+   OPENAI_COMPAT_BASE_URL=https://api.openai.com/v1
+   OPENAI_COMPAT_API_KEY=tu-clave
+   AI_MODEL_FAST=
+   AI_MODEL_SMART=
+   ```
+
+3. Guarda las variables, activa **Redeploy** con **Use existing Build Cache** desactivado y despliega. `vercel.json` programa dos crons diarios (permitidos en Hobby): `/api/health` y `/api/cron/reminders` (01:00 UTC ≈ 19:00 en Ciudad de México).
 
 ## 3. Dominio propio
 
