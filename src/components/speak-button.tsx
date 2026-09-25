@@ -1,6 +1,7 @@
 "use client";
 import { Volume2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { speechRate } from "@/components/comfort";
 import { cn } from "@/lib/cn";
 
 /** Pronunciación con la síntesis de voz del navegador (gratis, sin servidor). */
@@ -14,7 +15,7 @@ export function useSpeech(locale: string) {
       synth.cancel();
       const u = new SpeechSynthesisUtterance(text);
       u.lang = locale;
-      u.rate = rate;
+      u.rate = speechRate(rate);
       const voice = synth.getVoices().find((v) => v.lang.toLowerCase().startsWith(locale.toLowerCase().slice(0, 2)));
       if (voice) u.voice = voice;
       synth.speak(u);

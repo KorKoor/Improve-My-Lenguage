@@ -1,8 +1,9 @@
 "use client";
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles, Type } from "lucide-react";
 import { LanguageMark } from "@/components/language-mark";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { applyComfort } from "@/components/comfort";
 import { saveOnboarding, type OnboardingInput } from "@/app/app/actions";
 import { Mascot } from "@/components/mascot";
 import { Button } from "@/components/ui/button";
@@ -45,13 +46,28 @@ export function OnboardingWizard({ adding, languages, topics, defaults }: { addi
     months: 6,
     reason: "",
     timezone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "America/Mexico_City",
+    experience: adding ? undefined : "standard",
+    textSize: "normal",
   });
+  // Vista previa inmediata del tamaño de letra y del audio elegidos.
+  useEffect(() => {
+    if (data.experience) applyComfort(data.textSize ?? "normal", data.experience === "simple");
+  }, [data.experience, data.textSize]);
+  const chooseExperience = (e: "standard" | "simple") =>
+    setData((d) => ({
+      ...d,
+      experience: e,
+      textSize: e === "simple" ? "large" : "normal",
+      // Modo sencillo: explicaciones completas y ejercicios suaves (se pueden cambiar después).
+      explanationDepth: e === "simple" ? "detailed" : d.explanationDepth,
+      preferredDifficulty: e === "simple" ? "easy" : d.preferredDifficulty,
+    }));
   const set = <K extends keyof OnboardingInput>(k: K, v: OnboardingInput[K]) => setData((d) => ({ ...d, [k]: v }));
   const toggle = (k: "interests" | "interactionPrefs", v: string) =>
     setData((d) => ({ ...d, [k]: d[k].includes(v) ? d[k].filter((x) => x !== v) : [...d[k], v] }));
 
   const steps = useMemo(() => {
-    const all = ["language", "level", "goal", "time", "interests", "prefs", "consent"] as const;
+    const all = ["language", "experience", "level", "goal", "time", "interests", "prefs", "consent"] as const;
     // Al añadir un idioma, el perfil general ya existe: sólo lo específico del idioma.
     return adding ? (["language", "level", "goal", "time"] as const) : all;
   }, [adding]);
@@ -103,6 +119,39 @@ export function OnboardingWizard({ adding, languages, topics, defaults }: { addi
               ))}
             </div>
             <p className="mt-4 text-sm text-muted">Más idiomas en camino: la plataforma está preparada para cualquier sistema de escritura.</p>
+          </>
+        )}
+
+        {current === "experience" && (
+          <>
+            <h1 className="font-display text-3xl font-extrabold">¿Cómo te gustaría usar la app?</h1>
+            <p className="mt-2 text-muted">Puedes cambiarlo cuando quieras en Configuración → Comodidad.</p>
+            <div className="mt-6 grid gap-3" role="radiogroup" aria-label="Experiencia">
+              <button type="button" role="radio" aria-checked={data.experience === "standard"} onClick={() => chooseExperience("standard")} className={option(data.experience === "standard")}>
+                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-primary-soft text-primary"><Sparkles size={22} aria-hidden /></span>
+                <span className="flex-1">
+                  <span className="block font-semibold">Completa</span>
+                  <span className="text-sm text-muted">Todas las estadísticas, gráficas y opciones a la vista.</span>
+                </span>
+                {data.experience === "standard" && <Check size={18} className="text-primary" aria-hidden />}
+              </button>
+              <button type="button" role="radio" aria-checked={data.experience === "simple"} onClick={() => chooseExperience("simple")} className={option(data.experience === "simple")}>
+                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-success-soft text-success"><Type size={22} aria-hidden /></span>
+                <span className="flex-1">
+                  <span className="block font-semibold">Sencilla</span>
+                  <span className="text-sm text-muted">Letra grande, audio más lento, explicaciones paso a paso y un solo botón para empezar. Ideal si no usas muchas apps.</span>
+                </span>
+                {data.experience === "simple" && <Check size={18} className="text-primary" aria-hidden />}
+              </button>
+            </div>
+            <p className="mt-6 text-sm font-semibold">Tamaño de letra</p>
+            <div className="mt-2 grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tamaño de letra">
+              {([["normal", "Normal", "text-base"], ["large", "Grande", "text-lg"], ["xl", "Muy grande", "text-xl"]] as const).map(([v, l, size]) => (
+                <button key={v} type="button" role="radio" aria-checked={data.textSize === v} onClick={() => set("textSize", v)} className={cn("rounded-xl border py-3 font-semibold", size, data.textSize === v ? "border-primary bg-primary-soft text-primary" : "border-border bg-surface")}>
+                  {l}
+                </button>
+              ))}
+            </div>
           </>
         )}
 

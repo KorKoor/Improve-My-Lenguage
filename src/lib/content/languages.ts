@@ -86,7 +86,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["cases", "gender", "v2-order", "separable-verbs"],
     spaceSeparated: true,
-    status: "planned",
+    status: "beta",
     flagEmoji: "🇩🇪",
   },
   {
@@ -102,7 +102,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["gender", "articles", "subjunctive"],
     spaceSeparated: true,
-    status: "planned",
+    status: "beta",
     flagEmoji: "🇮🇹",
   },
   {
@@ -118,7 +118,7 @@ export const LANGUAGES: Language[] = [
     phonemeSupport: false,
     grammarFeatures: ["gender", "nasal-vowels", "personal-infinitive"],
     spaceSeparated: true,
-    status: "planned",
+    status: "beta",
     flagEmoji: "🇧🇷",
   },
   {

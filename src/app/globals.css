@@ -90,6 +90,10 @@
   --radius-card: 22px;
 }
 
+/* Comodidad: tamaño de letra global (toda la UI está en rem). */
+html[data-text="large"] { font-size: 112.5%; }
+html[data-text="xl"] { font-size: 125%; }
+
 @layer base {
   html {
     background: var(--bg);

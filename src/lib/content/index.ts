@@ -10,12 +10,15 @@ import { EN_GRAMMAR } from "./en/grammar";
 import { EN_VOCAB } from "./en/vocab";
 import { FR_GRAMMAR, FR_VOCAB } from "./fr";
 import { JA_GRAMMAR, JA_VOCAB } from "./ja";
+import { DE_GRAMMAR, DE_VOCAB } from "./de";
+import { IT_GRAMMAR, IT_VOCAB } from "./it";
+import { PT_GRAMMAR, PT_VOCAB } from "./pt";
 import { getLanguage } from "./languages";
 import type { AssessmentItem, GrammarConcept, LanguageCode, VocabItem } from "./types";
 import { translationOf } from "../engine/exercises";
 
-const VOCAB: Record<LanguageCode, VocabItem[]> = { en: EN_VOCAB, fr: FR_VOCAB, ja: JA_VOCAB };
-const GRAMMAR: Record<LanguageCode, GrammarConcept[]> = { en: EN_GRAMMAR, fr: FR_GRAMMAR, ja: JA_GRAMMAR };
+const VOCAB: Record<LanguageCode, VocabItem[]> = { en: EN_VOCAB, fr: FR_VOCAB, ja: JA_VOCAB, pt: PT_VOCAB, it: IT_VOCAB, de: DE_VOCAB };
+const GRAMMAR: Record<LanguageCode, GrammarConcept[]> = { en: EN_GRAMMAR, fr: FR_GRAMMAR, ja: JA_GRAMMAR, pt: PT_GRAMMAR, it: IT_GRAMMAR, de: DE_GRAMMAR };
 const ASSESSMENT: Record<LanguageCode, AssessmentItem[]> = { en: EN_ASSESSMENT };
 
 const vocabIndex = new Map<string, VocabItem>();

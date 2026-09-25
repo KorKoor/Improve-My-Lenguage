@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SidebarNav, TabBar } from "@/components/app/nav";
 import { LanguageSwitcher } from "@/components/app/language-switcher";
+import { ComfortSync } from "@/components/comfort";
 import { Logo } from "@/components/logo";
 import { LanguageMark } from "@/components/language-mark";
 import { getLanguage } from "@/lib/content";
@@ -23,9 +24,10 @@ export default async function AppShell({ children }: { children: React.ReactNode
 
   return (
     <div className="flex min-h-dvh">
+      <ComfortSync textSize={learner.profile.textSize} slowAudio={learner.profile.slowAudio} />
       <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-6 border-r border-border bg-surface/60 px-4 py-6 lg:flex">
         <div className="px-1"><Logo href="/app" /></div>
-        <SidebarNav due={due} />
+        <SidebarNav due={due} simple={learner.profile.simpleMode} />
         <div className="mt-auto space-y-3">
           <LanguageSwitcher options={options} active={learner.language.code} />
           <form action="/auth/signout" method="post">
@@ -41,7 +43,7 @@ export default async function AppShell({ children }: { children: React.ReactNode
         </header>
         <main id="main" className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-28 pt-6 sm:px-6 lg:px-9 lg:pb-12 lg:pt-8">{children}</main>
       </div>
-      <TabBar due={due} />
+      <TabBar due={due} simple={learner.profile.simpleMode} />
     </div>
   );
 }

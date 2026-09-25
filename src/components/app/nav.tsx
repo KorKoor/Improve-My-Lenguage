@@ -1,5 +1,5 @@
 "use client";
-import { BarChart3, BookOpen, Compass, Home, Layers, MessageCircle, Play, Repeat, Settings, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, CircleHelp, Compass, Home, Layers, MessageCircle, Play, Repeat, Settings, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
@@ -12,7 +12,17 @@ export interface NavItem {
   soon?: boolean;
 }
 
-export function navItems(due: number): NavItem[] {
+export function navItems(due: number, simple = false): NavItem[] {
+  if (simple) {
+    // Modo sencillo: sólo lo esencial, con nombres cotidianos.
+    return [
+      { href: "/app", label: "Inicio", icon: Home },
+      { href: "/app/session", label: "Practicar", icon: Play },
+      { href: "/app/review", label: "Repasar", icon: Repeat, badge: due > 0 ? due : null },
+      { href: "/app/vocabulary", label: "Mis palabras", icon: BookOpen },
+      { href: "/app/progress", label: "Mi progreso", icon: BarChart3 },
+    ];
+  }
   return [
     { href: "/app", label: "Inicio", icon: Home },
     { href: "/app/session", label: "Sesión de hoy", icon: Play },
@@ -29,11 +39,11 @@ function isActive(path: string, href: string) {
   return href === "/app" ? path === "/app" : path === href || path.startsWith(href + "/");
 }
 
-export function SidebarNav({ due }: { due: number }) {
+export function SidebarNav({ due, simple = false }: { due: number; simple?: boolean }) {
   const path = usePathname();
   return (
-    <nav aria-label="Aplicación" className="flex flex-col gap-1">
-      {navItems(due).map(({ href, label, icon: Icon, badge, soon }) => {
+    <nav aria-label="Aplicación" className={cn("flex flex-col gap-1", simple && "text-base")}>
+      {navItems(due, simple).map(({ href, label, icon: Icon, badge, soon }) => {
         const active = isActive(path, href);
         return (
           <Link
@@ -62,19 +72,33 @@ export function SidebarNav({ due }: { due: number }) {
       >
         <Settings size={18} aria-hidden /> Configuración
       </Link>
+      <Link
+        href="/app?tutorial=1"
+        className="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-surface-muted hover:text-text"
+      >
+        <CircleHelp size={18} aria-hidden /> Ayuda y tutorial
+      </Link>
     </nav>
   );
 }
 
-export function TabBar({ due }: { due: number }) {
+export function TabBar({ due, simple = false }: { due: number; simple?: boolean }) {
   const path = usePathname();
-  const tabs = [
-    { href: "/app", label: "Inicio", icon: Home },
-    { href: "/app/session", label: "Aprender", icon: Play },
-    { href: "/app/review", label: "Repaso", icon: Repeat, badge: due },
-    { href: "/app/tutor", label: "Tutor", icon: MessageCircle },
-    { href: "/app/progress", label: "Progreso", icon: BarChart3 },
-  ];
+  const tabs = simple
+    ? [
+        { href: "/app", label: "Inicio", icon: Home },
+        { href: "/app/session", label: "Practicar", icon: Play },
+        { href: "/app/review", label: "Repasar", icon: Repeat, badge: due },
+        { href: "/app/vocabulary", label: "Palabras", icon: BookOpen },
+        { href: "/app/settings", label: "Ajustes", icon: Settings },
+      ]
+    : [
+        { href: "/app", label: "Inicio", icon: Home },
+        { href: "/app/session", label: "Aprender", icon: Play },
+        { href: "/app/review", label: "Repaso", icon: Repeat, badge: due },
+        { href: "/app/tutor", label: "Tutor", icon: MessageCircle },
+        { href: "/app/progress", label: "Progreso", icon: BarChart3 },
+      ];
   return (
     <nav aria-label="Aplicación" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-surface/95 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 backdrop-blur lg:hidden">
       <ul className="mx-auto grid max-w-md grid-cols-5">

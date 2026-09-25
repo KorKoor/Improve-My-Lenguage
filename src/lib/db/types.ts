@@ -18,8 +18,18 @@ export interface ProfileRow {
   onboardedAt: Date | null;
   consentAt: Date | null;
   aiConsent: boolean;
+  /** Comodidad (accesibilidad): tamaño de letra de toda la app. */
+  textSize: TextSize;
+  /** Modo sencillo: inicio con una sola acción clara y menos opciones. */
+  simpleMode: boolean;
+  /** Audio más lento por defecto (0,8×). */
+  slowAudio: boolean;
+  /** Cuándo terminó (o saltó) el tutorial de bienvenida. */
+  tutorialDoneAt: Date | null;
   createdAt: Date;
 }
+
+export type TextSize = "normal" | "large" | "xl";
 
 export interface UserLanguageRow {
   id: string;

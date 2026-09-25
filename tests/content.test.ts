@@ -118,3 +118,18 @@ test("bancos de diagnóstico válidos para todos los idiomas disponibles", () =>
     }
   }
 });
+
+test("cada idioma disponible tiene un paquete mínimo útil y temas válidos", async () => {
+  const { TOPICS } = await import("../src/lib/content");
+  const topics = new Set(TOPICS.map((t) => t.id));
+  for (const lang of available) {
+    const vocab = vocabFor(lang);
+    assert.ok(vocab.length >= 30, `${lang}: sólo ${vocab.length} palabras`);
+    assert.ok(grammarFor(lang).length >= 2, `${lang}: faltan conceptos de gramática`);
+    assert.ok(assessmentBankFor(lang, "es").length >= 12, `${lang}: banco de diagnóstico demasiado pequeño`);
+    for (const v of vocab) for (const t of v.topics) assert.ok(topics.has(t), `${v.id}: tema desconocido ${t}`);
+    for (const g of grammarFor(lang)) {
+      for (const e of g.exercises) if (e.type === "mc") assert.ok(e.options?.includes(e.answers[0]!), `${g.id}: respuesta fuera de las opciones`);
+    }
+  }
+});

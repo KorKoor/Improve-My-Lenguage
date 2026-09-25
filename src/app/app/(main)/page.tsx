@@ -4,6 +4,8 @@ import Link from "next/link";
 import { BLOCK_META, SKILL_META, formatMinutes, greeting } from "@/components/app/labels";
 import { QuickSearch } from "@/components/app/quick-search";
 import { Heatmap } from "@/components/charts/heatmap";
+import { SimpleHome } from "@/components/dashboard/simple-home";
+import { WelcomeTour } from "@/components/tutorial/welcome-tour";
 import { Mascot } from "@/components/mascot";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
@@ -19,10 +21,28 @@ export const metadata: Metadata = { title: "Inicio" };
 
 const MINUTE_OPTIONS = [5, 10, 20, 30, 45];
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: { searchParams: Promise<{ tutorial?: string }> }) {
   const learner = await requireLearner();
-  const d = await getDashboard(learner);
+  const [d, sp] = await Promise.all([getDashboard(learner), searchParams]);
   const lang = learner.language;
+  // Tutorial: la primera vez que llega al inicio (o bajo demanda con ?tutorial=1).
+  const tour = (
+    <WelcomeTour
+      key={sp.tutorial ?? "auto"}
+      name={d.greetingName}
+      language={lang.name}
+      simple={learner.profile.simpleMode}
+      open={sp.tutorial === "1" || !learner.profile.tutorialDoneAt}
+    />
+  );
+  if (learner.profile.simpleMode) {
+    return (
+      <>
+        {tour}
+        <SimpleHome d={d} languageName={lang.name} dailyMinutes={learner.profile.dailyMinutes} greeting={greeting(learner.profile.timezone)} />
+      </>
+    );
+  }
   const today = localDay(new Date(), learner.profile.timezone);
   const weekDays = ["L", "M", "X", "J", "V", "S", "D"];
   const goalMonths = d.goal?.deadline ? Math.max(0, Math.round((new Date(d.goal.deadline).getTime() - Date.now()) / (30 * 86_400_000))) : null;
@@ -32,6 +52,7 @@ export default async function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {tour}
       {/* Saludo */}
       <header className="flex items-start gap-4 animate-rise sm:items-center">
         <div className="min-w-0 flex-1">

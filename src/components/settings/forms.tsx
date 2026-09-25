@@ -2,11 +2,13 @@
 import { Check, Loader2 } from "lucide-react";
 import { useState, useTransition } from "react";
 import { deleteAccountAction, updateSettingsAction } from "@/app/app/actions";
+import { applyComfort } from "@/components/comfort";
 import { ThemeToggle, type ThemePref } from "@/components/theme";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import type { Topic } from "@/lib/content/types";
+import type { TextSize } from "@/lib/db/types";
 
 interface Prefs {
   displayName: string;
@@ -116,5 +118,59 @@ export function DangerZone() {
         {pending ? <Loader2 className="animate-spin" size={16} aria-hidden /> : null} Eliminar mi cuenta para siempre
       </Button>
     </Card>
+  );
+}
+
+/** Comodidad: tamaño de letra, modo sencillo y audio lento. Se aplica al instante. */
+export function ComfortSettings({ initial }: { initial: { textSize: TextSize; simpleMode: boolean; slowAudio: boolean } }) {
+  const [v, setV] = useState(initial);
+  const [saved, setSaved] = useState(false);
+  const [, start] = useTransition();
+  const save = (patch: Partial<typeof initial>) => {
+    const next = { ...v, ...patch };
+    setV(next);
+    setSaved(false);
+    applyComfort(next.textSize, next.slowAudio);
+    start(async () => {
+      const res = await updateSettingsAction(patch);
+      setSaved(res.ok);
+    });
+  };
+  const toggle = "flex w-full items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-left transition hover:border-primary/60";
+  return (
+    <div className="space-y-5">
+      <fieldset>
+        <legend className="text-sm font-medium">Tamaño de letra</legend>
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          {([["normal", "Normal", "text-base"], ["large", "Grande", "text-lg"], ["xl", "Muy grande", "text-xl"]] as const).map(([val, label, size]) => (
+            <button key={val} type="button" aria-pressed={v.textSize === val} onClick={() => save({ textSize: val })} className={cn("rounded-xl border py-3 font-semibold", size, v.textSize === val ? "border-primary bg-primary-soft text-primary" : "border-border bg-surface")}>
+              {label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+      <button type="button" role="switch" aria-checked={v.simpleMode} onClick={() => save({ simpleMode: !v.simpleMode })} className={cn(toggle, v.simpleMode && "border-primary bg-primary-soft")}>
+        <span className={cn("mt-0.5 flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition", v.simpleMode ? "bg-primary" : "bg-border")}>
+          <span className={cn("size-5 rounded-full bg-white shadow transition", v.simpleMode && "translate-x-5")} />
+        </span>
+        <span>
+          <span className="block font-semibold">Modo sencillo</span>
+          <span className="text-sm text-muted">Inicio con un solo botón grande, menos números y menos opciones en el menú. Ideal para empezar sin complicaciones.</span>
+        </span>
+      </button>
+      <button type="button" role="switch" aria-checked={v.slowAudio} onClick={() => save({ slowAudio: !v.slowAudio })} className={cn(toggle, v.slowAudio && "border-primary bg-primary-soft")}>
+        <span className={cn("mt-0.5 flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition", v.slowAudio ? "bg-primary" : "bg-border")}>
+          <span className={cn("size-5 rounded-full bg-white shadow transition", v.slowAudio && "translate-x-5")} />
+        </span>
+        <span>
+          <span className="block font-semibold">Audio más lento</span>
+          <span className="text-sm text-muted">Las palabras y frases se pronuncian un poco más despacio para entenderlas mejor.</span>
+        </span>
+      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <a href="/app?tutorial=1" className="inline-flex h-11 items-center gap-2 rounded-[14px] border border-border bg-surface px-5 text-[15px] font-semibold text-primary hover:bg-surface-muted">Ver el tutorial otra vez</a>
+        {saved && <span role="status" className="flex items-center gap-1 text-sm text-success"><Check size={16} aria-hidden /> Guardado</span>}
+      </div>
+    </div>
   );
 }

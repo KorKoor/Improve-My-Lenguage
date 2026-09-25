@@ -18,12 +18,14 @@
   "dependencies": {
     "firebase": "^12.19.0",
     "firebase-admin": "^14.5.0",
+    "glob": "^13.0.6",
     "lucide-react": "^0.544.0",
     "next": "^16.3.6",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "server-only": "^0.0.1",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "uuid": "^14.0.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.0",

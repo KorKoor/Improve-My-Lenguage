@@ -42,6 +42,15 @@ Un `GrammarConcept` incluye: resumen, cuándo usarlo, formación, errores comune
 
 **Revisión humana recomendada** para IPA y traducciones antes de publicar un idioma.
 
+## Añadir un idioma nuevo
+
+1. Crea `src/lib/content/<código>/index.ts` usando `wordsFor("<código>")` de `src/lib/content/pack.ts`: cada palabra con IPA, traducción, al menos un ejemplo traducido y, si aplica, una nota (género, falsos amigos para hispanohablantes).
+2. Añade al menos 2 conceptos de gramática con errores comunes, contrastes y ejercicios, y sus categorías en `error-categories.ts`.
+3. Regístralo en `content/index.ts` y cambia su `status` a `"beta"` en `languages.ts`.
+4. `npm test` valida automáticamente cada idioma disponible: IDs, ejemplos, ≥ 30 palabras, ≥ 2 conceptos, banco de diagnóstico ≥ 12 ítems, temas válidos y que cada ejercicio sea resoluble.
+
+Estado actual: inglés (completo); francés, japonés, portugués, italiano y alemán (beta, revisión humana recomendada).
+
 ## Fase 3: contenido real de internet (diseño)
 
 1. **Fuentes con licencia compatible:** RSS de medios que lo permitan, Wikipedia (CC BY-SA), Tatoeba (CC BY), documentación técnica y APIs públicas de diccionarios.

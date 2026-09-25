@@ -62,7 +62,7 @@ Core goals:
 
 ### Content system
 
-- multilingual content layers for English, French, and Japanese
+- curated packs for English (complete) and French, Japanese, Portuguese, Italian and German (beta)
 - domainized vocabulary and grammar structures
 - content configuration that can scale to more languages
 - structured, versioned learning resources
@@ -80,6 +80,14 @@ Core goals:
 - skill-level dashboards
 - learning streaks and retention signals
 - explanation-rich analytics dashboards
+
+### Accessible for everyone
+
+- guided welcome tutorial (6 steps), replayable from Settings
+- **simple mode**: one big "Start" button, plain-language progress, fewer menu items
+- text size (normal / large / extra large) applied app-wide before first paint
+- slower speech synthesis for listening practice
+- "Did you really know it? Yes / I guessed" after correct answers (a guess reschedules the item sooner)
 
 ### Privacy and user control
 

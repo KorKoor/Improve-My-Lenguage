@@ -33,8 +33,18 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   // Francés
   { id: "fr:articles-gender", label: "género y artículos", language: "fr", grammarId: "fr:g:gender-articles" },
   { id: "fr:past-tense", label: "passé composé", language: "fr", grammarId: "fr:g:passe-compose" },
+  // Portugués
+  { id: "pt:contractions", label: "contracciones (no, na, do, da)", language: "pt", grammarId: "pt:g:contractions" },
+  { id: "pt:past-tense", label: "pretérito perfeito", language: "pt", grammarId: "pt:g:preterito-perfeito" },
+  // Italiano
+  { id: "it:articles", label: "artículos", language: "it", grammarId: "it:g:articles" },
+  { id: "it:past-tense", label: "passato prossimo", language: "it", grammarId: "it:g:passato-prossimo" },
+  // Alemán
+  { id: "de:articles-cases", label: "artículos y casos", language: "de", grammarId: "de:g:articles-cases" },
+  { id: "de:word-order", label: "orden de palabras", language: "de", grammarId: "de:g:word-order" },
   // Japonés
   { id: "ja:particles", label: "partículas", language: "ja", grammarId: "ja:g:particles-wa-ga-o" },
+  { id: "ja:polite-form", label: "forma cortés (～ます)", language: "ja", grammarId: "ja:g:masu-form" },
 ];
 
 export function categoriesFor(language: string): ErrorCategory[] {

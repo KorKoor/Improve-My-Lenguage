@@ -59,6 +59,9 @@ export interface OnboardingInput {
   aiConsent: boolean;
   privacyAccepted: boolean;
   timezone: string;
+  /** "simple": letra grande, audio lento, explicaciones detalladas y un inicio con una sola acción. */
+  experience?: "standard" | "simple";
+  textSize?: "normal" | "large" | "xl";
 }
 
 export async function saveOnboarding(input: OnboardingInput): Promise<ActionResult<{ next: string }>> {
@@ -100,6 +103,13 @@ export async function saveOnboarding(input: OnboardingInput): Promise<ActionResu
       aiConsent: Boolean(input.aiConsent),
       consentAt: new Date(),
       onboardedAt: viewer.profile.onboardedAt ?? new Date(),
+      ...(input.experience === undefined
+        ? {}
+        : {
+            simpleMode: input.experience === "simple",
+            slowAudio: input.experience === "simple",
+            textSize: oneOf(input.textSize, ["normal", "large", "xl"] as const, input.experience === "simple" ? "large" : "normal"),
+          }),
     });
     await repo.track(viewer.userId, "onboarding_completed", { language: lang.code });
     return { next: "/app/assessment" };
@@ -212,6 +222,9 @@ export async function updateSettingsAction(input: {
   interests?: string[];
   aiConsent?: boolean;
   nativeLanguage?: string;
+  textSize?: string;
+  simpleMode?: boolean;
+  slowAudio?: boolean;
 }): Promise<ActionResult<null>> {
   return run("settings.update", async () => {
     const viewer = await requireViewer();
@@ -225,8 +238,21 @@ export async function updateSettingsAction(input: {
       interests: input.interests !== undefined ? input.interests.filter((t) => topics.has(t)).slice(0, 8) : undefined,
       aiConsent: input.aiConsent !== undefined ? Boolean(input.aiConsent) : undefined,
       nativeLanguage: input.nativeLanguage !== undefined && getLanguage(str(input.nativeLanguage, 8)) ? str(input.nativeLanguage, 8) : undefined,
+      textSize: input.textSize !== undefined ? oneOf(input.textSize, ["normal", "large", "xl"] as const, "normal") : undefined,
+      simpleMode: input.simpleMode !== undefined ? Boolean(input.simpleMode) : undefined,
+      slowAudio: input.slowAudio !== undefined ? Boolean(input.slowAudio) : undefined,
     });
     revalidatePath("/app", "layout");
+    return null;
+  });
+}
+
+/** Tutorial de bienvenida: terminado o saltado (se puede repetir desde Configuración). */
+export async function completeTutorialAction(skipped: boolean): Promise<ActionResult<null>> {
+  return run("tutorial.done", async () => {
+    const viewer = await requireViewer();
+    await repo.updateProfile(viewer.userId, { tutorialDoneAt: new Date() });
+    await repo.track(viewer.userId, skipped ? "tutorial_skipped" : "tutorial_completed");
     return null;
   });
 }

@@ -1,6 +1,6 @@
 import { Download } from "lucide-react";
 import type { Metadata } from "next";
-import { DangerZone, PreferencesForm, ThemeSetting } from "@/components/settings/forms";
+import { ComfortSettings, DangerZone, PreferencesForm, ThemeSetting } from "@/components/settings/forms";
 import { Card, CardHeader } from "@/components/ui/card";
 import { getLanguage, LANGUAGES, TOPICS } from "@/lib/content";
 import { listUserLanguages } from "@/lib/db/repositories";
@@ -19,6 +19,11 @@ export default async function SettingsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="font-display text-3xl font-extrabold">Configuración</h1>
+
+      <Card>
+        <CardHeader title="Comodidad" aside="Letra, modo sencillo y audio" />
+        <ComfortSettings initial={{ textSize: p.textSize, simpleMode: p.simpleMode, slowAudio: p.slowAudio }} />
+      </Card>
 
       <Card>
         <CardHeader title="Aprendizaje" />

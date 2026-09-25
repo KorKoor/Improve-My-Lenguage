@@ -99,6 +99,10 @@ function toProfile(snap: DocumentSnapshot): ProfileRow {
     onboardedAt: date(d.onboardedAt),
     consentAt: date(d.consentAt),
     aiConsent: Boolean(d.aiConsent),
+    textSize: d.textSize === "large" || d.textSize === "xl" ? d.textSize : "normal",
+    simpleMode: Boolean(d.simpleMode),
+    slowAudio: Boolean(d.slowAudio),
+    tutorialDoneAt: date(d.tutorialDoneAt),
     createdAt: date(d.createdAt) ?? new Date(0),
   };
 }
@@ -136,6 +140,10 @@ export type ProfileUpdate = Partial<
     | "onboardedAt"
     | "consentAt"
     | "aiConsent"
+    | "textSize"
+    | "simpleMode"
+    | "slowAudio"
+    | "tutorialDoneAt"
   >
 >;
 

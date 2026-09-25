@@ -1,4 +1,4 @@
-import { ArrowRight, Brain, Compass, Gauge, MessageCircle, Repeat, Sparkles, Target } from "lucide-react";
+import { ArrowRight, Brain, CircleHelp, Compass, Gauge, MessageCircle, Repeat, Snail, Sparkles, Target, Type } from "lucide-react";
 import { LanguageMark } from "@/components/language-mark";
 import Link from "next/link";
 import { Mascot } from "@/components/mascot";
@@ -96,6 +96,48 @@ export default function Landing() {
               <p className="mt-2 text-sm leading-relaxed text-muted">{f.text}</p>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section aria-labelledby="family" className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+        <div className="card grid items-center gap-8 overflow-hidden p-6 sm:p-10 md:grid-cols-2">
+          <div>
+            <Chip tone="success">Para toda la familia</Chip>
+            <h2 id="family" className="mt-4 font-display text-2xl font-extrabold sm:text-3xl">Fácil para quien nunca ha usado una app de idiomas</h2>
+            <p className="mt-3 text-muted">Con el <strong className="text-text">modo sencillo</strong>, cualquier persona puede practicar sin perderse: un solo botón para empezar, frases claras en lugar de gráficas y ayuda siempre a mano.</p>
+            <ul className="mt-6 space-y-3">
+              {[
+                { icon: Type, text: "Letra grande o muy grande en toda la app" },
+                { icon: Snail, text: "Audio más lento para entender cada palabra" },
+                { icon: CircleHelp, text: "Tutorial guiado al empezar, y siempre disponible" },
+                { icon: Sparkles, text: "Explicaciones paso a paso en español" },
+              ].map(({ icon: Icon, text }) => (
+                <li key={text} className="flex items-center gap-3">
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-success-soft text-success" aria-hidden><Icon size={20} /></span>
+                  <span className="font-medium">{text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          {/* Vista previa del modo sencillo */}
+          <div className="rounded-[26px] bg-bg p-5 sm:p-6" aria-hidden>
+            <div className="flex items-center gap-3">
+              <Mascot size={56} />
+              <div>
+                <p className="font-display text-2xl font-extrabold">Hola, Rosa</p>
+                <p className="text-muted">Vamos a practicar inglés.</p>
+              </div>
+            </div>
+            <div className="card mt-4 p-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-primary">Tu práctica de hoy</p>
+              <p className="mt-1 font-display text-xl font-extrabold">10 minutos · uno por uno</p>
+              <div className="mt-4 flex h-14 items-center justify-center gap-2 rounded-2xl bg-primary text-lg font-semibold text-on-primary">Empezar <ArrowRight size={20} /></div>
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="card p-4"><p className="font-display text-2xl font-extrabold">6</p><p className="text-sm text-muted">días seguidos</p></div>
+              <div className="card p-4"><p className="font-display text-2xl font-extrabold">48</p><p className="text-sm text-muted">palabras que ya sabes</p></div>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Nunito } from "next/font/google";
+import { comfortScript } from "@/components/comfort";
 import { themeScript } from "@/components/theme";
 import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
@@ -39,7 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es" suppressHydrationWarning className={`${inter.variable} ${nunito.variable}`}>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: themeScript + comfortScript }} />
       </head>
       <body className="min-h-dvh">
         <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2">
