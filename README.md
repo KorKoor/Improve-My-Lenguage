@@ -86,6 +86,12 @@ Core goals:
 - progress computed from real activity; claiming is transactional and idempotent
 - XP derived from lifetime activity plus claimed quests, with levels and titles
 
+### Family & friends groups
+
+- create a group with a 6-character code (no ambiguous characters, easy to dictate) and invite up to 8 people
+- members see only name, avatar, language and level, streak and minutes this week — never mistakes, texts or emails
+- send cheers (👏 💪 🔥) that appear on the recipient's home screen; leaving is one click and account deletion removes membership
+
 ### Learning-style profile
 
 - "¿Cómo aprendes mejor?": a 15-question preference questionnaire (pace, challenge, structure, explanation depth, feedback tone, motivation, channel, goal) — framed as preferences, not "learning styles"

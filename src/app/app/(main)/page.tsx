@@ -18,6 +18,7 @@ import { ARCHETYPES } from "@/lib/engine/personality";
 import { localDay } from "@/lib/engine/progress";
 import { getDashboard } from "@/lib/services/insights";
 import { getXp, questBoard } from "@/lib/services/quests";
+import { takeCheers } from "@/lib/services/group";
 import { QuestBoard } from "@/components/dashboard/quests";
 import { requireLearner } from "@/lib/services/viewer";
 
@@ -35,7 +36,16 @@ const PRACTICE_META = {
 
 export default async function Dashboard({ searchParams }: { searchParams: Promise<{ tutorial?: string }> }) {
   const learner = await requireLearner();
-  const [d, sp, xp] = await Promise.all([getDashboard(learner), searchParams, getXp(learner.userId)]);
+  const [d, sp, xp, cheers] = await Promise.all([getDashboard(learner), searchParams, getXp(learner.userId), takeCheers(learner)]);
+  const cheerBanner =
+    cheers.length > 0 ? (
+      <p className="flex items-center gap-3 rounded-2xl bg-primary-soft px-4 py-3 text-sm font-semibold text-primary animate-pop-in" role="status">
+        <span className="text-2xl" aria-hidden>{cheers[0]!.emoji}</span>
+        {cheers.length === 1
+          ? `${cheers[0]!.from} te mandó ánimo. ${d.studiedToday ? "¡Sigue así!" : "¡A por la sesión de hoy!"}`
+          : `${[...new Set(cheers.map((c) => c.from))].join(", ")} te mandaron ${cheers.length} ánimos. ${d.studiedToday ? "¡Sigue así!" : "¡A por la sesión de hoy!"}`}
+      </p>
+    ) : null;
   const board = d.assessed ? await questBoard(learner, d.dueCount) : null;
   const lang = learner.language;
   // Tutorial: la primera vez que llega al inicio (o bajo demanda con ?tutorial=1).
@@ -52,6 +62,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
     return (
       <>
         {tour}
+        {cheerBanner && <div className="mx-auto mb-4 max-w-2xl">{cheerBanner}</div>}
         <SimpleHome d={d} languageName={lang.name} dailyMinutes={learner.profile.dailyMinutes} greeting={greeting(learner.profile.timezone)} />
         {board && <div className="mx-auto mt-6 max-w-2xl"><QuestBoard quests={board.quests} xp={xp} /></div>}
       </>
@@ -109,6 +120,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           {learner.profile.avatar ?? (learner.profile.displayName ?? learner.email ?? "?").slice(0, 1).toUpperCase()}
         </Link>
       </header>
+
+      {cheerBanner}
 
       {d.freezeUsed.length > 0 && (
         <p className="rounded-2xl bg-warning-soft px-4 py-3 text-sm font-semibold text-warning animate-pop-in" role="status">

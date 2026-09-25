@@ -107,6 +107,7 @@ function toProfile(snap: DocumentSnapshot): ProfileRow {
     avatar: str(d.avatar),
     personality: parsePersonality(json(d.personality)),
     streakFreezes: num(d.streakFreezes),
+    groupId: str(d.groupId),
     frozenDays: Array.isArray(d.frozenDays) ? (d.frozenDays as string[]).filter((x) => typeof x === "string") : [],
     createdAt: date(d.createdAt) ?? new Date(0),
   };
@@ -150,6 +151,7 @@ export type ProfileUpdate = Partial<
     | "slowAudio"
     | "tutorialDoneAt"
     | "avatar"
+    | "groupId"
   >
 >;
 
@@ -183,6 +185,101 @@ export async function consumeStreakFreezes(userId: string, days: string[]): Prom
     tx.set(ref, { streakFreezes: have - todo.length, frozenDays: [...frozen, ...todo].sort().slice(-60) }, { merge: true });
     return true;
   });
+}
+
+// ── Grupo familiar / de estudio ──────────────────────────────────────────
+export interface GroupRow {
+  id: string; // = código de invitación
+  name: string;
+  ownerId: string;
+  members: string[];
+  createdAt: Date;
+}
+
+export const GROUP_MAX_MEMBERS = 8;
+const groups = () => db().collection("groups");
+
+function toGroup(snap: DocumentSnapshot): GroupRow | null {
+  if (!snap.exists) return null;
+  const d = snap.data() ?? {};
+  return {
+    id: snap.id,
+    name: str(d.name) ?? "Mi grupo",
+    ownerId: str(d.ownerId) ?? "",
+    members: Array.isArray(d.members) ? (d.members as string[]) : [],
+    createdAt: date(d.createdAt) ?? new Date(0),
+  };
+}
+
+export async function getGroup(code: string): Promise<GroupRow | null> {
+  if (!/^[A-Z2-9]{6}$/.test(code)) return null;
+  return toGroup(await groups().doc(code).get());
+}
+
+/** Crea el grupo con un código libre (reintenta ante colisión) y une al creador. */
+export async function createGroup(userId: string, name: string, makeCode: () => string): Promise<GroupRow> {
+  for (let i = 0; i < 5; i++) {
+    const code = makeCode();
+    const ref = groups().doc(code);
+    try {
+      await db().runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        if (snap.exists) throw new Error("collision");
+        tx.create(ref, { name, ownerId: userId, members: [userId], createdAt: FieldValue.serverTimestamp() });
+        tx.set(userRef(userId), { groupId: code }, { merge: true });
+      });
+      return (await getGroup(code))!;
+    } catch (err) {
+      if ((err as Error).message !== "collision") throw err;
+    }
+  }
+  throw new Error("No se pudo generar un código de grupo");
+}
+
+export type JoinResult = "joined" | "already" | "full" | "not_found";
+
+export async function joinGroup(userId: string, code: string): Promise<JoinResult> {
+  if (!/^[A-Z2-9]{6}$/.test(code)) return "not_found";
+  const ref = groups().doc(code);
+  return db().runTransaction(async (tx) => {
+    const g = toGroup(await tx.get(ref));
+    if (!g) return "not_found";
+    if (g.members.includes(userId)) return "already";
+    if (g.members.length >= GROUP_MAX_MEMBERS) return "full";
+    tx.update(ref, { members: FieldValue.arrayUnion(userId) });
+    tx.set(userRef(userId), { groupId: code }, { merge: true });
+    return "joined";
+  });
+}
+
+/** Sale del grupo; si queda vacío se borra, y si salía el creador, hereda el siguiente. */
+export async function leaveGroup(userId: string, code: string): Promise<void> {
+  const ref = groups().doc(code);
+  await db().runTransaction(async (tx) => {
+    const g = toGroup(await tx.get(ref));
+    tx.set(userRef(userId), { groupId: null }, { merge: true });
+    if (!g || !g.members.includes(userId)) return;
+    const rest = g.members.filter((m) => m !== userId);
+    if (rest.length === 0) tx.delete(ref);
+    else tx.update(ref, { members: rest, ownerId: g.ownerId === userId ? rest[0] : g.ownerId });
+  });
+}
+
+// Ánimos entre miembros: se guardan en el destinatario y se muestran una vez.
+export async function sendCheer(fromId: string, toId: string, emoji: string): Promise<void> {
+  await userRef(toId).collection("cheers").add({ fromId, emoji, createdAt: FieldValue.serverTimestamp(), seen: false });
+}
+
+export async function unseenCheers(userId: string): Promise<{ id: string; fromId: string; emoji: string; createdAt: Date }[]> {
+  const snap = await userRef(userId).collection("cheers").where("seen", "==", false).limit(10).get();
+  return snap.docs.map((d) => ({ id: d.id, fromId: str(d.get("fromId")) ?? "", emoji: str(d.get("emoji")) ?? "👏", createdAt: date(d.get("createdAt")) ?? new Date(0) }));
+}
+
+export async function markCheersSeen(userId: string, ids: string[]): Promise<void> {
+  if (!ids.length) return;
+  const batch = db().batch();
+  for (const id of ids.slice(0, 20)) batch.update(userRef(userId).collection("cheers").doc(id), { seen: true });
+  await batch.commit();
 }
 
 export async function savePersonality(userId: string, result: PersonalityResult | null): Promise<void> {
@@ -1040,6 +1137,7 @@ export async function exportUserData(userId: string) {
     dailyActivity: await all(root.collection("activity")),
     achievements: await all(root.collection("achievements")),
     quests: await all(root.collection("quests")),
+    cheersReceived: await all(root.collection("cheers")),
     events: await all(root.collection("events")),
     pushDevices: (await pushTokens().where("userId", "==", userId).get()).docs.map((d) => ({
       userAgent: d.get("userAgent") ?? null,
@@ -1050,6 +1148,9 @@ export async function exportUserData(userId: string) {
 
 /** Borra TODOS los datos de aplicación del usuario (el árbol users/{uid} y sus dispositivos). */
 export async function deleteUserData(userId: string): Promise<void> {
+  // Primero salir del grupo (el documento del grupo vive fuera del árbol del usuario).
+  const gid = str((await userRef(userId).get()).get("groupId"));
+  if (gid) await leaveGroup(userId, gid);
   await db().recursiveDelete(userRef(userId));
   const tokens = await pushTokens().where("userId", "==", userId).get();
   const batch = db().batch();

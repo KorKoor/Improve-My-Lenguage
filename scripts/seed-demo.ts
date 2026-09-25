@@ -7,7 +7,9 @@
  * Lo ejecuta `npm run dev:emulated`; a mano:
  *   npx tsx --conditions=react-server scripts/seed-demo.ts
  *
- * Credenciales del usuario demo: demo@improve.local / demo-password
+ * Credenciales: demo@improve.local / demo-password (Carlos, inglés B1) y
+ * mama@improve.local / demo-password (modo sencillo, italiano A1), ambos en
+ * el grupo familiar FAM234.
  */
 import { Timestamp, type WriteBatch } from "firebase-admin/firestore";
 import { vocabFor } from "../src/lib/content";
@@ -22,6 +24,7 @@ if (!process.env.FIRESTORE_EMULATOR_HOST || !process.env.FIREBASE_AUTH_EMULATOR_
 }
 
 const EMAIL = "demo@improve.local";
+const MOM_EMAIL = "mama@improve.local";
 const PASSWORD = "demo-password";
 const LANG = "en";
 const DAY = 86_400_000;
@@ -206,7 +209,36 @@ async function main() {
   });
   await repo.unlockAchievements(uid, ["first-assessment", "first-session", "streak-7", "words-100", "exercises-100"]);
 
-  console.log(`seed-demo: listo → ${EMAIL} / ${PASSWORD} (${cards.size} palabras con historial)`);
+  // ── Segunda cuenta: «Mamá», en modo sencillo, aprendiendo italiano, y ambos en un grupo familiar.
+  const mom = await auth.createUser({ email: MOM_EMAIL, password: PASSWORD, displayName: "Mamá", emailVerified: true });
+  await repo.ensureProfile(mom.uid, "Mamá");
+  await repo.updateProfile(mom.uid, {
+    nativeLanguage: "es",
+    activeLanguage: "it",
+    dailyMinutes: 10,
+    interests: ["food", "travel"],
+    onboardedAt: new Date(now.getTime() - 20 * DAY),
+    consentAt: new Date(now.getTime() - 20 * DAY),
+    aiConsent: false,
+    theme: "light",
+    simpleMode: true,
+    textSize: "large",
+    avatar: "🌻",
+  });
+  const momUl = await repo.upsertUserLanguage(mom.uid, "it", "A1");
+  await repo.markAssessed(momUl.id);
+  await repo.upsertSkillEstimates(momUl.id, [
+    { skill: "vocabulary", theta: -2.3, se: 0.5, evidence: 40 },
+    { skill: "grammar", theta: -2.6, se: 0.6, evidence: 15 },
+  ]);
+  for (let i = 0; i < 6; i++) {
+    const day = dayStr(new Date(now.getTime() - i * DAY));
+    await repo.bumpActivity(mom.uid, "it", day, { seconds: 600 + i * 30, exercises: 12, correct: 9, sessions: 1 });
+  }
+  const group = await repo.createGroup(uid, "Familia García", () => "FAM234");
+  await repo.joinGroup(mom.uid, group.id);
+
+  console.log(`seed-demo: listo → ${EMAIL} / ${PASSWORD} (${cards.size} palabras con historial) · ${MOM_EMAIL} en el grupo ${group.id}`);
 }
 
 main().then(

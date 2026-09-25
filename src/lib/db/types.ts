@@ -34,6 +34,8 @@ export interface ProfileRow {
   /** Protectores de racha disponibles (0–2) y días que ya cubrieron. */
   streakFreezes: number;
   frozenDays: string[];
+  /** Grupo familiar o de estudio al que pertenece (código), si lo hay. */
+  groupId: string | null;
   createdAt: Date;
 }
 

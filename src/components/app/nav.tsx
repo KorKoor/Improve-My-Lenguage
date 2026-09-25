@@ -1,5 +1,5 @@
 "use client";
-import { BarChart3, BookOpen, CircleHelp, Headphones, Home, LayoutGrid, Layers, MessageCircle, Mic, Newspaper, PenLine, Play, Repeat, Route, Settings, Type, UserRound, type LucideIcon } from "lucide-react";
+import { BarChart3, BookOpen, CircleHelp, Headphones, Home, LayoutGrid, Layers, MessageCircle, Mic, Newspaper, PenLine, Play, Repeat, Route, Settings, Type, UserRound, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
@@ -24,6 +24,7 @@ export function navItems(due: number, simple = false): NavItem[] {
       { href: "/app/listen", label: "Escuchar", icon: Headphones },
       { href: "/app/speak", label: "Hablar", icon: Mic },
       { href: "/app/progress", label: "Mi progreso", icon: BarChart3 },
+      { href: "/app/group", label: "Mi familia", icon: Users },
     ];
   }
   return [
@@ -40,6 +41,7 @@ export function navItems(due: number, simple = false): NavItem[] {
     { href: "/app/tutor", label: "Tutor", icon: MessageCircle },
     { href: "/app/progress", label: "Progreso", icon: BarChart3 },
     { href: "/app/path", label: "Camino a C1", icon: Route },
+    { href: "/app/group", label: "Familia y amigos", icon: Users },
     { href: "/app/profile", label: "Mi perfil", icon: UserRound },
   ];
 }
