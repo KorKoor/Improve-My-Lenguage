@@ -88,6 +88,7 @@ export default async function LanguagesPage() {
 
 const FORECAST_COLORS = ["var(--primary)", "var(--skill-listening)", "var(--skill-writing)", "var(--skill-grammar)", "var(--skill-speaking)", "var(--skill-reading)"];
 const WEEKDAYS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+const WEEKDAYS_FULL = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"];
 
 /** Previsión de repasos de la semana, apilada por idioma. */
 function ForecastCard({ cards, todayIdx }: { cards: LanguageCard[]; todayIdx: number }) {
@@ -102,7 +103,7 @@ function ForecastCard({ cards, todayIdx }: { cards: LanguageCard[]; todayIdx: nu
       <p className="mt-1 text-sm text-muted">
         {sum === 0
           ? "No vence nada en los próximos 7 días: buen momento para aprender material nuevo."
-          : `${sum} repasos en 7 días (≈ ${minutes(sum)} min en total). El día más cargado es el ${peak === 0 ? "de mañana" : WEEKDAYS[(todayIdx + 1 + peak) % 7]}: si puedes, adelanta algo antes.`}
+          : `${sum} repasos en 7 días (≈ ${minutes(sum)} min en total). El día más cargado es ${peak === 0 ? "mañana" : `el ${WEEKDAYS_FULL[(todayIdx + 1 + peak) % 7]}`}: si puedes, adelanta algo antes.`}
       </p>
       <div className="mt-4 flex h-32 items-end gap-2" role="img" aria-label={`Repasos por día: ${totals.join(", ")}`}>
         {totals.map((t, d) => (

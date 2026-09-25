@@ -48,6 +48,7 @@ export function OnboardingWizard({ adding, languages, topics, defaults }: { addi
     timezone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "America/Mexico_City",
     experience: adding ? undefined : "standard",
     textSize: "normal",
+    ...(adding ? { adding: true, priority: "active" as const, dailyMinutes: 10 } : {}),
   });
   // Vista previa inmediata del tamaño de letra y del audio elegidos.
   useEffect(() => {
@@ -192,7 +193,31 @@ export function OnboardingWizard({ adding, languages, topics, defaults }: { addi
           </>
         )}
 
-        {current === "time" && (
+        {current === "time" && adding && (
+          <>
+            <h1 className="font-display text-3xl font-extrabold">¿Qué papel tendrá este idioma?</h1>
+            <p className="mt-2 text-muted">Repartimos tu tiempo diario entre todos tus idiomas según esto. Podrás cambiarlo cuando quieras en «Mis idiomas».</p>
+            <div className="mt-6 grid gap-2.5 sm:grid-cols-3">
+              {([["main", "Principal", "Mi foco ahora"], ["active", "En progreso", "Avanzar sin ser el foco"], ["maintain", "Mantener", "Sólo repasos para no olvidarlo"]] as const).map(([v, label, hint]) => (
+                <button key={v} type="button" aria-pressed={data.priority === v} onClick={() => set("priority", v)} className={cn("rounded-2xl border p-4 text-left", data.priority === v ? "border-2 border-primary bg-primary-soft" : "border-border bg-surface")}>
+                  <span className={cn("block font-semibold", data.priority === v && "text-primary")}>{label}</span>
+                  <span className="text-sm text-muted">{hint}</span>
+                </button>
+              ))}
+            </div>
+            <h2 className="mt-8 font-display text-xl font-extrabold">¿Cuántos minutos más al día para este idioma?</h2>
+            <p className="mt-1 text-sm text-muted">Se suman a tu tiempo diario total.</p>
+            <div className="mt-4 grid grid-cols-5 gap-2">
+              {[5, 10, 15, 20, 30].map((m) => (
+                <button key={m} type="button" aria-pressed={data.dailyMinutes === m} onClick={() => set("dailyMinutes", m)} className={cn("rounded-2xl border py-3 text-center", data.dailyMinutes === m ? "border-2 border-primary bg-primary-soft text-primary" : "border-border bg-surface")}>
+                  <span className="block font-display text-xl font-extrabold">+{m}</span><span className="text-xs text-muted">min</span>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {current === "time" && !adding && (
           <>
             <h1 className="font-display text-3xl font-extrabold">¿Cuánto tiempo puedes estudiar al día?</h1>
             <p className="mt-2 text-muted">Mejor poco y constante que mucho de vez en cuando. Podrás cambiarlo en cada sesión.</p>

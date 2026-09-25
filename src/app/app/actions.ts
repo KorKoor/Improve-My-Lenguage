@@ -62,6 +62,10 @@ export interface OnboardingInput {
   /** "simple": letra grande, audio lento, explicaciones detalladas y un inicio con una sola acción. */
   experience?: "standard" | "simple";
   textSize?: "normal" | "large" | "xl";
+  /** Añadiendo otro idioma: los minutos son para ese idioma (se suman al total diario). */
+  adding?: boolean;
+  /** Papel del idioma nuevo en el reparto de tiempo. */
+  priority?: "main" | "active" | "maintain";
 }
 
 export async function saveOnboarding(input: OnboardingInput): Promise<ActionResult<{ next: string }>> {
@@ -77,7 +81,9 @@ export async function saveOnboarding(input: OnboardingInput): Promise<ActionResu
     } catch {
       tz = "America/Mexico_City";
     }
+    const existed = Boolean(await repo.getUserLanguage(viewer.userId, lang.code));
     const ul = await repo.upsertUserLanguage(viewer.userId, lang.code, isLevel(input.selfLevel) ? input.selfLevel : null);
+    const adding = Boolean(input.adding) && Boolean(viewer.profile.onboardedAt);
     const months = int(input.months, 1, 36, 6);
     const deadline = new Date();
     deadline.setMonth(deadline.getMonth() + months);
@@ -93,7 +99,8 @@ export async function saveOnboarding(input: OnboardingInput): Promise<ActionResu
       nativeLanguage: getLanguage(str(input.nativeLanguage, 8)) ? str(input.nativeLanguage, 8) : "es",
       activeLanguage: lang.code,
       timezone: tz,
-      dailyMinutes: minutes,
+      // Al añadir un idioma, su tiempo se suma al total diario que se reparte entre todos.
+      dailyMinutes: adding ? (existed ? viewer.profile.dailyMinutes : Math.min(120, viewer.profile.dailyMinutes + minutes)) : minutes,
       interests: (Array.isArray(input.interests) ? input.interests : []).filter((t) => topics.has(t)).slice(0, 8),
       explanationDepth: oneOf(input.explanationDepth, ["brief", "balanced", "detailed"] as const, "balanced"),
       preferredDifficulty: oneOf(input.preferredDifficulty, ["easy", "balanced", "challenging"] as const, "balanced"),
@@ -111,7 +118,8 @@ export async function saveOnboarding(input: OnboardingInput): Promise<ActionResu
             textSize: oneOf(input.textSize, ["normal", "large", "xl"] as const, input.experience === "simple" ? "large" : "normal"),
           }),
     });
-    await repo.track(viewer.userId, "onboarding_completed", { language: lang.code });
+    if (adding) await repo.setLanguagePriority(viewer.userId, lang.code, oneOf(input.priority, ["main", "active", "maintain"] as const, "active"));
+    await repo.track(viewer.userId, adding ? "language_added" : "onboarding_completed", { language: lang.code });
     return { next: "/app/assessment" };
   });
 }
