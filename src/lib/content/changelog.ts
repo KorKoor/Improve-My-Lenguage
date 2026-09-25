@@ -6,12 +6,13 @@ export interface ChangelogItem {
   href: string;
 }
 
-export const CHANGELOG_VERSION = "2026-09-25b";
+export const CHANGELOG_VERSION = "2026-09-25c";
 
 export const CHANGELOG: ChangelogItem[] = [
   { icon: "⏱️", title: "Modo estudio", text: "Dices cuánto tiempo tienes y lo repartimos entre tus idiomas en bloques, con un temporizador que te guía y descansos en el momento justo.", href: "/app/study" },
   { icon: "🌍", title: "Varios idiomas a la vez", text: "Elige tu idioma principal, los que están en progreso y los que sólo quieres mantener. Cada día repartimos tus minutos y evitamos que se mezclen los parecidos.", href: "/app/languages" },
-  { icon: "🌿", title: "Descansos inteligentes", text: "Durante la sesión detectamos cuándo baja tu atención (más fallos, respuestas más lentas) y te proponemos una pausa guiada: respirar, descansar la vista, estirarte.", href: "/app/session" },
+  { icon: "📅", title: "Previsión de repasos", text: "En «Mis idiomas» ves cuántos repasos llegan cada día de la semana, por idioma, para adelantarte a los días cargados.", href: "/app/languages" },
+  { icon: "🌿", title: "Descansos inteligentes", text: "Durante la sesión detectamos cuándo baja tu atención (más fallos, respuestas más lentas) y te proponemos una pausa guiada (respirar, descansar la vista, estirarte). Si sigues cansado, la sesión se aligera sola. Se puede desactivar en Configuración.", href: "/app/session" },
   { icon: "🤝", title: "Palabras regalo y falsos amigos", text: "Al conocer una palabra nueva te avisamos si se parece al español (se aprende casi sola) o si es un falso amigo que engaña.", href: "/app/session" },
   { icon: "🧠", title: "Tu ritmo, aprendido", text: "Tu capacidad de atención y tu mejor hora del día se calculan con tus propias respuestas. Míralos en Progreso.", href: "/app/progress" },
   { icon: "📲", title: "Instálala en tu móvil", text: "Un icono en la pantalla de inicio (con instrucciones para iPhone) y una pestaña «Más» con todas las secciones.", href: "/app/settings" },
