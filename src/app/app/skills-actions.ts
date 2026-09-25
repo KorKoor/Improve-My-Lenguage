@@ -1,6 +1,8 @@
 "use server";
 
 import { rateLimit } from "@/lib/db/limits";
+import { RateLimitedError } from "@/lib/services/learning";
+import { answerListening, buildListening, finishListening, type ListeningFeedback, type ListeningItem } from "@/lib/services/listening";
 import { completeReading, readerForOwnText, type ReaderData } from "@/lib/services/reading";
 import { requireLearner } from "@/lib/services/viewer";
 
@@ -17,7 +19,10 @@ async function run<T>(name: string, fn: () => Promise<T>): Promise<SkillResult<T
   } catch (err) {
     if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
     console.error(`[action:${name}]`, err);
-    const message = err instanceof UserFacingError ? err.message : "Algo salió mal. Inténtalo de nuevo; tu progreso está a salvo.";
+    const message =
+      err instanceof UserFacingError ? err.message
+      : err instanceof RateLimitedError ? "Vas muy rápido. Espera unos segundos."
+      : "Algo salió mal. Inténtalo de nuevo; tu progreso está a salvo.";
     return { ok: false, error: message };
   }
 }
@@ -68,5 +73,21 @@ export async function completeReadingAction(input: {
       total,
       seconds: int(input.seconds, 0, 7200, 0),
     });
+  });
+}
+
+// ── Escucha ─────────────────────────────────────────────────────────────────
+export async function startListeningAction(): Promise<SkillResult<{ items: ListeningItem[]; locale: string }>> {
+  return run("listening.start", async () => buildListening(await requireLearner()));
+}
+
+export async function answerListeningAction(key: string, response: string, timeMs: number): Promise<SkillResult<ListeningFeedback>> {
+  return run("listening.answer", async () => answerListening(await requireLearner(), str(key, 300), str(response, 400), int(timeMs, 0, 600_000, 0)));
+}
+
+export async function finishListeningAction(correct: number, total: number): Promise<SkillResult<{ newAchievements: { id: string; title: string; icon: string }[] }>> {
+  return run("listening.finish", async () => {
+    const t = int(total, 0, 50, 0);
+    return finishListening(await requireLearner(), int(correct, 0, t, 0), t);
   });
 }
