@@ -49,6 +49,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           <nav aria-label="Información" className="flex flex-col gap-2">
             <p className="font-semibold text-text">Información</p>
             <Link href="/about" className="hover:text-text">Acerca de</Link>
+            <Link href="/about#creador" className="hover:text-text">Quién está detrás</Link>
             <Link href="/privacy" className="hover:text-text">Privacidad</Link>
             <Link href="/creditos" className="hover:text-text">Créditos y licencias</Link>
           </nav>
