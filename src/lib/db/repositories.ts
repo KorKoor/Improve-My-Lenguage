@@ -666,6 +666,18 @@ export async function weeklyAccuracy(ulId: string, weeks: number) {
     .sort((a, b) => a.week.localeCompare(b.week));
 }
 
+/** Respuestas recientes para que Afi aprenda cómo aprendes (hora, tipo, velocidad, casi aciertos). */
+export async function patternRows(ulId: string, since: Date): Promise<{ at: Date; correct: boolean; type: string; timeMs: number; nearMiss: boolean }[]> {
+  const rows = await attemptsSince(ulId, since, "createdAt", "correct", "exerciseType", "timeMs", "nearMiss");
+  return rows.map((r) => ({
+    at: date(r.createdAt) ?? new Date(),
+    correct: r.correct === true,
+    type: typeof r.exerciseType === "string" ? r.exerciseType : "",
+    timeMs: typeof r.timeMs === "number" ? r.timeMs : 0,
+    nearMiss: r.nearMiss === true,
+  }));
+}
+
 export async function skillAccuracy(ulId: string, since: Date) {
   const rows = await attemptsSince(ulId, since, "skill", "correct");
   return [...tally(rows, (r) => str(r.skill) as Skill | null)].map(([skill, t]) => ({ skill, ...t }));
