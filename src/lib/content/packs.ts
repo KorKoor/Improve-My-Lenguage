@@ -1,3 +1,4 @@
+import { audioMatchesLanguage } from "../audio-key";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
@@ -71,7 +72,7 @@ function toVocab(language: LanguageCode, w: PackWord): VocabItem {
     rank: w.r,
     frequencyBand: w.b,
     ipa: w.i,
-    audioUrl: w.a,
+    audioUrl: w.a && audioMatchesLanguage(w.a, language) ? w.a : undefined,
     translations: { es: w.t },
     definition: w.d,
     examples: w.ex.map(([text, es]) => ({ text, translation: es ? { es } : undefined })),

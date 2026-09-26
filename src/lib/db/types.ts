@@ -28,6 +28,13 @@ export interface ProfileRow {
   slowAudio: boolean;
   /** Descansos inteligentes (sugerencias de pausa); activados por defecto. */
   smartBreaks: boolean;
+  /**
+   * Modo accesible para quien usa lector de pantalla o no ve bien: nada que
+   * dependa de ver la forma de una letra, todo con audio, anuncios y atajos.
+   */
+  audioFirst: boolean;
+  /** Alto contraste: bordes y texto más marcados, enlaces subrayados. */
+  highContrast: boolean;
   /** Cuándo terminó (o saltó) el tutorial de bienvenida. */
   tutorialDoneAt: Date | null;
   /** Avatar elegido (emoji de una lista cerrada). */
@@ -86,7 +93,7 @@ export interface GoalRow {
 export interface KnowledgeDbRow {
   userLanguageId: string;
   itemId: string;
-  itemType: "vocab" | "grammar";
+  itemType: "vocab" | "grammar" | "letter" | "rule";
   status: "learning" | "known" | "difficult" | "saved";
   stability: number;
   difficulty: number;

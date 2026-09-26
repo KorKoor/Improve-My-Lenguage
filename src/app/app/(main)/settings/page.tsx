@@ -32,7 +32,7 @@ export default async function SettingsPage() {
 
       <Card>
         <CardHeader title="Comodidad" aside="Letra, modo sencillo y audio" />
-        <ComfortSettings initial={{ textSize: p.textSize, simpleMode: p.simpleMode, slowAudio: p.slowAudio, smartBreaks: p.smartBreaks }} />
+        <ComfortSettings initial={{ textSize: p.textSize, simpleMode: p.simpleMode, slowAudio: p.slowAudio, smartBreaks: p.smartBreaks, audioFirst: p.audioFirst, highContrast: p.highContrast }} />
       </Card>
 
       <Card>

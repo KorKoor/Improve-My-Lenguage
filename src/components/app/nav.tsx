@@ -11,11 +11,11 @@ function isActive(path: string, href: string) {
   return href === "/app" ? path === "/app" : path === href || path.startsWith(href + "/");
 }
 
-export function SidebarNav({ due, simple = false }: { due: number; simple?: boolean }) {
+export function SidebarNav({ due, simple = false, alphabet = false }: { due: number; simple?: boolean; alphabet?: boolean }) {
   const path = usePathname();
   return (
     <nav aria-label="Aplicación" className={cn("flex flex-col gap-1", simple && "text-base")}>
-      {navItems(due, simple).map(({ href, label, icon: Icon, badge, soon }) => {
+      {navItems(due, simple, alphabet).map(({ href, label, icon: Icon, badge, soon }) => {
         const active = isActive(path, href);
         return (
           <Link

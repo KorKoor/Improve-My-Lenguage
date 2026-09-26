@@ -121,8 +121,8 @@ export function DangerZone() {
   );
 }
 
-/** Comodidad: tamaño de letra, modo sencillo y audio lento. Se aplica al instante. */
-export function ComfortSettings({ initial }: { initial: { textSize: TextSize; simpleMode: boolean; slowAudio: boolean; smartBreaks: boolean } }) {
+/** Comodidad y accesibilidad: tamaño de letra, modo sencillo, audio lento, modo accesible y contraste. Se aplica al instante. */
+export function ComfortSettings({ initial }: { initial: { textSize: TextSize; simpleMode: boolean; slowAudio: boolean; smartBreaks: boolean; audioFirst: boolean; highContrast: boolean } }) {
   const [v, setV] = useState(initial);
   const [saved, setSaved] = useState(false);
   const [, start] = useTransition();
@@ -130,7 +130,7 @@ export function ComfortSettings({ initial }: { initial: { textSize: TextSize; si
     const next = { ...v, ...patch };
     setV(next);
     setSaved(false);
-    applyComfort(next.textSize, next.slowAudio);
+    applyComfort(next.textSize, next.slowAudio, next.highContrast);
     start(async () => {
       const res = await updateSettingsAction(patch);
       setSaved(res.ok);
@@ -165,6 +165,24 @@ export function ComfortSettings({ initial }: { initial: { textSize: TextSize; si
         <span>
           <span className="block font-semibold">Audio más lento</span>
           <span className="text-sm text-muted">Las palabras y frases se pronuncian un poco más despacio para entenderlas mejor.</span>
+        </span>
+      </button>
+      <button type="button" role="switch" aria-checked={v.audioFirst} onClick={() => save({ audioFirst: !v.audioFirst })} className={cn(toggle, v.audioFirst && "border-primary bg-primary-soft")}>
+        <span className={cn("mt-0.5 flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition", v.audioFirst ? "bg-primary" : "bg-border")}>
+          <span className={cn("size-5 rounded-full bg-white shadow transition", v.audioFirst && "translate-x-5")} />
+        </span>
+        <span>
+          <span className="block font-semibold">Modo accesible (lector de pantalla o poca vista)</span>
+          <span className="text-sm text-muted">Todo se aprende de oído: nada de ejercicios que dependan de ver la forma de las letras, audio en cada paso, anuncios para el lector de pantalla y atajos de teclado (pulsa «?» en una sesión para verlos).</span>
+        </span>
+      </button>
+      <button type="button" role="switch" aria-checked={v.highContrast} onClick={() => save({ highContrast: !v.highContrast })} className={cn(toggle, v.highContrast && "border-primary bg-primary-soft")}>
+        <span className={cn("mt-0.5 flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition", v.highContrast ? "bg-primary" : "bg-border")}>
+          <span className={cn("size-5 rounded-full bg-white shadow transition", v.highContrast && "translate-x-5")} />
+        </span>
+        <span>
+          <span className="block font-semibold">Alto contraste</span>
+          <span className="text-sm text-muted">Texto más oscuro, bordes más marcados, enlaces subrayados y un foco muy visible al moverte con el teclado.</span>
         </span>
       </button>
       <button type="button" role="switch" aria-checked={v.smartBreaks} onClick={() => save({ smartBreaks: !v.smartBreaks })} className={cn(toggle, v.smartBreaks && "border-primary bg-primary-soft")}>

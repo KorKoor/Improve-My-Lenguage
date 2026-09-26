@@ -2,13 +2,15 @@ import "server-only";
 import { catalog, errorLabel, grammarFor, grammarForCategory } from "../content";
 import type { Skill } from "../content/types";
 import { ACHIEVEMENT_RULES, newlyUnlocked } from "../engine/achievements";
-import { evaluateChoice, evaluateText, type EvaluationResult } from "../engine/evaluate";
+import { evaluateChoice, evaluateRoman, evaluateText, type EvaluationResult } from "../engine/evaluate";
+import { hasAlphabet } from "../content/alphabets";
 import { buildVocabExercise, canonicalMatchResponse, learnerStage, pickVocabExerciseType, resolveExercise } from "../engine/exercises";
 import { mulberry32 } from "../engine/random";
 import { Fsrs, newCard, ratingFromOutcome, targetRetention, type CardMemory } from "../engine/fsrs";
 import { defaultEstimate, overallTheta, thetaToCefr, updateSkillOnline, type SkillEstimate } from "../engine/levels";
 import { planSession, type SessionPlan } from "../engine/planner";
-import { computeStreak, localDay, summarizeVocabulary } from "../engine/progress";
+import { computeStreak, isLearned, localDay, summarizeVocabulary } from "../engine/progress";
+import { letterGroupsFor } from "../content/phase-zero";
 import { buildSessionSteps, sessionSeed, wordCard, type SessionStep } from "../engine/session-builder";
 import { gradeDictation } from "../listening/diff";
 import { isLeech } from "../engine/insights";
@@ -16,6 +18,12 @@ import { detectWeaknesses, type Weakness } from "../engine/weakness";
 import { polyglotDays } from "../engine/multilang";
 import { calibrationStep } from "../engine/calibration";
 import { buildCourse, lessonPassed, lessonSteps, type Lesson } from "../engine/course";
+import { PHASE_PASS, phaseZeroSteps, phaseZeroUnits } from "../engine/phase-zero";
+import { writingSteps } from "../engine/writing";
+import { writingUnits } from "../content/writing-system";
+import { capitalizationSlip } from "../engine/evaluate";
+import { phaseZeroState } from "./phase-zero";
+import { confusedLetter, READING_TYPES } from "../engine/letter-exercises";
 import { storiesFor } from "../content/stories";
 import * as repo from "../db/repositories";
 import { rateLimit } from "../db/limits";
@@ -81,7 +89,7 @@ export async function getWeaknesses(ulId: string, now = new Date()): Promise<Wea
   return detectWeaknesses(mistakes, stats, sessions, now).filter((w) => w.category !== "vocabulary");
 }
 
-export type SessionFocus = "new_words" | "listening" | "review" | "leeches" | "mixed" | `grammar:${string}` | `lesson:${number}` | null;
+export type SessionFocus = "new_words" | "listening" | "review" | "leeches" | "mixed" | "letters" | `grammar:${string}` | `lesson:${number}` | `phase:${string}` | `writing:${string}` | null;
 
 export interface BuiltSession {
   sessionId: string;
@@ -114,11 +122,17 @@ export async function startSession(
       : [];
   if (leeches.length) due = leeches;
   const vocabTotal = catalog.vocab(learner.language.code).length;
-  const seenIds = new Set(knowledge.filter((k) => k.reps > 0).map((k) => k.itemId));
+  const seenIds = new Set(knowledge.filter((k) => k.reps > 0 && k.itemType === "vocab").map((k) => k.itemId));
 
   let plan: SessionPlan;
   const focus = opts.focus ?? null;
-  if (focus === "leeches" && leeches.length) {
+  if (focus === "letters") {
+    // Sólo letras y reglas de lectura vencidas (más los contrastes de lo que se confunde).
+    due = due.filter((k) => k.itemType === "letter" || k.itemType === "rule");
+  }
+  if (focus === "letters") {
+    plan = { totalMinutes: minutes, blocks: [{ kind: "review", minutes, reason: "Repaso de las letras y reglas que más te cuestan." }] };
+  } else if (focus === "leeches" && leeches.length) {
     plan = { totalMinutes: minutes, blocks: [{ kind: "review", minutes, reason: "Reaprendemos las palabras que más se te resisten: primero la ficha con un ejemplo, luego práctica." }] };
   } else if (focus === "review" || focus === "leeches") {
     plan = { totalMinutes: minutes, blocks: [{ kind: "review", minutes, reason: "Repaso de los elementos que están a punto de olvidarse." }] };
@@ -149,6 +163,27 @@ export async function startSession(
   const day = localDay(now, learner.profile.timezone);
   // Repaso intercalado: lo vencido de TODOS tus idiomas, alternándolos.
   if (focus === "mixed") return startMixedReview(learner, now, day);
+  // Fase 0 (aprender a leer): la unidad fija sustituye a la sesión planificada.
+  if (focus?.startsWith("phase:")) {
+    const unit = phaseZeroUnits(learner.language.code).find((u) => u.id === focus.slice(6));
+    if (!unit || unit.kind === "strokes") throw new Error("Unidad desconocida");
+    const reading = await repo.getReadingState(ulId);
+    const phasePlan: SessionPlan & { phaseUnit: string } = { totalMinutes: 5, blocks: [{ kind: "reading", minutes: 5, reason: unit.goal }], phaseUnit: unit.id };
+    const steps = phaseZeroSteps(unit, learner.language.code, learner.native, catalog, { seed: sessionSeed(ulId, day, `phase-${unit.id}`), audioFirst: learner.profile.audioFirst, confusions: topConfusions(reading.confusions) });
+    const session = await repo.createSession(ulId, "focus", 5, phasePlan);
+    await repo.track(learner.userId, "phase_unit_started", { unit: unit.id, language: learner.language.code });
+    return { sessionId: session.id, plan: phasePlan, steps };
+  }
+  // Escritura y ortografía: una unidad corta.
+  if (focus?.startsWith("writing:")) {
+    const unit = writingUnits(learner.language.code).find((u) => u.id === focus.slice(8));
+    if (!unit) throw new Error("Unidad desconocida");
+    const writingPlan: SessionPlan & { writingUnit: string } = { totalMinutes: 5, blocks: [{ kind: "writing", minutes: 5, reason: unit.title }], writingUnit: unit.id };
+    const steps = writingSteps(unit, learner.language.code, learner.native, catalog, { seed: sessionSeed(ulId, day, `writing-${unit.id}`), audioFirst: learner.profile.audioFirst });
+    const session = await repo.createSession(ulId, "focus", 5, writingPlan);
+    await repo.track(learner.userId, "writing_unit_started", { unit: unit.id, language: learner.language.code });
+    return { sessionId: session.id, plan: writingPlan, steps };
+  }
   // Camino guiado: la lección fija sustituye a la sesión planificada.
   if (focus?.startsWith("lesson:")) {
     const course = courseFor(learner);
@@ -175,6 +210,8 @@ export async function startSession(
     interests: learner.profile.interests,
     seed: sessionSeed(ulId, day, opts.surprise ? String(now.getTime()) : String(knowledge.length)),
     style: learner.profile.personality ? { ear: learner.profile.personality.dims.ear, challenge: learner.profile.personality.dims.challenge } : undefined,
+    audioFirst: learner.profile.audioFirst,
+    confusions: topConfusions((await repo.getReadingState(ulId)).confusions),
   });
 
   // Palabras rebeldes: su ficha va delante, como si fueran nuevas.
@@ -212,6 +249,10 @@ export interface AnswerFeedback {
   expected: string;
   explanation?: string;
   errorLabel?: string;
+  /** Hito para celebrar («¡Primera palabra leída sin ayuda!»). */
+  milestone?: string;
+  /** Opción correcta (ejercicios de elegir), para marcarla tras responder. */
+  answer?: string;
 }
 
 export class RateLimitedError extends Error {}
@@ -250,14 +291,19 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
     result = resolved.accepted.map((a) => evaluateChoice(response, a)).find((r) => r.correct) ?? { correct: false, nearMiss: false };
   } else {
     result = evaluateText(response, resolved.accepted, lang, { typos: resolved.typos });
+    if (!result.correct && resolved.roman?.length && hasAlphabet(lang)) result = evaluateRoman(response, resolved.roman, resolved.accepted[0]!) ?? result;
+    // Alemán: sustantivo escrito en minúscula = acierto con aviso (y se registra para «Escritura y ortografía»).
+    if (result.correct && !result.nearMiss && capitalizationSlip(lang, response, resolved.accepted[0]!)) result = { ...result, nearMiss: true, note: "caps" };
   }
 
   const timeMs = Math.max(0, Math.min(input.timeMs, 10 * 60_000));
   const skill: Skill =
-    type === "dictation" || type === "listen_mc" || type === "listen_pick" || type === "dictation_word" || type === "phrase_listen" ? "listening"
+    type === "dictation" || type === "listen_mc" || type === "listen_pick" || type === "dictation_word" || type === "phrase_listen" || type === "letter_hear" || type === "letter_pair" || type === "tone_pick" ? "listening"
     : type === "speak" ? "pronunciation"
+    : type === "letter_see" || type === "rule_mc" || type === "read_word" ? "reading"
     : type === "grammar" || type === "rearrange" || type === "conjugate" ? "grammar"
     : "vocabulary";
+  const itemType: KnowledgeDbRow["itemType"] = type === "grammar" ? "grammar" : type.startsWith("letter_") && type !== "letter_name" ? "letter" : type === "rule_mc" ? "rule" : "vocab";
 
   // 1. Memoria FSRS por ítem
   const expectedMs = { match: 20000, dictation: 25000, rearrange: 20000, grammar: 15000, recall: 10000, cloze: 12000, conjugate: 12000, speak: 20000, listen_mc: 9000, listen_pick: 9000, dictation_word: 14000 }[type] ?? 7000;
@@ -281,7 +327,7 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
     await repo.saveKnowledge({
       userLanguageId: ulId,
       itemId,
-      itemType: type === "grammar" ? "grammar" : "vocab",
+      itemType,
       status: prev?.status === "known" ? "known" : !result.correct && (prev?.lapses ?? 0) >= 2 ? "difficult" : prev?.status === "difficult" && result.correct ? "learning" : prev?.status ?? "learning",
       stability: card.stability,
       difficulty: card.difficulty,
@@ -322,6 +368,11 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
   });
   // «No lo sé» (respuesta vacía) no es un patrón de error: no se registra como fallo tipificado.
   const gaveUp = !response.trim() && resolved.mode !== "match";
+  // Acierto con tildes o mayúsculas mal: no es un fallo, pero sí un patrón de ortografía que conviene trabajar.
+  const orthoSlip = result.correct && (result.note === "accent" || result.note === "caps") ? (result.note === "accent" ? "accents" : "capitalization") : null;
+  if (orthoSlip) {
+    await repo.insertMistakes([{ userLanguageId: ulId, sessionId, attemptId, source: "exercise", category: orthoSlip, subcategory: type, userText: response || null, correctedText: resolved.display, explanation: null }]);
+  }
   if (!result.correct && !gaveUp) {
     await repo.insertMistakes([
       {
@@ -338,16 +389,28 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
     ]);
   }
 
+  // Letras que se confunden: se registran para practicar su contraste.
+  if (!result.correct && type.startsWith("letter_")) {
+    const other = confusedLetter(type, idPart, response);
+    const mine = idPart.split(":l:")[1];
+    if (other && mine) await repo.bumpConfusion(ulId, mine, other);
+  }
+  // Hito: la primera palabra leída sin ayuda.
+  let milestone: string | undefined;
+  if (result.correct && type === "read_word" && (await repo.claimMilestone(ulId, "first-word"))) milestone = "¡Primera palabra leída sin ayuda!";
+
   // 4. Contadores
   if (sessionId) await repo.bumpSession(ulId, sessionId, result.correct);
   await repo.bumpActivity(learner.userId, lang, localDay(now, learner.profile.timezone), {
     seconds: Math.min(Math.round(timeMs / 1000), 120),
     exercises: 1,
     correct: result.correct ? 1 : 0,
-    wordsReviewed: type === "grammar" ? 0 : itemIds.length,
+    wordsReviewed: itemType === "vocab" ? itemIds.length : 0,
   });
 
   return {
+    milestone,
+    answer: resolved.mode === "choice" ? resolved.accepted[0] : undefined,
     attemptId,
     correct: result.correct,
     nearMiss: result.nearMiss,
@@ -364,6 +427,7 @@ function difficultyOfKey(key: string): number {
   const CEFR: Record<string, number> = { A1: -2.5, A2: -1.5, B1: -0.5, B2: 0.5, C1: 1.5, C2: 2.5 };
   if (type === "grammar") return CEFR[catalog.grammarById(id)?.cefr ?? "B1"] ?? 0;
   if (type.startsWith("phrase_")) return -2.8;
+  if ((READING_TYPES as readonly string[]).includes(type)) return -3;
   if (type === "match") {
     const items = id.split(",").map((i) => catalog.vocabById(i)).filter(Boolean);
     return items.reduce((a, v) => a + (CEFR[v!.cefr] ?? 0), 0) / Math.max(1, items.length) - 0.5;
@@ -418,6 +482,10 @@ export interface SessionSummary {
   lesson?: { n: number; passed: boolean; stars: number; next: number | null; title: string | null; storyId: string | null };
   /** Si el nivel se ajustó con esta sesión (primeras sesiones de un idioma). */
   levelAdjusted?: { direction: "down" | "up"; level: string; reason: string };
+  /** Unidad de «Escritura y ortografía», si la sesión era una. */
+  writing?: { unitId: string; title: string; passed: boolean; stars: number };
+  /** Unidad de la Fase 0 (aprender a leer), si la sesión era una. */
+  phase?: { unitId: string; title: string; passed: boolean; stars: number; next: { id: string; title: string; kind: string } | null; complete: boolean; milestone?: string };
 }
 
 export async function finishSession(
@@ -465,8 +533,26 @@ export async function finishSession(
     lesson = { n: planLesson, passed, stars, next: next?.n ?? null, title: next?.title ?? null, storyId: course[planLesson - 1]?.storyId ?? null };
     await repo.track(learner.userId, passed ? "lesson_passed" : "lesson_failed", { lesson: planLesson, language: learner.language.code });
   }
+  // Unidad de la Fase 0: mismo umbral que las lecciones.
+  let phase: SessionSummary["phase"];
+  const planPhase = (s.plan as { phaseUnit?: string } | null)?.phaseUnit;
+  if (typeof planPhase === "string") phase = await finishPhaseUnit(learner, planPhase, s.correctCount, s.exercisesCount);
+  // Unidad de «Escritura y ortografía».
+  let writing: SessionSummary["writing"];
+  const planWriting = (s.plan as { writingUnit?: string } | null)?.writingUnit;
+  if (typeof planWriting === "string") {
+    const acc = s.exercisesCount ? s.correctCount / s.exercisesCount : 0;
+    const passed = s.exercisesCount > 0 && acc >= PHASE_PASS;
+    const stars = !passed ? 0 : acc >= 0.9 ? 3 : acc >= 0.75 ? 2 : 1;
+    if (passed) await repo.savePhaseZeroUnits(learner.ul.id, { [planWriting]: stars }, "writing");
+    await repo.track(learner.userId, passed ? "writing_unit_passed" : "writing_unit_failed", { unit: planWriting, language: learner.language.code });
+    const unit = writingUnits(learner.language.code).find((u) => u.id === planWriting);
+    writing = { unitId: planWriting, title: unit?.title ?? planWriting, passed, stars };
+  }
   const newAchievements = await checkAchievements(learner);
   return {
+    phase,
+    writing,
     total: s.exercisesCount,
     correct: s.correctCount,
     minutes: Math.round(s.durationSeconds / 60),
@@ -474,6 +560,53 @@ export async function finishSession(
     levelAdjusted,
     lesson,
   };
+}
+
+/** Parejas de letras más confundidas (al menos 2 veces), de más a menos. */
+export function topConfusions(confusions: Record<string, number>, max = 4): [string, string][] {
+  return Object.entries(confusions)
+    .filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, max)
+    .map(([k]) => k.split("|") as [string, string])
+    .filter((p) => p.length === 2);
+}
+
+const LETTER_MILESTONES = [5, 10, 20, 30, 50, 80];
+
+/**
+ * Transcripción latina visible, atenuada o sólo al tocar, según cuántas letras
+ * del idioma dominas ya (aprendidas en la memoria FSRS). Sólo idiomas de otra escritura.
+ */
+export async function romanLevelFor(learner: Learner): Promise<"show" | "dim" | "tap"> {
+  if (!hasAlphabet(learner.language.code)) return "show";
+  const total = letterGroupsFor(learner.language.code).reduce((a, g) => a + g.letters.length, 0);
+  const now = new Date();
+  const learned = (await repo.getKnowledgeByType(learner.ul.id, "letter")).filter((k) => isLearned(knowledgeToCard(k, now), now)).length;
+  const share = total ? learned / total : 0;
+  return share >= 0.85 ? "tap" : share >= 0.5 ? "dim" : "show";
+}
+
+async function finishPhaseUnit(learner: Learner, unitId: string, correct: number, total: number): Promise<SessionSummary["phase"]> {
+  const ulId = learner.ul.id;
+  const units = phaseZeroUnits(learner.language.code);
+  const unit = units.find((u) => u.id === unitId);
+  if (!unit) return undefined;
+  const acc = total ? correct / total : 0;
+  const passed = total > 0 && acc >= PHASE_PASS;
+  const stars = !passed ? 0 : acc >= 0.9 ? 3 : acc >= 0.75 ? 2 : 1;
+  if (passed) await repo.savePhaseZeroUnits(ulId, { [unitId]: stars });
+  await repo.track(learner.userId, passed ? "phase_unit_passed" : "phase_unit_failed", { unit: unitId, language: learner.language.code });
+  const { progress } = await phaseZeroState(learner);
+  // Hito: «¡Ya sabes leer N letras!» (letras acertadas al menos una vez).
+  let milestone: string | undefined;
+  if (unit.kind === "letters") {
+    const known = (await repo.getKnowledgeByType(ulId, "letter")).filter((k) => k.correctCount > 0).length;
+    const reached = LETTER_MILESTONES.filter((n) => n <= known).pop();
+    if (reached && (await repo.claimMilestone(ulId, `letters-${reached}`))) milestone = `¡Ya sabes leer ${reached} letras!`;
+  }
+  if (progress.complete && passed && (await repo.claimMilestone(ulId, "phase-zero"))) milestone = "¡Ya sabes leer! Ahora empieza el Camino guiado.";
+  return { unitId, title: unit.title, passed, stars, next: progress.next ? { id: progress.next.id, title: progress.next.title, kind: progress.next.kind } : null, complete: progress.complete, milestone };
 }
 
 export async function checkAchievements(learner: Learner) {

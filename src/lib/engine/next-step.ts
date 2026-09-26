@@ -1,7 +1,9 @@
 /**
  * «Seguir aprendiendo»: decide el siguiente paso con un solo botón (modo
- * sencillo). Orden: repasos acumulados → lección del Camino guiado (hasta 2
- * al día) → práctica diaria hasta cumplir los minutos → historia → listo.
+ * sencillo). Orden: repasos acumulados → letras o reglas débiles → Fase 0
+ * (aprender a leer: letras, reglas, primeras palabras y frases) → lección del
+ * Camino guiado (hasta 2 al día) → práctica diaria hasta cumplir los minutos →
+ * historia → listo.
  * Puro y determinista.
  */
 export interface NextStepInput {
@@ -17,10 +19,16 @@ export interface NextStepInput {
   /** Historia sugerida (si hay para el idioma). */
   storyId: string | null;
   storiesToday: number;
+  /** Fase 0: siguiente unidad (null si está terminada o saltada) y progreso. */
+  phase?: { next: { id: string; title: string; kind: string } | null; done: number; total: number; diagnosed: boolean };
+  /** Letras y reglas de lectura vencidas en la memoria. */
+  weakLetters?: number;
+  /** «Escritura y ortografía» (A1–A2): unidad propuesta y si ya toca. */
+  writing?: { due: boolean; next: { id: string; title: string } | null; reason?: string };
 }
 
 export interface NextStep {
-  kind: "review" | "lesson" | "session" | "story" | "done";
+  kind: "review" | "letters" | "phase" | "writing" | "lesson" | "session" | "story" | "done";
   href: string;
   title: string;
   subtitle: string;
@@ -28,9 +36,30 @@ export interface NextStep {
 
 export const MAX_LESSONS_PER_DAY = 2;
 
+/** Letras débiles a partir de las cuales se repasan antes de seguir. */
+export const WEAK_LETTERS = 3;
+
+/** Paso de la Fase 0 (null si ya está terminada). La primera vez, a su portada con la prueba de 1 minuto. */
+export function phaseStep(phase: NextStepInput["phase"]): NextStep | null {
+  if (!phase?.next) return null;
+  if (phase.done === 0 && !phase.diagnosed) {
+    return { kind: "phase", href: "/app/start", title: "Aprende a leer desde cero", subtitle: "Primero las letras y los sonidos. ¿Ya sabes algo? Haz la prueba de un minuto." };
+  }
+  const href = phase.next.kind === "strokes" ? "/app/start/strokes" : `/app/session?phase=${encodeURIComponent(phase.next.id)}`;
+  return { kind: "phase", href, title: phase.next.title, subtitle: `Aprender a leer · paso ${phase.done + 1} de ${phase.total}.` };
+}
+
 export function nextStep(i: NextStepInput): NextStep {
   if (i.dueCount >= 10) {
     return { kind: "review", href: "/app/review", title: "Repasar lo aprendido", subtitle: `${i.dueCount} palabras están a punto de olvidarse: primero las repasamos.` };
+  }
+  if ((i.weakLetters ?? 0) >= WEAK_LETTERS) {
+    return { kind: "letters", href: "/app/session?focus=letters", title: "Repasar letras", subtitle: `${i.weakLetters} letras o reglas se te están olvidando: un repaso rápido y seguimos.` };
+  }
+  const phase = phaseStep(i.phase);
+  if (phase) return phase;
+  if (i.writing?.due && i.writing.next) {
+    return { kind: "writing", href: `/app/session?writing=${encodeURIComponent(i.writing.next.id)}`, title: i.writing.next.title, subtitle: `Escritura y ortografía · ${i.writing.reason ?? "cinco minutos para escribir mejor."}` };
   }
   if (i.courseDone < i.courseTotal && i.lessonsToday < MAX_LESSONS_PER_DAY) {
     return { kind: "lesson", href: `/app/session?lesson=${i.nextLesson}`, title: `Lección ${i.nextLesson}`, subtitle: i.courseDone === 0 ? "Empezamos desde cero, con calma." : `Vas por la lección ${i.nextLesson} de ${i.courseTotal}.` };

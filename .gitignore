@@ -86,3 +86,7 @@ firestore-debug.log
 
 # Descargas del generador de contenido (≈1 GB)
 .cache/
+
+# Textos intermedios del generador de audio (se regeneran)
+scripts/audio/.texts/
+scripts/content/.strokes/

@@ -1,5 +1,6 @@
 import "server-only";
 import { getVocab, topicLabel, vocabFor } from "../content";
+import { classicByTitle, classicsFor } from "../content/classics";
 import type { LanguageCode, VocabItem } from "../content/types";
 import * as repo from "../db/repositories";
 import { translationOf } from "../engine/exercises";
@@ -113,7 +114,7 @@ export interface ReaderWord {
 
 export interface ReaderData {
   title: string;
-  source: WikiSource | "own" | "graded";
+  source: WikiSource | "own" | "graded" | "classic";
   sourceLabel: string;
   url?: string;
   license?: string;
@@ -128,7 +129,7 @@ export interface ReaderData {
   translations?: (string | null)[];
 }
 
-async function buildReader(learner: Learner, meta: { title: string; source: WikiSource | "own" | "graded"; url?: string; license?: string; licenseUrl?: string; translations?: (string | null)[] }, paragraphs: string[]): Promise<ReaderData> {
+async function buildReader(learner: Learner, meta: { title: string; source: WikiSource | "own" | "graded" | "classic"; sourceLabel?: string; url?: string; license?: string; licenseUrl?: string; translations?: (string | null)[] }, paragraphs: string[]): Promise<ReaderData> {
   const lang = learner.language.code;
   const idx = lookupFor(lang);
   const [rank, known] = await Promise.all([learnerRank(learner), knownIds(learner)]);
@@ -167,7 +168,7 @@ async function buildReader(learner: Learner, meta: { title: string; source: Wiki
   return {
     ...meta,
     translations: meta.translations,
-    sourceLabel: meta.source === "own" ? "Tu texto" : meta.source === "graded" ? "Frases reales de Tatoeba" : SOURCE_LABEL[meta.source],
+    sourceLabel: meta.sourceLabel ?? (meta.source === "own" ? "Tu texto" : meta.source === "graded" ? "Frases reales de Tatoeba" : meta.source === "classic" ? "Wikisource" : SOURCE_LABEL[meta.source]),
     paragraphs: tokenized,
     words,
     analysis,
@@ -294,5 +295,41 @@ export async function readerForGraded(learner: Learner, topic: string): Promise<
     learner,
     { title: topic === "all" ? "Frases a tu nivel" : `Frases reales: ${topicLabel(topic)}`, source: "graded", translations: chosen.map((s) => s.es) },
     chosen.map((s) => s.text),
+  );
+}
+
+
+// ── Clásicos de dominio público (Wikisource) ────────────────────────────────
+export interface ClassicCard {
+  title: string;
+  author: string;
+  work: string;
+  excerpt: boolean;
+  preview: string;
+  analysis: TextAnalysis;
+}
+
+/** Fábulas, cuentos y relatos breves, ordenados por lo bien que encajan con tu nivel. */
+export async function classicReadings(learner: Learner): Promise<ClassicCard[]> {
+  const lang = learner.language.code;
+  const classics = classicsFor(lang);
+  if (!classics.length) return [];
+  const idx = lookupFor(lang);
+  const [rank, known] = await Promise.all([learnerRank(learner), knownIds(learner)]);
+  const cards = classics.map((c) => {
+    const text = c.paragraphs.join("\n");
+    const analysis = analyzeTokens(tokenize(lang, text, idx, learner.language.spaceSeparated), getVocab, rank, known);
+    return { title: c.title, author: c.author, work: c.work, excerpt: c.excerpt, preview: text.slice(0, 200), analysis };
+  });
+  return cards.sort((a, b) => b.analysis.coverage - a.analysis.coverage);
+}
+
+export async function readerForClassic(learner: Learner, title: string): Promise<ReaderData | null> {
+  const c = classicByTitle(learner.language.code, title);
+  if (!c) return null;
+  return buildReader(
+    learner,
+    { title: c.title, source: "classic", sourceLabel: `${c.author} · Wikisource${c.excerpt ? " (comienzo)" : ""}`, url: c.url, license: c.license, licenseUrl: "https://creativecommons.org/publicdomain/mark/1.0/deed.es" },
+    c.paragraphs,
   );
 }

@@ -70,7 +70,7 @@ export async function completeReadingAction(input: {
     const total = int(input.total, 0, 20, 0);
     const url = str(input.url, 500);
     return completeReading(learner, {
-      source: ["wikipedia", "wikinews", "wikivoyage", "simplewiki", "own", "graded"].includes(input.source) ? input.source : "own",
+      source: ["wikipedia", "wikinews", "wikivoyage", "simplewiki", "own", "graded", "classic"].includes(input.source) ? input.source : "own",
       title: str(input.title, 200),
       url: /^https:\/\/[a-z-]+\.(wikipedia|wikinews|wikivoyage)\.org\//.test(url) ? url : "",
       level: ["A1", "A2", "B1", "B2", "C1", "C2"].includes(input.level) ? input.level : "B1",

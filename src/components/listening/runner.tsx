@@ -1,4 +1,5 @@
 "use client";
+import { ScriptKeyboard } from "@/components/script-keyboard";
 import { VoiceWarning } from "@/components/speak-button";
 import { pickVoice } from "@/lib/voice";
 import { ArrowRight, Headphones, Loader2, RotateCcw, Snail, Trophy, Volume2 } from "lucide-react";
@@ -176,6 +177,7 @@ export function ListeningRunner({ languageName, beginner = false }: { languageNa
               placeholder="Escribe la frase…"
               className="h-14 w-full rounded-2xl border border-border bg-surface px-4 text-lg outline-none focus:border-primary focus:ring-4 focus:ring-primary-soft"
             />
+            {!fb && <ScriptKeyboard lang={locale.split("-")[0]!} locale={locale} value={answer} onChange={setAnswer} defaultOpen={false} romanOk={false} />}
             {!fb && <Button type="submit" size="lg" className="w-full" disabled={busy || !answer.trim()}>{busy ? <Loader2 className="animate-spin" size={18} /> : null} Comprobar</Button>}
           </form>
         ) : (

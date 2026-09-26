@@ -171,6 +171,9 @@ export async function startSessionAction(opts: { minutes?: number; focus?: strin
       f === "new_words" || f === "listening" || f === "review" || f === "leeches" || f === "mixed" ? f
       : f.startsWith("grammar:") ? (f as `grammar:${string}`)
       : /^lesson:\d{1,2}$/.test(f) ? (f as `lesson:${number}`)
+      : /^phase:[a-z]+(:[a-z0-9-]+){0,2}$/.test(f) ? (f as `phase:${string}`)
+      : /^writing:[a-z0-9-]+$/.test(f) ? (f as `writing:${string}`)
+      : f === "letters" ? "letters"
       : null;
     return startSession(learner, int(opts.minutes, 5, 60, learner.profile.dailyMinutes), { focus, surprise: Boolean(opts.surprise) });
   });
@@ -269,6 +272,8 @@ export async function updateSettingsAction(input: {
   simpleMode?: boolean;
   slowAudio?: boolean;
   smartBreaks?: boolean;
+  audioFirst?: boolean;
+  highContrast?: boolean;
 }): Promise<ActionResult<null>> {
   return run("settings.update", async () => {
     const viewer = await requireViewer();
@@ -286,6 +291,8 @@ export async function updateSettingsAction(input: {
       simpleMode: input.simpleMode !== undefined ? Boolean(input.simpleMode) : undefined,
       slowAudio: input.slowAudio !== undefined ? Boolean(input.slowAudio) : undefined,
       smartBreaks: input.smartBreaks !== undefined ? Boolean(input.smartBreaks) : undefined,
+      audioFirst: input.audioFirst !== undefined ? Boolean(input.audioFirst) : undefined,
+      highContrast: input.highContrast !== undefined ? Boolean(input.highContrast) : undefined,
     });
     revalidatePath("/app", "layout");
     return null;

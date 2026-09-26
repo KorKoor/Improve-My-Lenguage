@@ -6,9 +6,11 @@ export interface ChangelogItem {
   href: string;
 }
 
-export const CHANGELOG_VERSION = "2026-09-27";
+export const CHANGELOG_VERSION = "2026-09-28";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "🔤", title: "Aprender a leer desde cero", text: "Antes de las lecciones, en los 12 idiomas: letras y sonidos, cómo se trazan (japonés, chino, coreano y árabe), reglas para leer bien y tus primeras palabras y frases. ¿Ya sabes algo? Haz la prueba de un minuto.", href: "/app/start" },
+  { icon: "♿", title: "Modo accesible y alto contraste", text: "Si usas lector de pantalla o ves poco: todo se aprende de oído, con anuncios, foco en cada paso y atajos de teclado (pulsa «?» en una sesión). Y un tema de alto contraste. En Configuración.", href: "/app/settings" },
   { icon: "🔀", title: "Repaso intercalado", text: "Repasa lo pendiente de todos tus idiomas en una sola sesión, alternándolos (con la voz y la dirección de escritura de cada uno). En «Mis idiomas».", href: "/app/languages" },
   { icon: "📱", title: "Modo estudio en cualquier dispositivo", text: "Empieza un plan en el ordenador y continúalo en el móvil.", href: "/app/study" },
   { icon: "🏠", title: "Un solo botón en modo sencillo", text: "«Seguir aprendiendo» elige solo lo que toca: repaso, la siguiente lección del Camino guiado, un poco de práctica o una historia.", href: "/app" },

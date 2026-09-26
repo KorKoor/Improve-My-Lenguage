@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo, useRef, useState } from "react";
 import { answerVerbAction, finishVerbDrillAction, startVerbDrillAction } from "@/app/app/skills-actions";
 import { Confetti } from "@/components/celebrate";
+import { ScriptKeyboard } from "@/components/script-keyboard";
 import { SpeakButton } from "@/components/speak-button";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
@@ -183,6 +184,7 @@ export function VerbTrainer({ verbs, level, language, languageName, initialVerb 
             </Button>
           )}
         </form>
+        {!fb && <ScriptKeyboard lang={language} locale={locale} value={answer} onChange={setAnswer} romanOk={false} />}
         {err && <p className="text-sm text-danger" role="alert">{err}</p>}
         {fb && (
           <div className={cn("space-y-3 rounded-2xl p-4 animate-sheet", fb.correct ? "bg-success-soft" : "bg-danger-soft")} role="status">

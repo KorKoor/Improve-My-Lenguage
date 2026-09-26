@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { answerSpeakingAction, finishSpeakingAction, startSpeakingAction } from "@/app/app/skills-actions";
 import { Confetti } from "@/components/celebrate";
 import { useSpeech } from "@/components/speak-button";
+import { PitchCompare } from "./pitch-compare";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
@@ -273,6 +274,10 @@ export function SpeakingRunner({ languageName }: { languageName: string }) {
             </div>
           </div>
         )}
+        <details className="group">
+          <summary className="cursor-pointer text-sm font-semibold text-primary">Compara tu entonación con el modelo</summary>
+          <PitchCompare key={item.key} text={item.text} lang={locale.slice(0, 2)} className="mt-3" />
+        </details>
         {!fb && !listening && !busy && (
           <button type="button" onClick={() => { setFb({ correct: false, score: 0, heard: "", diff: [], tip: "Frase saltada." }); }} className="mx-auto block text-xs text-muted hover:text-text">
             Saltar esta frase

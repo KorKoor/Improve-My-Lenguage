@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { completeFirstStepsUnitAction } from "@/app/app/first-steps-actions";
 import { Confetti } from "@/components/celebrate";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
 import { useSpeech, VoiceWarning } from "@/components/speak-button";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -174,7 +174,7 @@ export function FirstStepsRunner({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-5 py-16 text-center animate-rise">
         {phase === "done" && (result?.stars ?? 0) >= 2 && <Confetti />}
-        <Mascot size={120} mood="cheer" className="animate-float" />
+        <Afi size={120} mood="celebrating" motion="hop" />
         <h1 className="font-display text-3xl font-extrabold">¡Unidad completada!</h1>
         <p className="text-4xl" aria-label={`${result?.stars ?? 0} estrellas de 3`}>
           {[1, 2, 3].map((s) => <span key={s} className={cn("inline-block", s <= (result?.stars ?? 0) ? "animate-pop-in" : "opacity-25 grayscale")} style={{ animationDelay: `${s * 150}ms` }}>⭐</span>)}
@@ -229,7 +229,7 @@ export function FirstStepsRunner({
             </div>
             <div className="mt-4 flex flex-wrap gap-2" lang={language} dir={dir}>
               {task.tokens.map((t, ti) => (
-                <button key={ti} type="button" disabled={!!answer || order.includes(ti)} onClick={() => setOrder((o) => [...o, ti])} className={cn("rounded-xl border border-border bg-surface px-3 py-2 font-medium", order.includes(ti) && "opacity-30")}>{t}</button>
+                <button key={ti} type="button" disabled={!!answer || order.includes(ti)} onClick={() => { setOrder((o) => [...o, ti]); say(t, false); }} className={cn("rounded-xl border border-border bg-surface px-3 py-2 font-medium", order.includes(ti) && "opacity-30")}>{t}</button>
               ))}
             </div>
             {!answer && <Button size="lg" className="mt-5 w-full" disabled={order.length !== task.tokens.length} onClick={() => check(order.map((i) => task.tokens[i]).join(" "))}>Comprobar</Button>}

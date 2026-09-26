@@ -9,23 +9,26 @@ const inter = Inter({ subsets: ["latin", "latin-ext"], variable: "--font-inter",
 const nunito = Nunito({ subsets: ["latin", "latin-ext"], weight: ["700", "800"], variable: "--font-nunito", display: "swap" });
 
 
+const DESCRIPTION =
+  "Improve My Languages es una plataforma de aprendizaje adaptativo de idiomas: mide tu nivel por habilidad (MCER), programa tus repasos con repetición espaciada FSRS, detecta tus errores recurrentes y construye cada sesión para ti. Te acompaña Afi.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Improve My Languages — Aprende idiomas con un sistema que se adapta a ti",
+    default: "Improve My Languages — Aprendizaje adaptativo de idiomas",
     template: "%s · Improve My Languages",
   },
-  description:
-    "Plataforma adaptativa para aprender idiomas de forma autodidacta: diagnóstico real de nivel, repetición espaciada (FSRS), análisis de errores y un tutor personal. El curso se adapta a ti.",
+  description: DESCRIPTION,
   applicationName: "Improve My Languages",
-  keywords: ["aprender inglés", "aprender idiomas", "repetición espaciada", "FSRS", "CEFR", "tutor de idiomas", "autodidacta"],
   openGraph: {
     type: "website",
     siteName: "Improve My Languages",
     locale: "es_MX",
     url: siteUrl,
+    title: "Improve My Languages — El curso se adapta a ti",
+    description: DESCRIPTION,
   },
-  twitter: { card: "summary_large_image" },
+  twitter: { card: "summary_large_image", title: "Improve My Languages — El curso se adapta a ti", description: DESCRIPTION },
   robots: { index: true, follow: true },
   icons: { apple: "/icons/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "Improve", statusBarStyle: "default" },

@@ -5,7 +5,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { EmptyState } from "@/components/ui/empty-state";
 import { listReadings } from "@/lib/db/repositories";
-import { gradedReadings, readingRecommendations } from "@/lib/services/reading";
+import { classicReadings, gradedReadings, readingRecommendations } from "@/lib/services/reading";
 import { requireLearner } from "@/lib/services/viewer";
 
 export const metadata: Metadata = { title: "Lecturas" };
@@ -21,7 +21,12 @@ export default async function ReadPage({ searchParams }: { searchParams: Promise
   const learner = await requireLearner();
   const sp = await searchParams;
   const q = sp.q?.trim().slice(0, 80);
-  const [{ cards }, history, graded] = await Promise.all([readingRecommendations(learner, q), listReadings(learner.ul.id, 8), q ? Promise.resolve([]) : gradedReadings(learner)]);
+  const [{ cards }, history, graded, classics] = await Promise.all([
+    readingRecommendations(learner, q),
+    listReadings(learner.ul.id, 8),
+    q ? Promise.resolve([]) : gradedReadings(learner),
+    q ? Promise.resolve([]) : classicReadings(learner),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -69,10 +74,34 @@ export default async function ReadPage({ searchParams }: { searchParams: Promise
         </section>
       )}
 
+      {classics.length > 0 && (
+        <section aria-labelledby="classics-title" className="space-y-3">
+          <div>
+            <h2 id="classics-title" className="font-display text-xl font-extrabold">Clásicos de dominio público</h2>
+            <p className="text-sm text-muted">Fábulas y cuentos originales de Wikisource, ordenados por lo bien que encajan con tu vocabulario. Algunos usan ortografía antigua.</p>
+          </div>
+          <ul className="stagger flex gap-3 overflow-x-auto pb-2">
+            {classics.map((c) => {
+              const fit = fitLabel(c.analysis.coverage);
+              return (
+                <li key={c.title} className="w-72 shrink-0">
+                  <Link href={`/app/read/classic/${encodeURIComponent(c.title)}`} className="card lift flex h-full flex-col gap-2 p-5 hover:border-primary">
+                    <div className="flex flex-wrap items-center gap-2"><Chip>{c.analysis.level}</Chip><Chip tone={fit.tone}>{fit.text}</Chip></div>
+                    <p className="font-display text-lg font-extrabold leading-snug" lang={learner.language.code}>{c.title}</p>
+                    <p className="text-xs text-muted">{c.author}{c.excerpt ? " · comienzo" : ""}</p>
+                    <p className="line-clamp-3 text-sm text-muted" lang={learner.language.code}>{c.preview}</p>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {cards.length > 0 && <h2 className="font-display text-xl font-extrabold">Artículos reales</h2>}
       {cards.length === 0 ? (
         <Card>
-          <EmptyState title="No pudimos traer lecturas ahora">
+          <EmptyState title="No pudimos traer lecturas ahora" mood="reading">
             Las fuentes públicas no respondieron o no hay resultados para esa búsqueda. Prueba con otro tema o pega tu propio texto.
           </EmptyState>
         </Card>
@@ -112,7 +141,7 @@ export default async function ReadPage({ searchParams }: { searchParams: Promise
           </ul>
         </Card>
       )}
-      <p className="text-xs text-muted">Textos de proyectos Wikimedia bajo licencia CC BY-SA 4.0. Siempre enlazamos a la fuente original.</p>
+      <p className="text-xs text-muted">Textos de proyectos Wikimedia bajo licencia CC BY-SA 4.0; los clásicos de Wikisource son de dominio público. Siempre enlazamos a la fuente original.</p>
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { completeReadingAction, lookupWordAction } from "@/app/app/skills-action
 import { POS_ES } from "@/components/app/labels";
 import { Confetti } from "@/components/celebrate";
 import { speechRate } from "@/components/comfort";
-import { SpeakButton } from "@/components/speak-button";
+import { SpeakButton, useSpeech } from "@/components/speak-button";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
@@ -31,6 +31,7 @@ export function Reader({ data }: { data: ReaderData }) {
   const [lookup, setLookup] = useState<{ word: string; state: "loading" | "done" | "error"; entry?: DictionaryEntry | null; error?: string } | null>(null);
   const started = useRef(Date.now());
   const article = useRef<HTMLDivElement>(null);
+  const { speak } = useSpeech(data.locale);
 
   useEffect(() => {
     const onScroll = () => {
@@ -122,7 +123,7 @@ export function Reader({ data }: { data: ReaderData }) {
             </a>
           ) : null}
         </div>
-        <p className="mt-3 text-sm text-muted">Toca cualquier palabra para ver su significado. Las subrayadas probablemente son nuevas para ti.</p>
+        <p className="mt-3 text-sm text-muted">Toca cualquier palabra para oírla y ver su significado. Las subrayadas probablemente son nuevas para ti.</p>
       </header>
 
       <article ref={article} className="card mt-6 space-y-5 p-6 sm:p-8" lang={data.locale} dir={data.rtl ? "rtl" : "ltr"} style={{ fontSize: `${1.12 * size}rem`, lineHeight: 1.75 }}>
@@ -134,7 +135,11 @@ export function Reader({ data }: { data: ReaderData }) {
                   <button
                     key={j}
                     type="button"
-                    onClick={() => open(t.id!)}
+                    onClick={() => {
+                      open(t.id!);
+                      setSpeaking(null);
+                      speak(t.t, 0.85);
+                    }}
                     className={cn(
                       "rounded-[4px] px-[1px] text-left transition-colors hover:bg-primary-soft focus-visible:bg-primary-soft",
                       active === t.id && "bg-primary-soft text-primary",
@@ -148,7 +153,11 @@ export function Reader({ data }: { data: ReaderData }) {
                   <button
                     key={j}
                     type="button"
-                    onClick={() => void lookupUnknown(t.t)}
+                    onClick={() => {
+                      setSpeaking(null);
+                      speak(t.t, 0.85);
+                      void lookupUnknown(t.t);
+                    }}
                     className={cn("rounded-[4px] px-[1px] text-left transition-colors hover:bg-surface-muted", lookup?.word === t.t && "bg-surface-muted")}
                   >
                     {t.t}

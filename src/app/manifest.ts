@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Improve My Languages",
     short_name: "Improve",
-    description: "Aprende idiomas con un sistema que se adapta a ti.",
+    description: "Aprendizaje adaptativo de idiomas: el curso se adapta a ti. Con Afi, tu compañera de aprendizaje.",
     start_url: "/app",
     display: "standalone",
     background_color: "#fbf8f4",

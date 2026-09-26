@@ -133,3 +133,16 @@ Para hispanohablantes en idiomas de escritura latina: se aplican correspondencia
 | Racha | días consecutivos con ≥ 1 ejercicio en la zona horaria del usuario; si hoy aún no estudió, cuenta desde ayer |
 | Constancia | % de días activos en los últimos 28 |
 | Progreso dentro del nivel | posición lineal de θ dentro de su banda de 1 logit |
+
+## Fase 0: aprender a leer y a sonar
+
+Antes del Camino guiado, quien empieza de cero pasa por la Fase 0 (`src/lib/engine/phase-zero.ts`), con un orden pedagógico fijo: **letras y sonidos → trazos (japonés, chino, coreano, árabe) → reglas de ortografía y lectura → primeras palabras → primeras frases**.
+
+- **Letras:** en ruso, árabe, coreano, japonés y chino, los grupos del alfabeto (`content/alphabets.ts`); en los idiomas latinos, las letras y combinaciones que suenan distinto al español (`content/phase-zero/<idioma>.ts`). Un grupo grande se reparte en unidades de ≤ 7 letras.
+- **Nunca letras sin ver:** `taughtLetters` + `isDecodable` calculan qué palabras son legibles con lo enseñado hasta cada punto (en coreano, por letras de cada sílaba; en japonés, sólo kana). Las opciones de los ejercicios de letras salen de las letras ya vistas.
+- **Escalera por ítem:** reconocer (ver la letra → su sonido) → oír (sonido → letra) → leer palabras (`read_word`, con distractores que cambian una sola letra) → escribir con el teclado en pantalla. En modo accesible no hay ejercicios que dependan de ver formas.
+- **Memoria:** cada letra y cada regla es un ítem FSRS (`letter`, `rule`) que vuelve en los repasos. Cada fallo entre dos letras suma una **confusión**; con 2 o más, los repasos y las unidades incluyen un ejercicio de contraste (`letter_pair`).
+- **Diagnóstico de 1 minuto:** 8 letras de dificultad creciente; los grupos anteriores al primer fallo se dan por sabidos y quien acierta todo se salta la fase.
+- **«Seguir aprendiendo»:** repasos vencidos → letras o reglas débiles (≥ 3 vencidas) → siguiente unidad de la Fase 0 → lección del Camino guiado.
+- **Ayudas adaptativas:** con 2 fallos seguidos, dos opciones en vez de cuatro, audio más lento y una pista; con 5 aciertos seguidos, menos ayudas. La transcripción latina se atenúa y luego se oculta (se ve al tocar) según el porcentaje de letras aprendidas.
+

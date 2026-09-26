@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { alphabetGroup } from "@/lib/content/alphabets";
 import { FIRST_STEPS } from "@/lib/content/first-steps";
 import { getStory } from "@/lib/content/stories";
 import * as repo from "@/lib/db/repositories";
@@ -38,6 +39,32 @@ export async function completeFirstStepsUnitAction(
   } catch (err) {
     if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
     logError("action:first-steps", err);
+    return { ok: false, error: "No se pudo guardar. Inténtalo de nuevo." };
+  }
+}
+
+/** Grupo de letras del alfabeto practicado (cuenta para la racha y la actividad). */
+export async function completeAlphabetGroupAction(groupId: string, correct: number, total: number, seconds: number): Promise<{ ok: true; data: { stars: number } } | { ok: false; error: string }> {
+  try {
+    const learner = await requireLearner();
+    if (!(await rateLimit(`abc:${learner.userId}`, 60, 3600))) return { ok: false, error: "Vas muy rápido. Espera un poco." };
+    const group = alphabetGroup(learner.language.code, typeof groupId === "string" ? groupId.slice(0, 40) : "");
+    if (!group) return { ok: false, error: "Grupo de letras desconocido" };
+    const t = Math.max(1, Math.min(60, Math.round(Number(total) || 0)));
+    const c = Math.max(0, Math.min(t, Math.round(Number(correct) || 0)));
+    const stars = c / t >= 0.9 ? 3 : c / t >= 0.7 ? 2 : 1;
+    await repo.saveAlphabetGroup(learner.ul.id, group.id, stars);
+    await repo.bumpActivity(learner.userId, learner.language.code, localDay(new Date(), learner.profile.timezone), {
+      seconds: Math.max(0, Math.min(1800, Math.round(Number(seconds) || 0))),
+      exercises: t,
+      correct: c,
+    });
+    await repo.track(learner.userId, "alphabet_group", { group: group.id, stars });
+    revalidatePath("/app/alphabet");
+    return { ok: true, data: { stars } };
+  } catch (err) {
+    if (err && typeof err === "object" && "digest" in err && String((err as { digest: unknown }).digest).startsWith("NEXT_")) throw err;
+    logError("action:alphabet", err);
     return { ok: false, error: "No se pudo guardar. Inténtalo de nuevo." };
   }
 }

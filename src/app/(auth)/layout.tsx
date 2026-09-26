@@ -1,5 +1,5 @@
 import { Logo } from "@/components/logo";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </div>
       </div>
       <aside className="hidden flex-col items-center justify-center gap-6 bg-primary-soft p-12 text-center lg:flex">
-        <Mascot size={180} mood="happy" />
+        <Afi size={180} mood="waving" />
         <p className="max-w-sm font-display text-3xl font-extrabold">No se trata de ser perfecto, sino de ser mejor que ayer.</p>
         <p className="max-w-sm text-muted">Cada sesión hace que el sistema te conozca un poco mejor.</p>
       </aside>

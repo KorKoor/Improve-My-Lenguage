@@ -105,7 +105,7 @@ export async function getDashboard(learner: Learner): Promise<DashboardData> {
     knowledge.map((k) => ({ ...knowledgeToCard(k, now), itemId: k.itemId, itemType: k.itemType })),
     now,
   );
-  const seen = new Set(knowledge.filter((k) => k.reps > 0).map((k) => k.itemId));
+  const seen = new Set(knowledge.filter((k) => k.reps > 0 && k.itemType === "vocab").map((k) => k.itemId));
   const assessed = Boolean(learner.ul.assessedAt);
   const aiEnabled = aiAvailable() && learner.profile.aiConsent;
 

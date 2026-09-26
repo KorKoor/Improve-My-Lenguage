@@ -1,13 +1,13 @@
 import { ArrowRight, BookOpen, CalendarCheck, CircleHelp, Clock, Gauge, Lightbulb, Repeat } from "lucide-react";
 import { InstallApp } from "@/components/install-app";
 import Link from "next/link";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { DashboardData } from "@/lib/services/insights";
 import type { NextStep } from "@/lib/engine/next-step";
 
-const STEP_EMOJI: Record<NextStep["kind"], string> = { review: "🔁", lesson: "🧭", session: "✨", story: "📚", done: "🌟" };
+const STEP_EMOJI: Record<NextStep["kind"], string> = { review: "🔁", letters: "🔤", phase: "🔤", writing: "✍️", lesson: "🧭", session: "✨", story: "📚", done: "🌟" };
 
 /**
  * Inicio del modo sencillo: una acción principal enorme, frases claras en
@@ -19,7 +19,7 @@ export function SimpleHome({ d, languageName, greeting, step }: { d: DashboardDa
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <header className="flex items-center gap-4 animate-rise">
-        <Mascot size={72} mood={d.studiedToday ? "cheer" : "happy"} className="hidden shrink-0 sm:block" />
+        <Afi size={72} mood={d.studiedToday ? "proud" : "waving"} className="hidden sm:block" />
         <div>
           <h1 className="font-display text-3xl font-extrabold tracking-tight">{greeting}{d.greetingName ? `, ${d.greetingName}` : ""}</h1>
           <p className="mt-1 text-lg text-muted">
@@ -41,7 +41,7 @@ export function SimpleHome({ d, languageName, greeting, step }: { d: DashboardDa
         <ButtonLink href={step.href} size="lg" className="mt-6 h-20 w-full text-2xl">
           {step.kind === "done" ? "Un poquito más" : "Seguir aprendiendo"} <ArrowRight size={26} aria-hidden />
         </ButtonLink>
-        {!d.assessed && step.kind === "lesson" && (
+        {!d.assessed && (step.kind === "lesson" || step.kind === "phase") && (
           <p className="mt-4 text-center text-muted">
             ¿Ya sabes algo de {lang}?{" "}
             <Link href="/app/assessment" className="font-semibold text-primary underline-offset-4 hover:underline"><Gauge size={15} className="mr-1 inline" aria-hidden />Hacer el test de nivel</Link>

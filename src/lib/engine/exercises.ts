@@ -9,6 +9,8 @@
 import { pronouns, tenseLabel, TENSE_ORDER, withPronoun } from "../content/conjugation";
 import type { GrammarConcept, LanguageCode, Skill, TenseKey, VocabItem } from "../content/types";
 import { CEFR_CENTER, itemTheta } from "./levels";
+import { romanForms } from "../content/alphabets";
+import { READING_TYPES, resolveReadingExercise } from "./letter-exercises";
 import { FIRST_STEPS, unitPhrases } from "../content/first-steps";
 import { hashString, mulberry32, sample, shuffle } from "./random";
 
@@ -28,6 +30,16 @@ export const EXERCISE_TYPES = [
   "dictation_word",
   "phrase_listen",
   "phrase_pick",
+  // Aprender a leer (Fase 0): ver letter-exercises.ts
+  "letter_see",
+  "letter_hear",
+  "letter_pair",
+  "rule_mc",
+  "read_word",
+  "tone_pick",
+  "letter_name",
+  "spell_word",
+  "accent_pick",
 ] as const;
 export type ExerciseType = (typeof EXERCISE_TYPES)[number];
 
@@ -56,6 +68,16 @@ export interface Exercise {
   /** Tipo de entrada esperada en la UI. */
   input: "choice" | "text" | "order" | "match" | "speech";
   expectedMs: number;
+  /** Idioma de las opciones (si no, se deduce del tipo). */
+  optionsLang?: "es" | "target";
+  /** Sólo dos opciones, para cuando el alumno se atasca (ayuda adaptativa). */
+  easy?: string[];
+  /** Pista visible tras varios fallos seguidos. */
+  clue?: string;
+  /** Texto que se lee en voz alta al responder (ver la letra → oírla después). */
+  afterAudio?: string;
+  /** Varios audios seguidos (deletreo: el nombre de cada letra). */
+  audioSeq?: string[];
 }
 
 export interface ResolvedAnswer {
@@ -66,6 +88,8 @@ export interface ResolvedAnswer {
   mode: "text" | "choice" | "match" | "speech";
   /** ¿Se toleran erratas? (no en gramática ni orden de palabras). */
   typos: boolean;
+  /** Transcripciones latinas aceptadas (escrituras no latinas: quien aún no tiene el teclado). */
+  roman?: string[];
 }
 
 export interface Catalog {
@@ -91,6 +115,15 @@ const TYPE_OFFSET: Record<ExerciseType, number> = {
   dictation_word: 0.2,
   phrase_listen: -0.2,
   phrase_pick: -0.4,
+  letter_see: 0,
+  letter_hear: 0,
+  letter_pair: 0,
+  rule_mc: 0,
+  read_word: 0,
+  tone_pick: 0,
+  letter_name: 0,
+  spell_word: 0,
+  accent_pick: 0,
 };
 
 const EXPECTED_MS: Record<ExerciseType, number> = {
@@ -109,6 +142,15 @@ const EXPECTED_MS: Record<ExerciseType, number> = {
   dictation_word: 14000,
   phrase_listen: 10000,
   phrase_pick: 9000,
+  letter_see: 5000,
+  letter_hear: 6000,
+  letter_pair: 5000,
+  rule_mc: 10000,
+  read_word: 8000,
+  tone_pick: 9000,
+  letter_name: 6000,
+  spell_word: 20000,
+  accent_pick: 7000,
 };
 
 /** «m _ _ _ _» : primera letra y huecos (ayuda sin regalar la respuesta). */
@@ -183,7 +225,7 @@ function distractors(
 }
 
 export function buildVocabExercise(
-  type: Exclude<ExerciseType, "grammar" | "match" | "phrase_listen" | "phrase_pick">,
+  type: VocabType,
   item: VocabItem,
   catalog: Catalog,
   native: LanguageCode,
@@ -495,6 +537,7 @@ export function resolveExercise(
 ): ResolvedAnswer | null {
   const [type, id, variant] = key.split("|") as [string, string, string | undefined];
   if (!type || !id) return null;
+  if ((READING_TYPES as readonly string[]).includes(type)) return resolveReadingExercise(type, id, variant, catalog);
 
   if (type === "grammar") {
     const concept = catalog.grammarById(id);
@@ -552,7 +595,7 @@ export function resolveExercise(
     case "listen_pick":
       return { accepted: [item.lemma], display: `${item.lemma} = ${tr.join(", ")}`, explanation: usage, errorCategory: "listening", mode: "choice", typos: false };
     case "dictation_word":
-      return { accepted: [item.lemma, ...(item.acceptedForms ?? [])], display: `${item.lemma} = ${tr.join(", ")}`, errorCategory: "listening", mode: "text", typos: true };
+      return { accepted: [item.lemma, ...(item.acceptedForms ?? [])], display: `${item.lemma}${item.reading ? ` (${item.reading})` : ""} = ${tr.join(", ")}`, errorCategory: "listening", mode: "text", typos: true, roman: romanForms(item.reading) };
     case "recall":
     case "cloze":
       return {
@@ -562,6 +605,7 @@ export function resolveExercise(
         errorCategory: type === "recall" ? "vocabulary" : "vocabulary-in-context",
         mode: "text",
         typos: true,
+        roman: romanForms(item.reading),
       };
     case "dictation": {
       const ex = item.examples[Number(variant)];
@@ -634,7 +678,7 @@ export function learnerStage(theta: number): LearnerStage {
   return theta < -2.1 ? "novice" : theta < -1.1 ? "beginner" : "intermediate";
 }
 
-type VocabType = Exclude<ExerciseType, "grammar" | "match" | "phrase_listen" | "phrase_pick">;
+type VocabType = Exclude<ExerciseType, "grammar" | "match" | "phrase_listen" | "phrase_pick" | (typeof READING_TYPES)[number]>;
 
 /**
  * Escalera de ejercicios por palabra: reconocer (leer y oír) → producir con

@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test \"tests/*.test.ts\"",
     "check": "npm run typecheck && npm test",
+    "a11y": "node scripts/a11y/axe-public.mjs",
     "dev:emulated": "node scripts/dev-emulated.mjs",
     "test:content": "python -m unittest scripts/content/test_build_packs.py",
     "smoke": "node scripts/smoke.mjs"
@@ -34,6 +35,8 @@
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "axe-core": "^4.13.0",
+    "playwright-core": "^1.56.1",
     "tailwindcss": "^4.1.0",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"

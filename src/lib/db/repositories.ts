@@ -106,6 +106,8 @@ function toProfile(snap: DocumentSnapshot): ProfileRow {
     simpleMode: Boolean(d.simpleMode),
     slowAudio: Boolean(d.slowAudio),
     smartBreaks: d.smartBreaks !== false,
+    audioFirst: Boolean(d.audioFirst),
+    highContrast: Boolean(d.highContrast),
     tutorialDoneAt: date(d.tutorialDoneAt),
     avatar: str(d.avatar),
     personality: parsePersonality(json(d.personality)),
@@ -176,6 +178,8 @@ export type ProfileUpdate = Partial<
     | "simpleMode"
     | "slowAudio"
     | "smartBreaks"
+    | "audioFirst"
+    | "highContrast"
     | "tutorialDoneAt"
     | "avatar"
     | "groupId"
@@ -446,6 +450,12 @@ export async function getAllKnowledge(ulId: string): Promise<KnowledgeDbRow[]> {
   return snap.docs.map((d) => toKnowledge(ulId, d));
 }
 
+/** Conocimiento de un tipo (letras, reglas…): consulta de un solo campo, sin índice compuesto. */
+export async function getKnowledgeByType(ulId: string, itemType: KnowledgeDbRow["itemType"]): Promise<KnowledgeDbRow[]> {
+  const snap = await ulRef(ulId).collection("knowledge").where("itemType", "==", itemType).get();
+  return snap.docs.map((d) => toKnowledge(ulId, d));
+}
+
 function dueQuery(ulId: string, now: Date) {
   return ulRef(ulId).collection("knowledge").where("reviewable", "==", true).where("dueAt", "<=", Timestamp.fromDate(now));
 }
@@ -482,7 +492,7 @@ export async function saveKnowledge(row: KnowledgeDbRow): Promise<void> {
 export async function setKnowledgeStatus(
   ulId: string,
   itemId: string,
-  itemType: "vocab" | "grammar",
+  itemType: KnowledgeDbRow["itemType"],
   status: KnowledgeDbRow["status"],
 ): Promise<void> {
   const ref = ulRef(ulId).collection("knowledge").doc(knowledgeId(itemId));
@@ -1149,6 +1159,94 @@ export async function saveFirstStepsUnit(ulId: string, unitId: string, score: nu
     const prev = (snap.get("firstSteps") ?? {}) as Record<string, number>;
     if ((prev[unitId] ?? -1) >= score) return;
     tx.set(ref, { firstSteps: { [unitId]: score } }, { merge: true });
+  });
+}
+
+// ── Alfabeto (mejor puntuación por grupo de letras, en el documento del idioma) ─
+export async function getAlphabet(ulId: string): Promise<Record<string, number>> {
+  const v = (await ulRef(ulId).get()).get("alphabet");
+  const out: Record<string, number> = {};
+  if (v && typeof v === "object") for (const [k, n] of Object.entries(v as Record<string, unknown>)) if (typeof n === "number") out[k] = n;
+  return out;
+}
+
+export async function saveAlphabetGroup(ulId: string, groupId: string, stars: number): Promise<void> {
+  await db().runTransaction(async (tx) => {
+    const ref = ulRef(ulId);
+    const snap = await tx.get(ref);
+    const prev = (snap.get("alphabet") ?? {}) as Record<string, number>;
+    if ((prev[groupId] ?? -1) >= stars) return;
+    tx.set(ref, { alphabet: { [groupId]: stars } }, { merge: true });
+  });
+}
+
+// ── Fase 0: aprender a leer (en el documento del idioma) ─────────────────
+export interface ReadingState {
+  /** Unidades de la Fase 0 superadas → estrellas. */
+  phase: Record<string, number>;
+  /** Grupos del alfabeto practicados en su página → estrellas. */
+  alphabet: Record<string, number>;
+  /** Fase 0 saltada (diagnóstico o ya aprobó lecciones). */
+  skipped: boolean;
+  /** Diagnóstico «¿Sabes leer esto?» hecho. */
+  diagnosed: boolean;
+  /** Confusiones entre letras: «ш|щ» → veces. */
+  confusions: Record<string, number>;
+  milestones: string[];
+  /** Unidades de «Escritura y ortografía» hechas → estrellas. */
+  writing: Record<string, number>;
+}
+
+const numRecord = (v: unknown): Record<string, number> => {
+  const out: Record<string, number> = {};
+  if (v && typeof v === "object") for (const [k, n] of Object.entries(v as Record<string, unknown>)) if (typeof n === "number") out[k] = n;
+  return out;
+};
+
+export async function getReadingState(ulId: string): Promise<ReadingState> {
+  const snap = await ulRef(ulId).get();
+  const m = snap.get("milestones");
+  return {
+    phase: numRecord(snap.get("phaseZero")),
+    alphabet: numRecord(snap.get("alphabet")),
+    skipped: Boolean(snap.get("phaseZeroSkipped")),
+    diagnosed: Boolean(snap.get("phaseZeroDiagnosed")),
+    confusions: numRecord(snap.get("confusions")),
+    milestones: Array.isArray(m) ? m.filter((x): x is string => typeof x === "string") : [],
+    writing: numRecord(snap.get("writing")),
+  };
+}
+
+export async function savePhaseZeroUnits(ulId: string, units: Record<string, number>, field: "phaseZero" | "writing" = "phaseZero"): Promise<void> {
+  await db().runTransaction(async (tx) => {
+    const ref = ulRef(ulId);
+    const prev = numRecord((await tx.get(ref)).get(field));
+    const better = Object.fromEntries(Object.entries(units).filter(([k, n]) => n > (prev[k] ?? 0)));
+    if (Object.keys(better).length) tx.set(ref, { [field]: better }, { merge: true });
+  });
+}
+
+export async function setPhaseZeroFlags(ulId: string, flags: { skipped?: boolean; diagnosed?: boolean }): Promise<void> {
+  const patch: Record<string, boolean> = {};
+  if (flags.skipped !== undefined) patch.phaseZeroSkipped = flags.skipped;
+  if (flags.diagnosed !== undefined) patch.phaseZeroDiagnosed = flags.diagnosed;
+  if (Object.keys(patch).length) await ulRef(ulId).set(patch, { merge: true });
+}
+
+/** Suma una confusión entre dos letras (el orden no importa). */
+export async function bumpConfusion(ulId: string, a: string, b: string): Promise<void> {
+  const key = [a, b].sort().join("|");
+  await ulRef(ulId).set({ confusions: { [key]: FieldValue.increment(1) } }, { merge: true });
+}
+
+/** Marca un hito como celebrado. true si es la primera vez. */
+export async function claimMilestone(ulId: string, key: string): Promise<boolean> {
+  return db().runTransaction(async (tx) => {
+    const ref = ulRef(ulId);
+    const m = (await tx.get(ref)).get("milestones");
+    if (Array.isArray(m) && m.includes(key)) return false;
+    tx.set(ref, { milestones: FieldValue.arrayUnion(key) }, { merge: true });
+    return true;
   });
 }
 
