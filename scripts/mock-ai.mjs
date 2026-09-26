@@ -19,6 +19,34 @@ function reply(body) {
   const last = users.at(-1) ?? "";
 
   if (body.response_format?.type === "json_object") {
+    // «Aprende con el mundo»: una lección completa sobre el tema pedido.
+    if (/turn something the learner loves into a short, accurate lesson/.test(system)) {
+      const topic = (/^[^:]+: (.*)$/m.exec(last)?.[1] ?? "the topic").slice(0, 60);
+      return JSON.stringify({
+        title: `Aprende con ${topic}`,
+        summary: `Una lección simulada sobre ${topic}.`,
+        vocabulary: [
+          { term: "world", meaning: "mundo", example: "The world is big." },
+          { term: "to build", meaning: "construir", example: "I like to build houses." },
+          { term: "block", meaning: "bloque", example: "Every block is a cube." },
+          { term: "night", meaning: "noche", example: "Monsters come at night." },
+          { term: "to explore", meaning: "explorar", example: "We explore caves." },
+          { term: "friend", meaning: "amigo", example: "I play with a friend." },
+        ],
+        reading: [`${topic} is a fun thing to learn about. Many people love it.`, "You can build, explore and play with your friends. At night, it is dangerous!"],
+        questions: [
+          { question: "¿Qué se puede hacer?", options: ["Construir y explorar", "Sólo dormir", "Nadar en lava", "Nada"], answer: 0, explanation: "El texto dice «build, explore and play»." },
+          { question: "¿Cuándo es peligroso?", options: ["Por la mañana", "Por la noche", "Nunca", "Los lunes"], answer: 1, explanation: "«At night, it is dangerous»." },
+        ],
+        listening: [
+          { text: "I build a small house.", meaning: "Construyo una casa pequeña." },
+          { text: "We explore a big cave.", meaning: "Exploramos una cueva grande." },
+          { text: "The night is dangerous.", meaning: "La noche es peligrosa." },
+        ],
+        conversation: ["What do you like to build?", "Do you play with friends?"],
+        writing: `Escribe tres frases sobre lo que harías en ${topic}.`,
+      });
+    }
     // Corrección de escritura: el primer error sale de una palabra real del texto.
     if (/corrected/i.test(system)) {
       const w = words(last).find((x) => x.length > 3) ?? words(last)[0] ?? "text";

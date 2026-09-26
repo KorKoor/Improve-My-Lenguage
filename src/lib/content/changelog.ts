@@ -6,9 +6,10 @@ export interface ChangelogItem {
   href: string;
 }
 
-export const CHANGELOG_VERSION = "2026-09-29";
+export const CHANGELOG_VERSION = "2026-09-30";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "🌎", title: "Aprende con el mundo", text: "Trae lo que te gusta (Minecraft, una canción, una noticia, una página de Wikipedia, un vídeo o un tema) y Afi lo convierte en una lección a tu nivel: vocabulario, lectura, preguntas, escucha, conversación con el tutor y escritura.", href: "/app/world" },
   { icon: "🎮", title: "Minijuegos", text: "Lluvia de palabras (atrápalas antes de que caigan de los audífonos de Afi), Memorama, Oído rápido y Ordena la frase: partidas de 1 a 3 minutos con tus palabras y frases reales. Con récords.", href: "/app/games" },
   { icon: "☁️", title: "Afi cobra vida", text: "Parpadea, te sigue con la mirada, reacciona cuando la tocas (tiene cosquillas en los audífonos) y se duerme si la dejas sola un rato.", href: "/afi" },
   { icon: "🧭", title: "Menús más claros", text: "Las secciones se agrupan en Hoy, Aprender, Practicar, Jugar y Tú; puedes plegar los grupos y en «Más» cada sección dice para qué sirve.", href: "/app/more" },

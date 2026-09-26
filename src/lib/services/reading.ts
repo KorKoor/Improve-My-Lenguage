@@ -195,6 +195,11 @@ export async function readerForOwnText(learner: Learner, text: string): Promise<
   return buildReader(learner, { title: "Tu texto", source: "own" }, paragraphs);
 }
 
+/** Lectura de una lección de «Aprende con el mundo» (texto escrito por Afi a tu nivel): se analiza y no se guarda. */
+export async function readerForWorld(learner: Learner, title: string, paragraphs: string[], sourceLabel: string): Promise<ReaderData> {
+  return buildReader(learner, { title, source: "own", sourceLabel }, paragraphs.slice(0, 8));
+}
+
 export interface ReadingResult {
   source: string;
   title: string;

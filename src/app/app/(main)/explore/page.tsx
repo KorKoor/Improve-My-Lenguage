@@ -42,6 +42,13 @@ export default async function PracticeHub() {
         <h1 className="font-display text-3xl font-extrabold">Practicar</h1>
         <p className="mt-1 max-w-2xl text-muted">Elige cómo quieres practicar {learner.language.name.toLowerCase()} hoy. Todo lo que hagas actualiza tu nivel y tu plan.</p>
       </header>
+      <Link href="/app/world" className="card lift group flex items-center gap-4 overflow-hidden bg-gradient-to-r from-warning-soft to-surface p-5 hover:border-primary">
+        <span className="text-4xl transition-transform group-hover:rotate-12 group-hover:scale-110" aria-hidden>🌎</span>
+        <span className="flex-1">
+          <span className="flex items-center gap-2 font-display text-lg font-extrabold">✨ Aprende con el mundo <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-warning-ink">Nuevo</span></span>
+          <span className="block text-sm text-muted">Trae un videojuego, una canción, una noticia o un tema: Afi lo convierte en tu lección.</span>
+        </span>
+      </Link>
       <Link href="/app/games" className="card lift group flex items-center gap-4 overflow-hidden bg-gradient-to-r from-primary-soft to-surface p-5 hover:border-primary">
         <span className="text-4xl transition-transform group-hover:-rotate-12 group-hover:scale-110" aria-hidden>🎮</span>
         <span className="flex-1">
