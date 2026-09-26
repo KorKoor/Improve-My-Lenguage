@@ -107,6 +107,7 @@ function toProfile(snap: DocumentSnapshot): ProfileRow {
     slowAudio: Boolean(d.slowAudio),
     smartBreaks: d.smartBreaks !== false,
     audioFirst: Boolean(d.audioFirst),
+    latinScript: Boolean(d.latinScript),
     highContrast: Boolean(d.highContrast),
     tutorialDoneAt: date(d.tutorialDoneAt),
     avatar: str(d.avatar),
@@ -179,6 +180,7 @@ export type ProfileUpdate = Partial<
     | "slowAudio"
     | "smartBreaks"
     | "audioFirst"
+    | "latinScript"
     | "highContrast"
     | "tutorialDoneAt"
     | "avatar"

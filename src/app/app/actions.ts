@@ -273,6 +273,7 @@ export async function updateSettingsAction(input: {
   slowAudio?: boolean;
   smartBreaks?: boolean;
   audioFirst?: boolean;
+  latinScript?: boolean;
   highContrast?: boolean;
 }): Promise<ActionResult<null>> {
   return run("settings.update", async () => {
@@ -292,6 +293,7 @@ export async function updateSettingsAction(input: {
       slowAudio: input.slowAudio !== undefined ? Boolean(input.slowAudio) : undefined,
       smartBreaks: input.smartBreaks !== undefined ? Boolean(input.smartBreaks) : undefined,
       audioFirst: input.audioFirst !== undefined ? Boolean(input.audioFirst) : undefined,
+      latinScript: input.latinScript !== undefined ? Boolean(input.latinScript) : undefined,
       highContrast: input.highContrast !== undefined ? Boolean(input.highContrast) : undefined,
     });
     revalidatePath("/app", "layout");

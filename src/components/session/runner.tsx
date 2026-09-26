@@ -20,7 +20,7 @@ import { PlanNext } from "@/components/focus/plan-next";
 import { ReportButton } from "@/components/report-button";
 import { ScriptKeyboard } from "@/components/script-keyboard";
 import { ChoiceList } from "@/components/ui/choice-list";
-import { charBreakdown } from "@/lib/content/alphabets";
+import { charBreakdown, transliterate } from "@/lib/content/alphabets";
 import { LetterStep, RuleStep } from "@/components/session/reading-steps";
 import { Stressed } from "@/components/stressed";
 import type { SessionStep } from "@/lib/engine/session-builder";
@@ -52,12 +52,14 @@ interface Props {
   romanLevel?: RomanLevel;
   /** Modo accesible (lector de pantalla o poca vista): atajos visibles desde el principio. */
   audioFirst?: boolean;
+  /** Japonés/chino sólo en letras latinas (rōmaji, pinyin): sin kanji ni hanzi en primer plano. */
+  latinOnly?: boolean;
 }
 
 export type RomanLevel = "show" | "dim" | "tap";
 
 
-export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15, smartBreaks = true, gentle = false, languageName = "", languages, romanLevel = "show", audioFirst = false }: Props) {
+export function SessionRunner({ minutes, focus, surprise, locale, language, rtl, title, aiEnabled = false, span = 15, smartBreaks = true, gentle = false, languageName = "", languages, romanLevel = "show", audioFirst = false, latinOnly = false }: Props) {
   // ── Temporizador inteligente ──
   const focusEvents = useRef<FocusEvent[]>([]);
   const lastBreakAt = useRef(0);
@@ -477,7 +479,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         />
       )}
       <div key={step.uid} className={cn("mt-4", feedback && !feedback.correct && !gaveUp ? "animate-shake" : "animate-rise")} lang={step.kind === "tip" || step.kind === "tutor" ? "es" : undefined}>
-        {step.kind === "intro" && <IntroStep step={step} locale={locale} language={language} rtl={rtl} onNext={next} gentle={gentle} roman={roman} />}
+        {step.kind === "intro" && <IntroStep step={step} locale={locale} language={language} rtl={rtl} onNext={next} gentle={gentle} roman={roman} latinOnly={latinOnly} />}
         {step.kind === "letter" && <LetterStep letter={step.letter} locale={locale} language={language} rtl={rtl} onNext={next} gentle={gentle || struggling} />}
         {step.kind === "rule" && <RuleStep rule={step.rule} locale={locale} language={language} rtl={rtl} onNext={next} />}
         {step.kind === "tip" && <TipStep step={step} language={language} onNext={next} />}
@@ -492,6 +494,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
             gentle={gentle || struggling}
             struggling={struggling}
             roman={roman}
+            latinOnly={latinOnly}
             position={`Paso ${index + 1} de ${queue.length}.`}
             exercise={step.exercise}
             locale={languages?.[step.exercise.language]?.locale ?? locale}
@@ -528,8 +531,10 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
   );
 }
 
-function IntroStep({ step, locale, language, rtl, onNext, gentle = false, roman = "show" }: { step: Extract<SessionStep, { kind: "intro" }>; locale: string; language: string; rtl: boolean; onNext: () => void; gentle?: boolean; roman?: RomanLevel }) {
+function IntroStep({ step, locale, language, rtl, onNext, gentle = false, roman = "show", latinOnly = false }: { step: Extract<SessionStep, { kind: "intro" }>; locale: string; language: string; rtl: boolean; onNext: () => void; gentle?: boolean; roman?: RomanLevel; latinOnly?: boolean }) {
   const w = step.word;
+  // Sólo letras latinas: la palabra en rōmaji/pinyin, y el original pequeño debajo.
+  const latin = latinOnly ? transliterate(language, w.lemma, w.reading) : null;
   const { speak } = useSpeech(locale);
   useEffect(() => {
     speak(w.lemma, gentle ? 0.8 : 1, w.audioUrl);
@@ -540,15 +545,24 @@ function IntroStep({ step, locale, language, rtl, onNext, gentle = false, roman 
       <div className="card mt-3 p-6">
         <div className="flex items-start gap-3">
           <div className="flex-1" lang={language} dir={rtl ? "rtl" : "ltr"}>
+            {latin ? (
+              <>
+                <p className="font-display text-4xl font-extrabold" lang={`${language}-Latn`} dir="ltr">{latin}</p>
+                <p className="mt-1 text-sm text-muted">{w.lemma}{" · "}{[w.ipa, POS_ES[w.pos] ?? w.pos].filter(Boolean).join(" · ")}</p>
+              </>
+            ) : (
+            <>
             <p className="font-display text-4xl font-extrabold">{w.lemma}</p>
             <p className="mt-1 text-sm text-muted">
               {w.reading && <><RomanText text={w.reading} level={roman} />{" · "}</>}
               {[w.ipa, POS_ES[w.pos] ?? w.pos].filter(Boolean).join(" · ")}
             </p>
+            </>
+            )}
           </div>
           <SpeakButton text={w.lemma} audioUrl={w.audioUrl} locale={locale} size={48} />
         </div>
-        <LetterTiles text={w.lemma} language={language} rtl={rtl} onSay={(t) => speak(t, 0.8)} />
+        {!latin && <LetterTiles text={w.lemma} language={language} rtl={rtl} onSay={(t) => speak(t, 0.8)} />}
         <p className="mt-4 text-xl font-semibold text-primary">{w.translation.join(", ")}</p>
         {w.friend?.kind === "cognate" && (
           <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success animate-pop-in">
@@ -563,10 +577,10 @@ function IntroStep({ step, locale, language, rtl, onNext, gentle = false, roman 
         {w.example && (
           <div className="mt-5 rounded-2xl bg-surface-muted p-4">
             <div className="flex items-start gap-2">
-              <p className="flex-1 text-lg" lang={language} dir={rtl ? "rtl" : "ltr"}>{w.example.text}</p>
+              <p className="flex-1 text-lg" lang={language} dir={rtl ? "rtl" : "ltr"}>{latinOnly && w.example.reading ? w.example.reading : w.example.text}</p>
               <SpeakButton text={w.example.text} locale={locale} size={34} label="Escuchar el ejemplo" />
             </div>
-            {w.example.reading && <p className="mt-1 text-sm text-muted"><RomanText text={w.example.reading} level={roman} /></p>}
+            {w.example.reading && <p className="mt-1 text-sm text-muted">{latinOnly ? w.example.text : <RomanText text={w.example.reading} level={roman} />}</p>}
             {w.example.translation && <p className="mt-1 text-sm text-muted">{w.example.translation}</p>}
           </div>
         )}
@@ -657,6 +671,7 @@ function ExerciseStep({
   gentle = false,
   struggling = false,
   roman = "show",
+  latinOnly = false,
   position = "",
   exercise: ex,
   locale,
@@ -671,6 +686,7 @@ function ExerciseStep({
   gentle?: boolean;
   struggling?: boolean;
   roman?: RomanLevel;
+  latinOnly?: boolean;
   /** «Paso 3 de 12.» para el lector de pantalla. */
   position?: string;
   exercise: Exercise;
@@ -690,6 +706,8 @@ function ExerciseStep({
   const promptInSpanish = ex.type === "reverse_mc" || ex.type === "recall" || ex.type === "phrase_pick" || ex.type === "rule_mc";
   // Ejercicios de leer: oír el enunciado antes de responder regalaría la respuesta.
   const readingTest = ex.type === "letter_see" || ex.type === "read_word";
+  // Sólo letras latinas: el enunciado en rōmaji/pinyin (el original, pequeño debajo).
+  const latinPrompt = latinOnly && !readingTest ? ex.promptReading : undefined;
   const listening = !ex.prompt && Boolean(ex.audioText) && ex.input !== "speech";
   const [chosen, setChosen] = useState<string | null>(null);
   const [order, setOrder] = useState<number[]>([]);
@@ -775,8 +793,15 @@ function ExerciseStep({
               </p>
             ) : (
               // En el idioma que aprendes: tocar el texto también lo lee en voz alta.
-              <button type="button" onClick={() => speak(ex.audioText ?? ex.afterAudio ?? ex.prompt, gentle ? 0.8 : 1, ex.audioText || ex.type === "read_word" ? ex.audioUrl : undefined)} className={cn("flex-1 text-start font-display font-extrabold hover:text-primary", ex.prompt.length > 40 ? "text-xl leading-snug" : readingTest ? "text-6xl" : "text-3xl sm:text-4xl")} lang={language} dir={dir} title="Toca para escucharlo">
-                {ex.prompt}
+              <button type="button" onClick={() => speak(ex.audioText ?? ex.afterAudio ?? ex.prompt, gentle ? 0.8 : 1, ex.audioText || ex.type === "read_word" ? ex.audioUrl : undefined)} className={cn("flex-1 text-start font-display font-extrabold hover:text-primary", ex.prompt.length > 40 ? "text-xl leading-snug" : readingTest ? "text-6xl" : "text-3xl sm:text-4xl")} lang={language} dir={latinPrompt ? "ltr" : dir} title="Toca para escucharlo">
+                {latinPrompt ? (
+                  <>
+                    <span lang={`${language}-Latn`}>{latinPrompt}</span>
+                    <span className="mt-1 block text-base font-medium text-muted">{ex.prompt}</span>
+                  </>
+                ) : (
+                  ex.prompt
+                )}
               </button>
             )}
             {ex.audioText && !promptInSpanish ? <SpeakButton text={ex.audioText} audioUrl={ex.audioUrl} locale={locale} size={46} /> : null}
@@ -787,7 +812,7 @@ function ExerciseStep({
               <span className="font-display text-3xl font-extrabold" lang={language} dir={dir}><Stressed text={ex.context} /></span>
               <span className="sr-only">. Toca para escucharlo.</span>
             </button>
-          ) : ex.context ? (
+          ) : ex.context && !(latinPrompt && ex.type === "meaning_mc") ? (
             <p className="mt-2 text-sm text-muted" lang={ex.type === "cloze" || ex.type === "conjugate" ? "es" : language}>
               {ex.type === "meaning_mc" ? <RomanText text={ex.context} level={roman} /> : ex.context}
             </p>
@@ -828,6 +853,7 @@ function ExerciseStep({
             readingMode={readingTest || ex.type === "letter_hear" || ex.type === "letter_pair" || ex.type === "tone_pick" ? "after" : roman}
             // El significado en español ayuda a memorizar, salvo cuando la pregunta es justo el significado.
             meaningBefore={!promptInSpanish && !readingTest && ex.type !== "grammar" && ex.type !== "cloze"}
+            latin={latinOnly}
           />
         </div>
       )}
@@ -846,13 +872,13 @@ function ExerciseStep({
             spellCheck={false}
             lang={language}
             dir={dir}
-            placeholder="Escribe tu respuesta…"
+            placeholder={latinOnly ? (language === "ja" ? "Escribe en rōmaji…" : "Escribe en pinyin…") : "Escribe tu respuesta…"}
             className={cn(
               "h-14 w-full rounded-2xl border-2 bg-surface px-4 text-lg outline-none transition focus:border-primary",
               feedback ? (feedback.correct ? "border-success" : "border-danger") : "border-border",
             )}
           />
-          <ScriptKeyboard lang={language} locale={locale} value={text} onChange={setText} disabled={disabled} romanOk={ex.type === "recall" || ex.type === "cloze" || ex.type === "dictation_word"} defaultOpen={ex.type === "spell_word" ? true : undefined} />
+          {!latinOnly && <ScriptKeyboard lang={language} locale={locale} value={text} onChange={setText} disabled={disabled} romanOk={ex.type === "recall" || ex.type === "cloze" || ex.type === "dictation_word"} defaultOpen={ex.type === "spell_word" ? true : undefined} />}
           {showHint && ex.hint && !feedback && (
             <p className="mt-2 font-mono text-lg tracking-wider text-primary animate-pop-in" lang={language} aria-label="Pista">{ex.hint}</p>
           )}

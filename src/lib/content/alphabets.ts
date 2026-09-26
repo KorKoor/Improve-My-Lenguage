@@ -638,6 +638,14 @@ export function transliterate(lang: LanguageCode, text: string, reading?: string
     return out;
   }
   if (lang === "ja") {
+    // Con kanji no se puede leer carácter a carácter: se usa la lectura del
+    // diccionario («だんせい · dansei» → «dansei»; si sólo trae kana, se translitera).
+    if (/\p{Script=Han}/u.test(clean) && reading) {
+      const roman = reading.split("·").map((x) => x.trim()).find((x) => /^[\p{Script=Latin}\s'’-]+$/u.test(x.normalize("NFC")));
+      if (roman) return roman.toLowerCase();
+      const kana = reading.split("·")[0]!.trim();
+      return kana && !/\p{Script=Han}/u.test(kana) ? transliterate(lang, kana) : null;
+    }
     const pieces = charBreakdown(lang, clean);
     if (!pieces.length || pieces.some((p) => !p.r)) return null;
     let out = "";

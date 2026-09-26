@@ -12,6 +12,7 @@ import { defaultEstimate, overallTheta, thetaToCefr, updateSkillOnline, type Ski
 import { planSession, type SessionPlan } from "../engine/planner";
 import { computeStreak, isLearned, localDay, summarizeVocabulary } from "../engine/progress";
 import { letterGroupsFor } from "../content/phase-zero";
+import { LATIN_OPTIONAL } from "../engine/phase-zero";
 import { buildSessionSteps, sessionSeed, wordCard, type SessionStep } from "../engine/session-builder";
 import { gradeDictation } from "../listening/diff";
 import { isLeech } from "../engine/insights";
@@ -166,7 +167,7 @@ export async function startSession(
   if (focus === "mixed") return startMixedReview(learner, now, day);
   // Fase 0 (aprender a leer): la unidad fija sustituye a la sesión planificada.
   if (focus?.startsWith("phase:")) {
-    const unit = phaseZeroUnits(learner.language.code).find((u) => u.id === focus.slice(6));
+    const unit = phaseZeroUnits(learner.language.code, learner.profile.latinScript).find((u) => u.id === focus.slice(6));
     if (!unit || unit.kind === "strokes") throw new Error("Unidad desconocida");
     const reading = await repo.getReadingState(ulId);
     const phasePlan: SessionPlan & { phaseUnit: string } = { totalMinutes: 5, blocks: [{ kind: "reading", minutes: 5, reason: unit.goal }], phaseUnit: unit.id };
@@ -292,7 +293,11 @@ export async function submitAnswer(learner: Learner, input: AnswerInput): Promis
     result = resolved.accepted.map((a) => evaluateChoice(response, a)).find((r) => r.correct) ?? { correct: false, nearMiss: false };
   } else {
     result = evaluateText(response, resolved.accepted, lang, { typos: resolved.typos });
-    if (!result.correct && resolved.roman?.length && hasAlphabet(lang)) result = evaluateRoman(response, resolved.roman, resolved.accepted[0]!) ?? result;
+    if (!result.correct && resolved.roman?.length && hasAlphabet(lang)) {
+      result = evaluateRoman(response, resolved.roman, resolved.accepted[0]!) ?? result;
+      // Quien estudia sólo en letras latinas (rōmaji, pinyin) acierta de pleno, sin aviso.
+      if (result.correct && result.note === "roman" && learner.profile.latinScript && LATIN_OPTIONAL.has(lang)) result = { ...result, nearMiss: false, note: undefined };
+    }
     // Alemán: sustantivo escrito en minúscula = acierto con aviso (y se registra para «Escritura y ortografía»).
     if (result.correct && !result.nearMiss && capitalizationSlip(lang, response, resolved.accepted[0]!)) result = { ...result, nearMiss: true, note: "caps" };
   }
@@ -590,7 +595,7 @@ export async function romanLevelFor(learner: Learner): Promise<"show" | "dim" | 
 
 async function finishPhaseUnit(learner: Learner, unitId: string, correct: number, total: number): Promise<SessionSummary["phase"]> {
   const ulId = learner.ul.id;
-  const units = phaseZeroUnits(learner.language.code);
+  const units = phaseZeroUnits(learner.language.code, learner.profile.latinScript);
   const unit = units.find((u) => u.id === unitId);
   if (!unit) return undefined;
   const acc = total ? correct / total : 0;

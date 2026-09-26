@@ -33,6 +33,8 @@ export interface ProfileRow {
    * dependa de ver la forma de una letra, todo con audio, anuncios y atajos.
    */
   audioFirst: boolean;
+  /** Japonés/chino sin kanji ni hanzi: todo en letras latinas (rōmaji, pinyin). */
+  latinScript: boolean;
   /** Alto contraste: bordes y texto más marcados, enlaces subrayados. */
   highContrast: boolean;
   /** Cuándo terminó (o saltó) el tutorial de bienvenida. */

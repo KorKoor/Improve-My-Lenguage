@@ -46,10 +46,19 @@ export const WORDS_PER_UNIT = 6;
 /** Aciertos para dar una unidad por superada (igual que las lecciones). */
 export const PHASE_PASS = 0.6;
 
-/** Unidades de la Fase 0 de un idioma, en orden. */
-export function phaseZeroUnits(lang: LanguageCode): PhaseUnit[] {
+/** Idiomas que se pueden estudiar sólo con letras latinas (rōmaji, pinyin). */
+export const LATIN_OPTIONAL = new Set(["ja", "zh"]);
+
+/**
+ * Unidades de la Fase 0 de un idioma, en orden. `latin`: el alumno estudia
+ * japonés o chino sólo en letras latinas, así que se saltan los kana, los
+ * kanji/hanzi, los trazos y las palabras «para leer»; en chino se quedan el
+ * pinyin y los tonos (que son letras latinas).
+ */
+export function phaseZeroUnits(lang: LanguageCode, latin = false): PhaseUnit[] {
+  latin = latin && LATIN_OPTIONAL.has(lang);
   const units: Omit<PhaseUnit, "n">[] = [];
-  const groups = letterGroupsFor(lang);
+  const groups = letterGroupsFor(lang).filter((g) => !latin || (lang === "zh" && g.id !== "zh-first"));
   const nonLatin = Boolean(alphabetFor(lang));
   for (const g of groups) {
     const chunks = letterChunks(g);
@@ -67,17 +76,19 @@ export function phaseZeroUnits(lang: LanguageCode): PhaseUnit[] {
       });
     }
   }
-  if (STROKE_LANGS.has(lang)) units.push({ id: "strokes", kind: "strokes", title: "Cómo se trazan", goal: "El orden de los trazos de los signos más sencillos.", emoji: "✍️" });
+  if (STROKE_LANGS.has(lang) && !latin) units.push({ id: "strokes", kind: "strokes", title: "Cómo se trazan", goal: "El orden de los trazos de los signos más sencillos.", emoji: "✍️" });
   // Reglas de dos en dos; si sobra una, va con la unidad anterior (una sola regla es muy poco).
-  const rules = rulesFor(lang);
+  const rules = latin && lang === "ja" ? [] : rulesFor(lang);
   const chunks: (typeof rules)[] = [];
   for (let i = 0; i < rules.length; i += RULES_PER_UNIT) chunks.push(rules.slice(i, i + RULES_PER_UNIT));
   if (chunks.length > 1 && chunks[chunks.length - 1]!.length === 1) chunks[chunks.length - 2]!.push(...chunks.pop()!);
   chunks.forEach((chunk, i) => {
     units.push({ id: `rules:${i + 1}`, kind: "rules", ruleIds: chunk.map((r) => r.id), title: chunk.map((r) => r.title).join(" · "), goal: `${chunk.length} reglas para leer bien.`, emoji: "📏" });
   });
-  units.push({ id: "words:1", kind: "words", title: "Tus primeras palabras", goal: "Palabras que ya puedes leer solo.", emoji: "📖" });
-  units.push({ id: "words:2", kind: "words", title: "Más palabras que ya sabes leer", goal: "Leer, escuchar y entender.", emoji: "📖" });
+  if (!latin) {
+    units.push({ id: "words:1", kind: "words", title: "Tus primeras palabras", goal: "Palabras que ya puedes leer solo.", emoji: "📖" });
+    units.push({ id: "words:2", kind: "words", title: "Más palabras que ya sabes leer", goal: "Leer, escuchar y entender.", emoji: "📖" });
+  }
   units.push({ id: "phrases", kind: "phrases", title: "Tus primeras frases", goal: "Saludar y presentarte con lo que ya lees.", emoji: "💬" });
   return units.map((u, i) => ({ ...u, n: i + 1 }));
 }

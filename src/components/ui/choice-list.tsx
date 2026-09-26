@@ -31,6 +31,7 @@ export function ChoiceList({
   info,
   readingMode = "show",
   meaningBefore = false,
+  latin = false,
 }: {
   options: string[];
   onConfirm: (option: string) => void;
@@ -62,6 +63,8 @@ export function ChoiceList({
   readingMode?: "show" | "dim" | "tap" | "after";
   /** Mostrar el significado antes de responder (sólo si no regala la respuesta). */
   meaningBefore?: boolean;
+  /** Sólo letras latinas: la lectura (rōmaji, pinyin) como texto principal y el original pequeño. */
+  latin?: boolean;
 }) {
   const [chosen, setChosen] = useState<string | null>(null);
   const { speak } = useSpeech(locale ?? "es-ES");
@@ -124,7 +127,7 @@ export function ChoiceList({
               )}
             >
               {shortcuts && i < 9 && <kbd className="hidden size-6 shrink-0 place-items-center rounded-md border border-border text-[11px] text-muted sm:grid" aria-hidden>{i + 1}</kbd>}
-              <OptionLabel text={o} lang={lang} dir={dir} info={info?.[o]} answered={answered} readingMode={readingMode} meaningBefore={meaningBefore} />
+              <OptionLabel text={o} lang={lang} dir={dir} info={info?.[o]} answered={answered} readingMode={readingMode} meaningBefore={meaningBefore} latin={latin} />
               {canHear && <Volume2 size={16} className="shrink-0 text-muted" aria-hidden />}
               {state === "ok" && <Check size={18} aria-hidden />}
               {state === "bad" && <X size={18} aria-hidden />}
@@ -142,7 +145,19 @@ export function ChoiceList({
   );
 }
 
-function OptionLabel({ text, lang, dir, info, answered, readingMode, meaningBefore }: { text: string; lang?: string; dir: "ltr" | "rtl"; info?: { reading?: string; meaning?: string }; answered: boolean; readingMode: "show" | "dim" | "tap" | "after"; meaningBefore: boolean }) {
+function OptionLabel({ text, lang, dir, info, answered, readingMode, meaningBefore, latin }: { text: string; lang?: string; dir: "ltr" | "rtl"; info?: { reading?: string; meaning?: string }; answered: boolean; readingMode: "show" | "dim" | "tap" | "after"; meaningBefore: boolean; latin: boolean }) {
+  const showMeaningLatin = (answered || meaningBefore) && info?.meaning;
+  if (latin && info?.reading && info.reading !== text) {
+    return (
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span lang={lang ? `${lang}-Latn` : undefined}>{info.reading}</span>
+        <span className="text-sm font-normal text-muted" lang="es" dir="ltr">
+          <span lang={lang} dir={dir}>{text}</span>
+          {showMeaningLatin ? <> · <span className="italic">«{info.meaning}»</span></> : null}
+        </span>
+      </span>
+    );
+  }
   const showReading = info?.reading && info.reading !== text && (answered || readingMode === "show" || readingMode === "dim");
   const showMeaning = (answered || meaningBefore) && info?.meaning;
   return (

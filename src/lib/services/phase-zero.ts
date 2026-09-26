@@ -26,7 +26,7 @@ export async function phaseZeroState(learner: Learner, courseDone?: number): Pro
     courseDone === undefined ? repo.getCourse(ulId) : Promise.resolve(null),
   ]);
   const lessons = courseDone ?? Object.keys(course ?? {}).length;
-  const units = phaseZeroUnits(learner.language.code);
+  const units = phaseZeroUnits(learner.language.code, learner.profile.latinScript);
   const done = phaseDone(reading.phase, reading.alphabet);
   // Modo accesible: trazar depende de ver las formas, así que ese paso no se exige.
   if (learner.profile.audioFirst) for (const u of units) if (u.kind === "strokes") done.add(u.id);
