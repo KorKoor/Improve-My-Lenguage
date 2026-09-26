@@ -1,5 +1,6 @@
 import "server-only";
 import { env } from "../env";
+import { geminiBody, geminiModelChain, isModelMissing, isThinkingRejected, readGemini, thinkingOptionsFor } from "./gemini";
 
 /**
  * Capa de IA agnóstica al proveedor.
@@ -35,10 +36,7 @@ export class AiUnavailableError extends Error {
   }
 }
 
-const DEFAULT_MODELS = {
-  gemini: { fast: "gemini-3.5-flash-lite", smart: "gemini-3.5-flash" },
-  "openai-compatible": { fast: "llama-3.1-8b-instant", smart: "llama-3.3-70b-versatile" },
-} as const;
+const OPENAI_DEFAULTS = { fast: "llama-3.1-8b-instant", smart: "llama-3.3-70b-versatile" } as const;
 
 export function aiAvailable(): boolean {
   if (env.aiProvider === "none") return false;
@@ -46,44 +44,74 @@ export function aiAvailable(): boolean {
   return Boolean(env.openaiCompatBaseUrl && env.openaiCompatApiKey);
 }
 
-function model(tier: ModelTier): string {
-  if (tier === "fast" && env.aiModelFast) return env.aiModelFast;
-  if (tier === "smart" && env.aiModelSmart) return env.aiModelSmart;
-  const p = env.aiProvider === "openai-compatible" ? "openai-compatible" : "gemini";
-  return DEFAULT_MODELS[p][tier];
+function configuredModel(tier: ModelTier): string | undefined {
+  return tier === "fast" ? env.aiModelFast : env.aiModelSmart;
 }
 
 const TIMEOUT_MS = 25_000;
 
-async function callGemini(o: GenerateOptions): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model(o.tier))}:generateContent`;
-  const res = await fetch(url, {
+// Modelo y ajuste de «pensar» que ya funcionaron (por nivel): la búsqueda se hace una vez por instancia.
+const resolved: Partial<Record<ModelTier, { model: string; thinking?: Record<string, unknown> }>> = {};
+
+/** Qué modelo de Gemini se está usando (para el panel de administración). */
+export function activeGeminiModels(): Partial<Record<ModelTier, string>> {
+  return { fast: resolved.fast?.model, smart: resolved.smart?.model };
+}
+
+async function postGemini(model: string, body: unknown): Promise<Response> {
+  return fetch(`${env.geminiBaseUrl.replace(/\/$/, "")}/models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
     headers: { "content-type": "application/json", "x-goog-api-key": env.geminiApiKey! },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: o.system }] },
-      contents: o.messages.map((m) => ({
-        role: m.role === "assistant" ? "model" : "user",
-        parts: [{ text: m.content }],
-      })),
-      generationConfig: {
-        temperature: o.temperature ?? 0.7,
-        maxOutputTokens: o.maxTokens ?? 800,
-        ...(o.json ? { responseMimeType: "application/json" } : {}),
-      },
-    }),
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Gemini ${res.status}: ${body.slice(0, 300)}`);
+}
+
+/**
+ * Gemini con red de seguridad: si el modelo no existe para esta clave se pasa
+ * al siguiente de la cadena; si la API rechaza el ajuste de «pensar», se
+ * prueba el siguiente ajuste; si la respuesta se queda sin tokens antes de
+ * escribir nada, se repite una vez con más margen. Lo que funciona se recuerda.
+ */
+async function callGemini(o: GenerateOptions): Promise<string> {
+  const chain = geminiModelChain(o.tier, configuredModel(o.tier));
+  const known = resolved[o.tier];
+  const models = known ? [known.model, ...chain.filter((m) => m !== known.model)] : chain;
+  let lastError: unknown = new Error("Gemini: ningún modelo disponible");
+  for (const m of models) {
+    let missing = false;
+    const options = known?.model === m ? [known.thinking, ...thinkingOptionsFor(m, o.tier)] : thinkingOptionsFor(m, o.tier);
+    for (const thinking of [...new Map(options.map((t) => [JSON.stringify(t ?? null), t])).values()]) {
+      let maxTokens = o.maxTokens ?? 800;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const res = await postGemini(m, geminiBody({ system: o.system, messages: o.messages, json: o.json, temperature: o.temperature ?? 0.7, maxTokens, thinking }));
+        if (!res.ok) {
+          const body = await res.text().catch(() => "");
+          if (res.status === 401 || res.status === 403) throw new AiUnavailableError("La clave de Gemini no es válida o no tiene permiso para esta API.");
+          lastError = new Error(`Gemini ${res.status} (${m}): ${body.slice(0, 300)}`);
+          if (isThinkingRejected(res.status, body)) break; // siguiente ajuste de «pensar»
+          if (isModelMissing(res.status, body)) {
+            missing = true; // siguiente modelo
+            break;
+          }
+          throw lastError; // 429/5xx: generate() decide si reintentar
+        }
+        const r = readGemini(await res.json());
+        if (r.blocked || r.finishReason === "SAFETY" || r.finishReason === "PROHIBITED_CONTENT") {
+          throw new AiUnavailableError("No puedo responder a eso. Prueba a decirlo de otra forma.");
+        }
+        if (!r.text && r.finishReason === "MAX_TOKENS" && attempt === 0) {
+          maxTokens += 1024; // pensó demasiado: una vez más, con margen
+          continue;
+        }
+        if (!r.text) throw new Error(`Gemini devolvió una respuesta vacía (${m}, ${r.finishReason ?? "sin motivo"})`);
+        resolved[o.tier] = { model: m, thinking };
+        return r.text;
+      }
+      if (missing) break;
+    }
   }
-  const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-  };
-  const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
-  if (!text) throw new Error("Gemini devolvió una respuesta vacía");
-  return text;
+  throw lastError;
 }
 
 async function callOpenAiCompatible(o: GenerateOptions): Promise<string> {
@@ -95,7 +123,7 @@ async function callOpenAiCompatible(o: GenerateOptions): Promise<string> {
       authorization: `Bearer ${env.openaiCompatApiKey}`,
     },
     body: JSON.stringify({
-      model: model(o.tier),
+      model: configuredModel(o.tier) ?? OPENAI_DEFAULTS[o.tier],
       messages: [{ role: "system", content: o.system }, ...o.messages],
       temperature: o.temperature ?? 0.7,
       max_tokens: o.maxTokens ?? 800,

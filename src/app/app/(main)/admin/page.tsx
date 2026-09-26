@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { AiCheck } from "@/components/admin/ai-check";
 import { ReportActions } from "@/components/admin/report-actions";
+import { aiAvailable } from "@/lib/ai/provider";
 import { getVocab } from "@/lib/content";
 import { listReports } from "@/lib/db/repositories";
 import { phraseById } from "@/lib/engine/exercises";
@@ -30,6 +32,7 @@ export default async function AdminPage() {
         <h1 className="font-display text-3xl font-extrabold">Revisión de contenido</h1>
         <p className="mt-1 text-muted">{open.length} reportes abiertos en {rows.length} palabras o frases. Corrige en <code>scripts/content/overrides/&lt;idioma&gt;.json</code>, reconstruye el paquete y márcalo como corregido.</p>
       </header>
+      <AiCheck configured={aiAvailable()} />
       {rows.length === 0 && <p className="card p-6 text-muted">No hay reportes pendientes. 🎉</p>}
       <ul className="space-y-3">
         {rows.map(([itemId, rs]) => {

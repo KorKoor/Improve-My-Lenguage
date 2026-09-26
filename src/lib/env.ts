@@ -15,8 +15,12 @@ function read(name: string): string | undefined {
 
 export const env = {
   siteUrl: resolveSiteUrl(),
-  aiProvider: (read("AI_PROVIDER") ?? "gemini") as "gemini" | "openai-compatible" | "none",
-  geminiApiKey: read("GEMINI_API_KEY"),
+  aiProvider: (read("AI_PROVIDER")?.toLowerCase() ?? "gemini") as "gemini" | "openai-compatible" | "none",
+  // Nombre oficial GEMINI_API_KEY; también se aceptan los habituales de Google y el nombre en minúsculas
+  // (las variables distinguen mayúsculas: «gemini_api_key» en Vercel no llegaría como GEMINI_API_KEY).
+  geminiApiKey: read("GEMINI_API_KEY") ?? read("gemini_api_key") ?? read("GOOGLE_API_KEY") ?? read("GOOGLE_GENERATIVE_AI_API_KEY"),
+  /** Sólo para pruebas o un proxy: por defecto la API pública de Google. */
+  geminiBaseUrl: read("GEMINI_BASE_URL") ?? "https://generativelanguage.googleapis.com/v1beta",
   openaiCompatBaseUrl: read("OPENAI_COMPAT_BASE_URL"),
   openaiCompatApiKey: read("OPENAI_COMPAT_API_KEY"),
   aiModelFast: read("AI_MODEL_FAST"),
