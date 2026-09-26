@@ -524,7 +524,15 @@ const KEYBOARDS: Record<string, KeyboardLayout[]> = {
   ],
 };
 
-/** Teclado en pantalla para escribir en la escritura del idioma (null si usa letras latinas o el chino, que se escribe en pinyin). */
+// Idiomas con letras latinas: sólo las letras y signos que no están en un teclado español.
+KEYBOARDS.fr = [{ label: "Letras especiales", rows: rows("éèêëàâç", "îïôûùœ«»") }];
+KEYBOARDS.de = [{ label: "Letras especiales", rows: rows("äöüßÄÖÜ„“") }];
+KEYBOARDS.it = [{ label: "Letras especiales", rows: rows("àèéìòù'") }];
+KEYBOARDS.pt = [{ label: "Letras especiales", rows: rows("áàâãéêíóôõúç") }];
+KEYBOARDS.sv = [{ label: "Letras especiales", rows: rows("åäöÅÄÖ") }];
+KEYBOARDS.nl = [{ label: "Letras especiales", rows: rows("ëïéèó'") }];
+
+/** Teclado en pantalla: la escritura del idioma, o las letras especiales en los latinos (null: inglés, o chino, que se escribe en pinyin). */
 export function keyboardFor(lang: LanguageCode): KeyboardLayout[] | null {
   return KEYBOARDS[lang] ?? null;
 }

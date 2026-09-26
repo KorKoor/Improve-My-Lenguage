@@ -23,10 +23,12 @@ export interface NextStepInput {
   phase?: { next: { id: string; title: string; kind: string } | null; done: number; total: number; diagnosed: boolean };
   /** Letras y reglas de lectura vencidas en la memoria. */
   weakLetters?: number;
+  /** «Escritura y ortografía» (A1–A2): unidad propuesta y si ya toca. */
+  writing?: { due: boolean; next: { id: string; title: string } | null; reason?: string };
 }
 
 export interface NextStep {
-  kind: "review" | "letters" | "phase" | "lesson" | "session" | "story" | "done";
+  kind: "review" | "letters" | "phase" | "writing" | "lesson" | "session" | "story" | "done";
   href: string;
   title: string;
   subtitle: string;
@@ -56,6 +58,9 @@ export function nextStep(i: NextStepInput): NextStep {
   }
   const phase = phaseStep(i.phase);
   if (phase) return phase;
+  if (i.writing?.due && i.writing.next) {
+    return { kind: "writing", href: `/app/session?writing=${encodeURIComponent(i.writing.next.id)}`, title: i.writing.next.title, subtitle: `Escritura y ortografía · ${i.writing.reason ?? "cinco minutos para escribir mejor."}` };
+  }
   if (i.courseDone < i.courseTotal && i.lessonsToday < MAX_LESSONS_PER_DAY) {
     return { kind: "lesson", href: `/app/session?lesson=${i.nextLesson}`, title: `Lección ${i.nextLesson}`, subtitle: i.courseDone === 0 ? "Empezamos desde cero, con calma." : `Vas por la lección ${i.nextLesson} de ${i.courseTotal}.` };
   }

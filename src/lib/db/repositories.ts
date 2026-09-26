@@ -1193,6 +1193,8 @@ export interface ReadingState {
   /** Confusiones entre letras: «ш|щ» → veces. */
   confusions: Record<string, number>;
   milestones: string[];
+  /** Unidades de «Escritura y ortografía» hechas → estrellas. */
+  writing: Record<string, number>;
 }
 
 const numRecord = (v: unknown): Record<string, number> => {
@@ -1211,15 +1213,16 @@ export async function getReadingState(ulId: string): Promise<ReadingState> {
     diagnosed: Boolean(snap.get("phaseZeroDiagnosed")),
     confusions: numRecord(snap.get("confusions")),
     milestones: Array.isArray(m) ? m.filter((x): x is string => typeof x === "string") : [],
+    writing: numRecord(snap.get("writing")),
   };
 }
 
-export async function savePhaseZeroUnits(ulId: string, units: Record<string, number>): Promise<void> {
+export async function savePhaseZeroUnits(ulId: string, units: Record<string, number>, field: "phaseZero" | "writing" = "phaseZero"): Promise<void> {
   await db().runTransaction(async (tx) => {
     const ref = ulRef(ulId);
-    const prev = numRecord((await tx.get(ref)).get("phaseZero"));
+    const prev = numRecord((await tx.get(ref)).get(field));
     const better = Object.fromEntries(Object.entries(units).filter(([k, n]) => n > (prev[k] ?? 0)));
-    if (Object.keys(better).length) tx.set(ref, { phaseZero: better }, { merge: true });
+    if (Object.keys(better).length) tx.set(ref, { [field]: better }, { merge: true });
   });
 }
 

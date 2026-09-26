@@ -29,6 +29,10 @@
   --skill-writing: #e07aa5;
   --skill-pronunciation: #a283e6;
   --shadow: 0 6px 20px rgb(64 51 115 / 0.05);
+  /* Texto de color sobre fondos suaves (etiquetas): contraste AA. */
+  --success-ink: #1f7a52;
+  --warning-ink: #8a5208;
+  --danger-ink: #a8322d;
   color-scheme: light;
 }
 
@@ -36,6 +40,9 @@
   --bg: #14121c;
   --surface: #1c1a27;
   --surface-muted: #242134;
+  --success-ink: var(--success);
+  --warning-ink: var(--warning);
+  --danger-ink: var(--danger);
   --border: #2e2a40;
   --text: #f2f0fa;
   --text-muted: #a7a2bc;
@@ -77,6 +84,9 @@
   --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-success-ink: var(--success-ink);
+  --color-warning-ink: var(--warning-ink);
+  --color-danger-ink: var(--danger-ink);
   --color-skill-vocabulary: var(--skill-vocabulary);
   --color-skill-grammar: var(--skill-grammar);
   --color-skill-listening: var(--skill-listening);
@@ -100,6 +110,9 @@ html[data-contrast="high"] {
   --success: #1c6b48;
   --warning: #7a4a05;
   --danger: #9c2420;
+  --success-ink: #1c6b48;
+  --warning-ink: #7a4a05;
+  --danger-ink: #9c2420;
 }
 html[data-contrast="high"].dark {
   --text: #ffffff;
@@ -110,6 +123,9 @@ html[data-contrast="high"].dark {
   --success: #7de3b5;
   --warning: #ffd27a;
   --danger: #ffaaa6;
+  --success-ink: #7de3b5;
+  --warning-ink: #ffd27a;
+  --danger-ink: #ffaaa6;
 }
 html[data-contrast="high"] a { text-decoration: underline; text-underline-offset: 3px; }
 html[data-contrast="high"] :focus-visible { outline: 3px solid var(--text); outline-offset: 3px; }

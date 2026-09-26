@@ -172,6 +172,7 @@ export async function startSessionAction(opts: { minutes?: number; focus?: strin
       : f.startsWith("grammar:") ? (f as `grammar:${string}`)
       : /^lesson:\d{1,2}$/.test(f) ? (f as `lesson:${number}`)
       : /^phase:[a-z]+(:[a-z0-9-]+){0,2}$/.test(f) ? (f as `phase:${string}`)
+      : /^writing:[a-z0-9-]+$/.test(f) ? (f as `writing:${string}`)
       : f === "letters" ? "letters"
       : null;
     return startSession(learner, int(opts.minutes, 5, 60, learner.profile.dailyMinutes), { focus, surprise: Boolean(opts.surprise) });

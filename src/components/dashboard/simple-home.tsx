@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import type { DashboardData } from "@/lib/services/insights";
 import type { NextStep } from "@/lib/engine/next-step";
 
-const STEP_EMOJI: Record<NextStep["kind"], string> = { review: "🔁", letters: "🔤", phase: "🔤", lesson: "🧭", session: "✨", story: "📚", done: "🌟" };
+const STEP_EMOJI: Record<NextStep["kind"], string> = { review: "🔁", letters: "🔤", phase: "🔤", writing: "✍️", lesson: "🧭", session: "✨", story: "📚", done: "🌟" };
 
 /**
  * Inicio del modo sencillo: una acción principal enorme, frases claras en

@@ -12,9 +12,11 @@ import { backspaceJamo, typeJamo } from "@/lib/hangul";
  * al pulsarla, así se repasan las letras mientras se escribe. En coreano las
  * letras se juntan solas en sílabas (ㅎ + ㅏ + ㄴ → 한).
  */
-export function ScriptKeyboard({ lang, locale, value, onChange, disabled = false, defaultOpen = true, romanOk = true }: { lang: string; locale: string; value: string; onChange: (v: string) => void; disabled?: boolean; defaultOpen?: boolean; /** ¿Se acepta la respuesta en letras latinas? */ romanOk?: boolean }) {
+export function ScriptKeyboard({ lang, locale, value, onChange, disabled = false, defaultOpen, romanOk = true }: { lang: string; locale: string; value: string; onChange: (v: string) => void; disabled?: boolean; defaultOpen?: boolean; /** ¿Se acepta la respuesta en letras latinas? */ romanOk?: boolean }) {
   const layouts = keyboardFor(lang);
-  const [open, setOpen] = useState(defaultOpen);
+  // Idiomas con letras latinas: sólo una fila de letras especiales, plegada al principio.
+  const latin = !alphabetFor(lang);
+  const [open, setOpen] = useState(defaultOpen ?? !latin);
   const [tab, setTab] = useState(0);
   const { speak } = useSpeech(locale);
   if (!layouts) {
@@ -34,14 +36,14 @@ export function ScriptKeyboard({ lang, locale, value, onChange, disabled = false
     <div className="mt-3">
       <div className="flex flex-wrap items-center gap-2">
         <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-3 py-1.5 text-xs font-semibold text-muted hover:text-text">
-          <Keyboard size={14} aria-hidden /> {open ? "Ocultar teclado" : "Mostrar teclado"}
+          <Keyboard size={14} aria-hidden /> {latin ? (open ? "Ocultar letras especiales" : "Letras especiales (é, ç…)") : open ? "Ocultar teclado" : "Mostrar teclado"}
         </button>
         {open && layouts.length > 1 && layouts.map((l, i) => (
           <button key={l.label} type="button" onClick={() => setTab(i)} aria-pressed={tab === i} className={cn("rounded-full px-3 py-1.5 text-xs font-semibold", tab === i ? "bg-primary text-on-primary" : "bg-surface-muted text-muted")}>
             {l.label}
           </button>
         ))}
-        {romanOk && <span className="text-xs text-muted">También puedes escribir en letras latinas.</span>}
+        {romanOk && !latin && <span className="text-xs text-muted">También puedes escribir en letras latinas.</span>}
       </div>
       {open && (
         <div className="mt-2 space-y-1.5 rounded-2xl bg-surface-muted p-2" lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} role="group" aria-label="Teclado en pantalla">
@@ -57,7 +59,7 @@ export function ScriptKeyboard({ lang, locale, value, onChange, disabled = false
                 >
                   {k}
                   {/* Con lector de pantalla: la letra y cómo suena. */}
-                  <span className="sr-only" lang="es">, {soundOf(k)}</span>
+                  {!latin && <span className="sr-only" lang="es">, {soundOf(k)}</span>}
                 </button>
               ))}
             </div>

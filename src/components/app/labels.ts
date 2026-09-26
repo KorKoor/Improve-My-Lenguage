@@ -19,6 +19,7 @@ export const BLOCK_META: Record<BlockKind, { label: string; color: string; icon:
   listening: { label: "Listening", color: "var(--skill-listening)", icon: Headphones },
   tutor: { label: "Conversación", color: "var(--skill-speaking)", icon: MessageCircle },
   reading: { label: "Aprender a leer", color: "var(--skill-reading)", icon: CaseSensitive },
+  writing: { label: "Escritura y ortografía", color: "var(--skill-writing)", icon: PenLine },
 };
 
 export function greeting(timezone: string): string {

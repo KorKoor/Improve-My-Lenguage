@@ -3,6 +3,8 @@ import Link from "next/link";
 import { LanguageMark } from "@/components/language-mark";
 import { LANGUAGES } from "@/lib/content";
 import { packMeta } from "@/lib/content/packs";
+import { humanRecordings } from "@/lib/content/audio-credits";
+import { PREGEN_VOICES } from "@/lib/audio-key";
 
 export const metadata: Metadata = {
   title: "Créditos y licencias",
@@ -40,7 +42,39 @@ const SOURCES = [
     url: "https://commons.wikimedia.org",
     license: "Licencias libres indicadas en cada archivo",
     licenseUrl: "https://commons.wikimedia.org/wiki/Commons:Licensing/es",
-    use: "Audio de pronunciación grabado por personas. Se reproduce directamente desde Wikimedia.",
+    use: "Audio de pronunciación grabado por personas (también del proyecto Lingua Libre). Se reproduce directamente desde Wikimedia. Cada autor aparece en «Audio por idioma».",
+  },
+  {
+    name: "Wikisource",
+    by: "Autores clásicos (Esopo, La Fontaine, los Grimm, Collodi, Tolstói, Miyazawa, Lu Xun…) y los voluntarios que los transcriben",
+    url: "https://wikisource.org",
+    license: "Dominio público",
+    licenseUrl: "https://creativecommons.org/publicdomain/mark/1.0/deed.es",
+    use: "Fábulas y cuentos originales para leer. Cada lectura enlaza a su página en Wikisource e indica su autor.",
+  },
+  {
+    name: "KanjiVG",
+    by: "Ulrich Apel y colaboradores",
+    url: "https://kanjivg.tagaini.net",
+    license: "CC BY-SA 3.0",
+    licenseUrl: "https://creativecommons.org/licenses/by-sa/3.0/deed.es",
+    use: "Orden y dirección de los trazos de hiragana, katakana y kanji en la caligrafía japonesa.",
+  },
+  {
+    name: "Make Me a Hanzi",
+    by: "Shaunak Kishore; trazos derivados de las fuentes Arphic PL KaitiM GB y UKai",
+    url: "https://github.com/skishore/makemeahanzi",
+    license: "Arphic Public License",
+    licenseUrl: "http://ftp.gnu.org/non-gnu/chinese-fonts-truetype/LICENSE",
+    use: "Orden y dirección de los trazos de los caracteres chinos en la caligrafía.",
+  },
+  {
+    name: "Piper",
+    by: "Open Home Foundation / Rhasspy, con voces entrenadas sobre grabaciones libres",
+    url: "https://github.com/OHF-Voice/piper1-gpl",
+    license: "Voces CC0, CC BY 4.0 o dominio público",
+    licenseUrl: "https://huggingface.co/rhasspy/piper-voices",
+    use: "Voz sintética libre con la que pregeneramos el audio de letras, reglas, frases y palabras básicas, para que la app suene bien aunque tu dispositivo no tenga voces.",
   },
 ];
 
@@ -89,6 +123,30 @@ export default function CreditsPage() {
           </div>
         </section>
       )}
+
+      <section className="mt-12" aria-labelledby="audio">
+        <h2 id="audio" className="font-display text-2xl font-extrabold">Audio por idioma</h2>
+        <p className="mt-2 text-sm text-muted">Primero suena una persona real; si no hay grabación, una voz libre; y si tampoco, la voz de tu dispositivo.</p>
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[560px] text-left text-sm">
+            <thead className="text-muted">
+              <tr><th className="py-2 pr-4 font-semibold">Idioma</th><th className="px-2 py-2 text-right font-semibold">Grabaciones humanas</th><th className="py-2 pl-4 font-semibold">Voz libre (Piper)</th></tr>
+            </thead>
+            <tbody>
+              {LANGUAGES.map((l) => {
+                const v = PREGEN_VOICES[l.code];
+                return (
+                  <tr key={l.code} className="border-t border-border">
+                    <td className="py-2.5 pr-4"><Link href={`/creditos/audio/${l.code}`} className="inline-flex items-center gap-2 font-medium underline-offset-4 hover:underline"><LanguageMark code={l.code} size={22} /> {l.name}</Link></td>
+                    <td className="px-2 text-right tabular-nums">{humanRecordings(l.code).length.toLocaleString("es")}</td>
+                    <td className="pl-4">{v ? <>{v.voice} · <a href={v.source} className="underline" rel="noopener noreferrer" target="_blank">{v.license}</a></> : <span className="text-muted">Sin voz libre comercial: voz del dispositivo</span>}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <section className="mt-12 space-y-3 text-sm text-muted">
         <h2 className="font-display text-xl font-extrabold text-text">Compartir igual</h2>

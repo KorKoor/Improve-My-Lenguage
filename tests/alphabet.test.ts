@@ -41,7 +41,8 @@ test("teclado en pantalla: tiene todas las letras que se enseñan", () => {
     for (const l of letters) assert.ok(typable(l.g), `${code}: falta ${l.g}`);
   }
   assert.equal(keyboardFor("zh"), null);
-  assert.equal(keyboardFor("fr"), null);
+  assert.ok(keyboardFor("fr")![0]!.rows.flat().includes("ç"), "letras especiales del francés");
+  assert.equal(keyboardFor("en"), null);
 });
 
 test("hangul: las letras se juntan en sílabas como en un teclado coreano", () => {

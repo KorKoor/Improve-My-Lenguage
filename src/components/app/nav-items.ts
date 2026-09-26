@@ -1,4 +1,4 @@
-import { BarChart3, BookA, BookHeart, CaseSensitive, BookOpen, Footprints, Milestone, Globe2, Headphones, Home, Timer, Layers, MessageCircle, Mic, Newspaper, PenLine, Play, Repeat, Route, Sparkles, Type, UserRound, Users, type LucideIcon } from "lucide-react";
+import { BarChart3, BookA, SpellCheck, BookHeart, CaseSensitive, BookOpen, Footprints, Milestone, Globe2, Headphones, Home, Timer, Layers, MessageCircle, Mic, Newspaper, PenLine, Play, Repeat, Route, Sparkles, Type, UserRound, Users, type LucideIcon } from "lucide-react";
 
 /** Secciones de la app (menú lateral, pantalla «Más»). Módulo sin "use client": lo usan servidor y cliente. */
 export interface NavItem {
@@ -12,7 +12,11 @@ export interface NavItem {
 /** `alphabet`: el idioma activo usa otra escritura (ruso, árabe, coreano, japonés, chino). */
 export function navItems(due: number, simple = false, alphabet = false): NavItem[] {
   // Aprender a leer (Fase 0) en todos los idiomas; la tabla del alfabeto, en los de otra escritura.
-  const abc: NavItem[] = [{ href: "/app/start", label: "Aprender a leer", icon: BookA }, ...(alphabet ? [{ href: "/app/alphabet", label: "Alfabeto", icon: CaseSensitive }] : [])];
+  const abc: NavItem[] = [
+    { href: "/app/start", label: "Aprender a leer", icon: BookA },
+    ...(alphabet ? [{ href: "/app/alphabet", label: "Alfabeto", icon: CaseSensitive }] : []),
+    { href: "/app/writing-system", label: "Ortografía", icon: SpellCheck },
+  ];
   if (simple) {
     // Modo sencillo: sólo lo esencial, con nombres cotidianos.
     return [

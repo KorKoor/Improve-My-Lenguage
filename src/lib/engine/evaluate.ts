@@ -14,7 +14,7 @@ export interface EvaluationResult {
   correct: boolean;
   nearMiss: boolean;
   /** Motivo legible del nearMiss ("acento", "errata", escrita en transcripción latina). */
-  note?: "accent" | "typo" | "roman";
+  note?: "accent" | "typo" | "roman" | "caps";
   matched?: string;
 }
 
@@ -118,6 +118,17 @@ export function evaluateRoman(response: string, roman: string[], expected: strin
   const loose = (x: string) => x.replace(/ou|oo/g, "o").replace(/uu/g, "u").replace(/ei/g, "e").replace(/aa/g, "a").replace(/ii/g, "i").replace(/j/g, "y");
   const hit = roman.some((a) => a === r || loose(a) === loose(r));
   return hit ? { correct: true, nearMiss: true, note: "roman", matched: expected } : null;
+}
+
+/**
+ * Alemán: todos los sustantivos van con mayúscula. Si la respuesta es la
+ * palabra correcta pero en minúscula («hund» por «Hund»), se avisa.
+ */
+export function capitalizationSlip(language: string, response: string, expected: string): boolean {
+  if (language !== "de") return false;
+  const r = response.trim();
+  const e = expected.trim();
+  return r.length > 1 && e.length > 1 && r[0] !== e[0] && r[0] === e[0]!.toLowerCase() && e[0] !== e[0]!.toLowerCase() && r.slice(1) === e.slice(1);
 }
 
 /** Para ejercicios de opción múltiple / emparejar: comparación exacta normalizada. */

@@ -171,6 +171,42 @@ export function checkTrace(model: Stroke[], drawn: [number, number][][], toleran
       continue;
     }
     if (dist(start, from) > tolerance || dist(end, to) > tolerance) return i + 1;
+    // Trazos importados (polilíneas): además, la forma por el camino, punto a punto.
+    if (!/C/.test(model[i]!.d)) {
+      const m = polyline(model[i]!.d);
+      if (m.length > 2) {
+        const a = resample(m, 10);
+        const b = resample(s, 10);
+        const mean = a.reduce((sum, p, k) => sum + dist(p, b[k]!), 0) / a.length;
+        if (mean > tolerance * 0.9) return i + 1;
+      }
+    }
   }
   return 0;
+}
+
+/** Puntos de un camino hecho sólo de M y L. */
+function polyline(d: string): [number, number][] {
+  const n = (d.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
+  const out: [number, number][] = [];
+  for (let i = 0; i + 1 < n.length; i += 2) out.push([n[i]!, n[i + 1]!]);
+  return out;
+}
+
+/** `count` puntos repartidos a igual distancia a lo largo de una polilínea. */
+export function resample(pts: [number, number][], count: number): [number, number][] {
+  if (pts.length === 1) return Array.from({ length: count }, () => pts[0]!);
+  const seg = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i]![0], p[1] - pts[i]![1]));
+  const total = seg.reduce((a, b) => a + b, 0) || 1;
+  const out: [number, number][] = [];
+  for (let k = 0; k < count; k++) {
+    let target = (total * k) / (count - 1);
+    let i = 0;
+    while (i < seg.length - 1 && target > seg[i]!) target -= seg[i++]!;
+    const t = seg[i] ? Math.min(1, target / seg[i]!) : 0;
+    const a = pts[i]!;
+    const b = pts[i + 1] ?? a;
+    out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+  }
+  return out;
 }

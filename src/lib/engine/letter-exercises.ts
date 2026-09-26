@@ -14,17 +14,20 @@
  */
 import { charBreakdown, transliterate, type Letter } from "../content/alphabets";
 import { letterById, letterItemId, ruleById, ruleItemId } from "../content/phase-zero";
+import { letterNameById, letterNameId, spellingOf, writingFor } from "../content/writing-system";
+import { jamoOf } from "../hangul";
 import type { LanguageCode, VocabItem } from "../content/types";
 import { withInitial, decompose, CHO } from "../hangul";
+import { translationOf } from "./exercises";
 import type { Catalog, Exercise, ResolvedAnswer } from "./exercises";
 import { hashString, mulberry32, shuffle } from "./random";
 
-export const READING_TYPES = ["letter_see", "letter_hear", "letter_pair", "rule_mc", "read_word", "tone_pick"] as const;
+export const READING_TYPES = ["letter_see", "letter_hear", "letter_pair", "rule_mc", "read_word", "tone_pick", "letter_name", "spell_word", "accent_pick"] as const;
 export type ReadingExerciseType = (typeof READING_TYPES)[number];
 
 /** Dificultad fija (escala θ): leer letras es lo primero de todo. */
-const DIFFICULTY: Record<ReadingExerciseType, number> = { letter_see: -3.2, letter_hear: -3, letter_pair: -2.9, rule_mc: -2.8, read_word: -2.8, tone_pick: -2.6 };
-const EXPECTED: Record<ReadingExerciseType, number> = { letter_see: 5000, letter_hear: 6000, letter_pair: 5000, rule_mc: 10000, read_word: 8000, tone_pick: 9000 };
+const DIFFICULTY: Record<ReadingExerciseType, number> = { letter_see: -3.2, letter_hear: -3, letter_pair: -2.9, rule_mc: -2.8, read_word: -2.8, tone_pick: -2.6, letter_name: -2.9, spell_word: -2.2, accent_pick: -2.4 };
+const EXPECTED: Record<ReadingExerciseType, number> = { letter_see: 5000, letter_hear: 6000, letter_pair: 5000, rule_mc: 10000, read_word: 8000, tone_pick: 9000, letter_name: 6000, spell_word: 20000, accent_pick: 7000 };
 
 const base = (type: ReadingExerciseType, lang: LanguageCode, id: string) => ({
   type,
@@ -118,8 +121,8 @@ export function buildLetterPairExercise(id: string, other: string, seed = 0): Ex
   };
 }
 
-export function buildRuleExercise(lang: LanguageCode, ruleId: string, seed = 0): Exercise | null {
-  const id = ruleItemId(lang, ruleId);
+export function buildRuleExercise(lang: LanguageCode, ruleId: string, seed = 0, ortho = false): Exercise | null {
+  const id = ortho ? `${lang}:o:${ruleId}` : ruleItemId(lang, ruleId);
   const ref = ruleById(id);
   if (!ref) return null;
   const c = ref.rule.check;
@@ -270,6 +273,95 @@ export function buildTonePickExercise(v: VocabItem, seed = 0): Exercise | null {
   };
 }
 
+// ── Escritura y ortografía ────────────────────────────────────────────────
+/** Oír el nombre de una letra («effe») y elegir cuál es. */
+export function buildLetterNameExercise(lang: LanguageCode, g: string, seed = 0): Exercise | null {
+  const id = letterNameId(lang, g);
+  const ref = letterNameById(id);
+  if (!ref) return null;
+  const rand = mulberry32(hashString(`letter_name|${id}|${seed}`));
+  const shown = (a: { g: string }) => a.g.split(" ")[0]!;
+  const others = shuffle(ref.alphabet.filter((a) => a !== ref.item), rand).slice(0, 3).map(shown);
+  const options = shuffle([shown(ref.item), ...others], rand);
+  return {
+    ...base("letter_name", lang, id),
+    key: `letter_name|${id}`,
+    skill: "listening",
+    instruction: "Escucha el nombre de la letra y elige cuál es",
+    prompt: "",
+    audioText: ref.item.say,
+    options,
+    easy: easyPair(shown(ref.item), options, rand),
+    clue: `Se llama «${ref.item.name}».`,
+    optionsLang: "target",
+  };
+}
+
+/** Te deletrean una palabra (nombre a nombre) y la escribes. */
+export function buildSpellExercise(v: VocabItem, native: LanguageCode): Exercise | null {
+  const names = spellingOf(v.language, v.lemma, jamoOf);
+  if (!names || names.length < 2 || names.length > 10) return null;
+  return {
+    ...base("spell_word", v.language, v.id),
+    key: `spell_word|${v.id}`,
+    skill: "listening",
+    instruction: "Te la deletreamos: escribe la palabra",
+    prompt: "",
+    context: translationOf(v, native)[0],
+    audioText: names.map((n) => n.say).join(", "),
+    audioSeq: names.map((n) => n.say),
+    input: "text",
+    clue: names.map((n) => n.name).join(" · "),
+    afterAudio: v.lemma,
+  };
+}
+
+const ACCENT_SWAPS: Record<string, string[]> = {
+  é: ["e", "è", "ê"], è: ["e", "é", "ê"], ê: ["e", "é", "è"], ë: ["e", "é"], à: ["a", "á", "â"], â: ["a", "à"], á: ["a", "à", "â"], ã: ["a", "â", "á"],
+  ç: ["c", "s"], î: ["i", "ï"], ï: ["i", "î"], í: ["i", "ì"], ì: ["i", "í"], ô: ["o", "ó", "õ"], ó: ["o", "ò", "ô"], ò: ["o", "ó"], õ: ["o", "ô"],
+  û: ["u", "ù"], ù: ["u", "ú"], ú: ["u", "ù"], ü: ["u", "ú"], ä: ["a", "å", "e"], ö: ["o", "ø"], å: ["a", "ä", "o"], ß: ["s", "sz"], œ: ["oe", "e"],
+};
+
+/** Variantes con otras tildes («été» → ete, èté, eté): para «¿cómo se escribe?». */
+export function accentVariants(word: string, rand: () => number, n = 3): string[] {
+  const chars = [...word.normalize("NFC")];
+  const spots = chars.map((c, i) => (ACCENT_SWAPS[c.toLowerCase()] ? i : -1)).filter((i) => i >= 0);
+  if (!spots.length) return [];
+  const out = new Set<string>();
+  // Siempre, la versión sin ninguna tilde (el error más común).
+  out.add(chars.map((c) => ACCENT_SWAPS[c.toLowerCase()]?.[0] ?? c).join(""));
+  for (let t = 0; t < 30 && out.size < n; t++) {
+    const copy = [...chars];
+    const i = spots[Math.floor(rand() * spots.length)]!;
+    const alts = ACCENT_SWAPS[copy[i]!.toLowerCase()]!;
+    copy[i] = alts[Math.floor(rand() * alts.length)]!;
+    out.add(copy.join(""));
+  }
+  out.delete(word);
+  return [...out].slice(0, n);
+}
+
+/** Oír una palabra con tildes o signos y elegir cómo se escribe. */
+export function buildAccentExercise(v: VocabItem, native: LanguageCode, seed = 0): Exercise | null {
+  if (!writingFor(v.language) || /[^\p{Script=Latin}\s'-]/u.test(v.lemma)) return null;
+  const rand = mulberry32(hashString(`accent_pick|${v.id}|${seed}`));
+  const wrong = accentVariants(v.lemma, rand);
+  if (!wrong.length) return null;
+  const options = shuffle([v.lemma, ...wrong], rand);
+  return {
+    ...base("accent_pick", v.language, v.id),
+    key: `accent_pick|${v.id}`,
+    skill: "vocabulary",
+    instruction: "¿Cómo se escribe? Fíjate en los signos",
+    prompt: translationOf(v, native)[0] ?? v.lemma,
+    audioText: v.lemma,
+    audioUrl: v.audioUrl,
+    options,
+    easy: easyPair(v.lemma, options, rand),
+    optionsLang: "target",
+  };
+}
+
 /** Resuelve las keys de lectura (sólo en el servidor). null si no es de este tipo. */
 export function resolveReadingExercise(type: string, id: string, variant: string | undefined, catalog: Catalog): ResolvedAnswer | null {
   if (type === "letter_see" || type === "letter_hear" || type === "letter_pair") {
@@ -285,6 +377,18 @@ export function resolveReadingExercise(type: string, id: string, variant: string
     if (!ref) return null;
     const c = ref.rule.check;
     return { accepted: [c.answer], display: c.answer, explanation: c.why ?? ref.rule.explain, errorCategory: "reading-rules", mode: "choice", typos: false };
+  }
+  if (type === "letter_name") {
+    const ref = letterNameById(id);
+    if (!ref) return null;
+    const g = ref.item.g.split(" ")[0]!;
+    return { accepted: [g], display: `${ref.item.g} se llama «${ref.item.name}»`, errorCategory: "letters", mode: "choice", typos: false };
+  }
+  if (type === "spell_word" || type === "accent_pick") {
+    const v = catalog.vocabById(id);
+    if (!v) return null;
+    const tr = v.translations.es?.[0];
+    return { accepted: [v.lemma], display: `${v.lemma}${tr ? ` («${tr}»)` : ""}`, errorCategory: type === "accent_pick" ? "accents" : "spelling", mode: type === "accent_pick" ? "choice" : "text", typos: false };
   }
   if (type === "read_word" || type === "tone_pick") {
     const v = catalog.vocabById(id);

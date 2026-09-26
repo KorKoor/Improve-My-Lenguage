@@ -37,6 +37,9 @@ export const EXERCISE_TYPES = [
   "rule_mc",
   "read_word",
   "tone_pick",
+  "letter_name",
+  "spell_word",
+  "accent_pick",
 ] as const;
 export type ExerciseType = (typeof EXERCISE_TYPES)[number];
 
@@ -73,6 +76,8 @@ export interface Exercise {
   clue?: string;
   /** Texto que se lee en voz alta al responder (ver la letra → oírla después). */
   afterAudio?: string;
+  /** Varios audios seguidos (deletreo: el nombre de cada letra). */
+  audioSeq?: string[];
 }
 
 export interface ResolvedAnswer {
@@ -116,6 +121,9 @@ const TYPE_OFFSET: Record<ExerciseType, number> = {
   rule_mc: 0,
   read_word: 0,
   tone_pick: 0,
+  letter_name: 0,
+  spell_word: 0,
+  accent_pick: 0,
 };
 
 const EXPECTED_MS: Record<ExerciseType, number> = {
@@ -140,6 +148,9 @@ const EXPECTED_MS: Record<ExerciseType, number> = {
   rule_mc: 10000,
   read_word: 8000,
   tone_pick: 9000,
+  letter_name: 6000,
+  spell_word: 20000,
+  accent_pick: 7000,
 };
 
 /** «m _ _ _ _» : primera letra y huecos (ayuda sin regalar la respuesta). */

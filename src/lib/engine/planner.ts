@@ -14,7 +14,7 @@ import { mulberry32 } from "./random";
 import type { Weakness } from "./weakness";
 
 /** `reading`: aprender a leer (Fase 0); no lo propone el planificador, lo usan sus unidades. */
-export type BlockKind = "review" | "new_words" | "grammar" | "listening" | "tutor" | "reading";
+export type BlockKind = "review" | "new_words" | "grammar" | "listening" | "tutor" | "reading" | "writing";
 
 export interface PlanBlock {
   kind: BlockKind;
@@ -206,6 +206,7 @@ export function exercisesForBlock(block: PlanBlock): number {
     listening: 1.5,
     tutor: 0,
     reading: 2,
+    writing: 2,
   };
   return Math.max(1, Math.round(block.minutes * perMinute[block.kind]));
 }

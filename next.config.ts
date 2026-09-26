@@ -13,7 +13,7 @@ const config: NextConfig = {
   poweredByHeader: false,
   // Los paquetes de vocabulario se leen con fs en el servidor: hay que
   // incluirlos explícitamente en las funciones de Vercel.
-  outputFileTracingIncludes: { "/**": ["./data/packs/**"] },
+  outputFileTracingIncludes: { "/**": ["./data/packs/**", "./data/audio/**", "./data/strokes/**", "./data/readings/**"] },
   reactStrictMode: true,
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];

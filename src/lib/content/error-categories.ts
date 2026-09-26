@@ -23,6 +23,12 @@ export const ERROR_CATEGORIES: ErrorCategory[] = [
   { id: "tense", label: "tiempos verbales", language: "*" },
   { id: "conjugation", label: "conjugación verbal", language: "*" },
   { id: "pronunciation", label: "pronunciación", language: "*" },
+  // Escritura y lectura (Fase 0 y «Escritura y ortografía»)
+  { id: "letters", label: "letras que se confunden", language: "*" },
+  { id: "reading-rules", label: "reglas de lectura y ortografía", language: "*" },
+  { id: "accents", label: "tildes y signos especiales", language: "*" },
+  { id: "capitalization", label: "mayúsculas", language: "*" },
+  { id: "punctuation", label: "puntuación", language: "*" },
   // Inglés
   { id: "subject-verb-agreement", label: "concordancia sujeto-verbo", language: "en", grammarId: "en:g:third-person-s" },
   { id: "past-tense", label: "pasado simple", language: "en", grammarId: "en:g:past-simple" },

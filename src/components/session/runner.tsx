@@ -329,6 +329,15 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
             )}
           </div>
         )}
+        {summary?.writing && (
+          <div className={`w-full max-w-md rounded-2xl p-4 text-left animate-pop-in ${summary.writing.passed ? "bg-success-soft" : "bg-warning-soft"}`} role="status">
+            <p className="font-display text-xl font-extrabold">{summary.writing.passed ? `¡${summary.writing.title}: hecho! ${"⭐".repeat(summary.writing.stars)}` : "Casi: repítela una vez más"}</p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {!summary.writing.passed && <ButtonLink href={`/app/session?writing=${encodeURIComponent(summary.writing.unitId)}&again=${Date.now() % 100000}`}>Repetir</ButtonLink>}
+              <ButtonLink href="/app/writing-system" variant="secondary">Escritura y ortografía</ButtonLink>
+            </div>
+          </div>
+        )}
         {summary?.levelAdjusted && (
           <p className="max-w-md rounded-2xl bg-primary-soft px-4 py-3 text-sm animate-pop-in" role="status">
             {summary.levelAdjusted.direction === "down" ? "🌱" : "🚀"} <strong>Hemos ajustado tu nivel a {summary.levelAdjusted.level}</strong> porque {summary.levelAdjusted.reason}.{" "}
@@ -682,7 +691,12 @@ function ExerciseStep({
   const listening = !ex.prompt && Boolean(ex.audioText) && ex.input !== "speech";
   const [chosen, setChosen] = useState<string | null>(null);
   const [order, setOrder] = useState<number[]>([]);
-  const { supported, speak } = useSpeech(locale);
+  const { supported, speak: speakOne, speakSeq } = useSpeech(locale);
+  // El deletreo suena letra a letra (varios audios seguidos); lo demás, de una vez.
+  const speak = useCallback(
+    (text: string, rate = 1, url?: string) => (ex.audioSeq && text === ex.audioText ? speakSeq(ex.audioSeq, rate) : speakOne(text, rate, url)),
+    [ex.audioSeq, ex.audioText, speakSeq, speakOne],
+  );
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -757,6 +771,7 @@ function ExerciseStep({
             </button>
             {ex.context && ex.type === "dictation_word" && <p className="basis-full text-center text-sm text-muted">Significa «{ex.context}»</p>}
             {ex.context && ex.type === "tone_pick" && <p className="basis-full text-center font-display text-4xl font-extrabold" lang={language}>{ex.context}</p>}
+            {ex.context && ex.type === "spell_word" && <p className="basis-full text-center text-sm text-muted">Significa «{ex.context}»</p>}
           </div>
         ) : (
           <div className="card mt-3 p-6 text-center">
@@ -856,7 +871,7 @@ function ExerciseStep({
               feedback ? (feedback.correct ? "border-success" : "border-danger") : "border-border",
             )}
           />
-          <ScriptKeyboard lang={language} locale={locale} value={text} onChange={setText} disabled={disabled} romanOk={ex.type === "recall" || ex.type === "cloze" || ex.type === "dictation_word"} />
+          <ScriptKeyboard lang={language} locale={locale} value={text} onChange={setText} disabled={disabled} romanOk={ex.type === "recall" || ex.type === "cloze" || ex.type === "dictation_word"} defaultOpen={ex.type === "spell_word" ? true : undefined} />
           {showHint && ex.hint && !feedback && (
             <p className="mt-2 font-mono text-lg tracking-wider text-primary animate-pop-in" lang={language} aria-label="Pista">{ex.hint}</p>
           )}
@@ -1083,7 +1098,7 @@ function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain, ex
         </p>
         {!ok && f.expected && <p className="mt-1 text-lg font-semibold">{f.expected}</p>}
         {ok && f.nearMiss && (
-          <p className="mt-1 text-sm">{f.note === "accent" ? "Ojo con los acentos: " : f.note === "roman" ? "Bien, lo escribiste en letras latinas. En su escritura es: " : "Pequeña errata. Se escribe: "}<strong>{f.expected}</strong></p>
+          <p className="mt-1 text-sm">{f.note === "accent" ? "Ojo con los acentos: " : f.note === "caps" ? "Ojo: en alemán los sustantivos van con mayúscula: " : f.note === "roman" ? "Bien, lo escribiste en letras latinas. En su escritura es: " : "Pequeña errata. Se escribe: "}<strong>{f.expected}</strong></p>
         )}
         {f.explanation && <p className="mt-2 text-sm leading-relaxed">{f.explanation}</p>}
         {f.milestone && <p className="mt-3 rounded-xl bg-surface px-3 py-2 font-display text-lg font-extrabold text-primary animate-pop-in">🎉 {f.milestone}</p>}

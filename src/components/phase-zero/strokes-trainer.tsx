@@ -99,7 +99,8 @@ function TraceCanvas({ ch, onOk }: { ch: StrokeChar; onOk: () => void }) {
   );
 }
 
-export function StrokesTrainer({ chars, locale, language, rtl, nextHref }: { chars: StrokeChar[]; locale: string; language: string; rtl: boolean; nextHref: string }) {
+/** `practice`: práctica libre de caligrafía (no guarda el avance de la Fase 0). */
+export function StrokesTrainer({ chars, locale, language, rtl, nextHref, practice = false }: { chars: StrokeChar[]; locale: string; language: string; rtl: boolean; nextHref: string; practice?: boolean }) {
   const [i, setI] = useState(0);
   const [play, setPlay] = useState(0);
   const [traced, setTraced] = useState<Set<number>>(new Set());
@@ -116,6 +117,7 @@ export function StrokesTrainer({ chars, locale, language, rtl, nextHref }: { cha
   }, [i, say]);
 
   const finish = async () => {
+    if (practice) return setState("done");
     setState("saving");
     await completeStrokesAction(traced.size, chars.length, Math.round((Date.now() - started.current) / 1000));
     setState("done");

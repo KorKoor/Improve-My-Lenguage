@@ -9,6 +9,7 @@
  * Ids estables para la memoria (FSRS): «ru:l:к» (letra) y «ru:r:stress» (regla).
  */
 import { alphabetFor, type Letter, type LetterGroup } from "../alphabets";
+import { orthoRuleById } from "../writing-system";
 import type { LanguageCode } from "../types";
 import { AR } from "./ar";
 import { DE } from "./de";
@@ -87,8 +88,9 @@ export function letterById(id: string): LetterRef | null {
   return letterIndex.get(id) ?? null;
 }
 
-/** «ru:r:stress» → la regla. */
+/** «ru:r:stress» → la regla de lectura; «fr:o:a-a» → la regla de escritura (mismo formato y ejercicio). */
 export function ruleById(id: string): { lang: LanguageCode; rule: ReadingRule } | null {
+  if (id.includes(":o:")) return orthoRuleById(id);
   const m = /^([a-z]{2,3}):r:(.+)$/.exec(id);
   if (!m) return null;
   const rule = rulesFor(m[1]!).find((r) => r.id === m[2]);
