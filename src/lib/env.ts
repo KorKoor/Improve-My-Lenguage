@@ -13,12 +13,29 @@ function read(name: string): string | undefined {
   return v && v.trim() !== "" ? v.trim() : undefined;
 }
 
+/**
+ * Como `read`, pero sin distinguir mayúsculas ni espacios en el nombre: en
+ * Vercel es fácil crear «Gemini_API_Key» o «gemini_api_key » y que la app no
+ * la vea. Sólo para variables cuyo nombre no es ambiguo (claves de IA).
+ */
+function readLoose(...names: string[]): string | undefined {
+  for (const n of names) {
+    const exact = read(n);
+    if (exact) return exact;
+  }
+  const wanted = new Set(names.map((n) => n.toUpperCase()));
+  for (const [k, v] of Object.entries(process.env)) {
+    if (wanted.has(k.trim().toUpperCase()) && v && v.trim() !== "") return v.trim();
+  }
+  return undefined;
+}
+
 export const env = {
   siteUrl: resolveSiteUrl(),
   aiProvider: (read("AI_PROVIDER")?.toLowerCase() ?? "gemini") as "gemini" | "openai-compatible" | "none",
-  // Nombre oficial GEMINI_API_KEY; también se aceptan los habituales de Google y el nombre en minúsculas
-  // (las variables distinguen mayúsculas: «gemini_api_key» en Vercel no llegaría como GEMINI_API_KEY).
-  geminiApiKey: read("GEMINI_API_KEY") ?? read("gemini_api_key") ?? read("GOOGLE_API_KEY") ?? read("GOOGLE_GENERATIVE_AI_API_KEY"),
+  // Nombre oficial GEMINI_API_KEY; también los habituales de Google, escritos como sea
+  // («Gemini_API_Key», «gemini_api_key»…): las variables distinguen mayúsculas.
+  geminiApiKey: readLoose("GEMINI_API_KEY", "GOOGLE_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY"),
   /** Sólo para pruebas o un proxy: por defecto la API pública de Google. */
   geminiBaseUrl: read("GEMINI_BASE_URL") ?? "https://generativelanguage.googleapis.com/v1beta",
   openaiCompatBaseUrl: read("OPENAI_COMPAT_BASE_URL"),

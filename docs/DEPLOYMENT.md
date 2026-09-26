@@ -44,7 +44,7 @@ Proyecto: `improve-my-lenguages` (ya creado, con la app web registrada y Firesto
 
    `FIREBASE_SERVICE_ACCOUNT`, `CRON_SECRET` y `GEMINI_API_KEY` son secretos: activa la opción **Sensitive** cuando Vercel la muestre y nunca los prefijes con `NEXT_PUBLIC_`. El JSON de `FIREBASE_SERVICE_ACCOUNT` debe ser el archivo completo de la cuenta de servicio, convertido a una sola línea; el ejemplo anterior sólo muestra el formato.
 
-   **IA:** tras añadir o cambiar `GEMINI_API_KEY` hay que **volver a desplegar** (Vercel sólo aplica las variables en un despliegue nuevo). Para comprobarlo: `GET /api/health` debe decir `"ai": true`, y en `/app/admin` el botón **Probar la IA** hace una llamada mínima y muestra el modelo que responde y cuánto tarda. La clave también se acepta con el nombre en minúsculas (`gemini_api_key`).
+   **IA:** tras añadir o cambiar `GEMINI_API_KEY` hay que **volver a desplegar** (Vercel sólo aplica las variables en un despliegue nuevo). Para comprobarlo: `GET /api/health` debe decir `"ai": true`, y en `/app/admin` el botón **Probar la IA** hace una llamada mínima y muestra el modelo que responde y cuánto tarda. El nombre de la clave no distingue mayúsculas (`Gemini_API_Key` también vale).
 
    Los valores `NEXT_PUBLIC_FIREBASE_*` salen de **Firebase Console → Configuración del proyecto → General → Tus apps → app web → Configuración del SDK**. La `NEXT_PUBLIC_FIREBASE_VAPID_KEY` sale de **Cloud Messaging → Configuración web → Certificados push web**. Genera `CRON_SECRET` con un valor aleatorio largo.
 
