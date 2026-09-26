@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { InstallApp } from "@/components/install-app";
 import { ARCHETYPES } from "@/lib/engine/personality";
-import { ComfortSettings, DangerZone, PreferencesForm, ThemeSetting } from "@/components/settings/forms";
+import { ComfortSettings, DangerZone, LatinScriptSetting, PreferencesForm, ThemeSetting } from "@/components/settings/forms";
 import { Card, CardHeader } from "@/components/ui/card";
 import { getLanguage, LANGUAGES, TOPICS } from "@/lib/content";
 import { listUserLanguages } from "@/lib/db/repositories";
@@ -34,6 +34,13 @@ export default async function SettingsPage() {
         <CardHeader title="Comodidad" aside="Letra, modo sencillo y audio" />
         <ComfortSettings initial={{ textSize: p.textSize, simpleMode: p.simpleMode, slowAudio: p.slowAudio, smartBreaks: p.smartBreaks, audioFirst: p.audioFirst, highContrast: p.highContrast }} />
       </Card>
+
+      {(learner.language.code === "ja" || learner.language.code === "zh") && (
+        <Card>
+          <CardHeader title="Escritura" aside={learner.language.name} />
+          <LatinScriptSetting initial={p.latinScript} language={learner.language.code} />
+        </Card>
+      )}
 
       <Card>
         <CardHeader title="Aprendizaje" aside={<Link href={p.personality ? "/app/profile" : "/app/profile/test"} className="font-semibold text-primary">{p.personality ? `${ARCHETYPES[p.personality.archetype].icon} Tu forma de aprender` : "🪞 Hacer el test de aprendizaje"}</Link>} />

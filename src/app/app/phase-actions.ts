@@ -48,7 +48,7 @@ export async function placePhaseZeroAction(responses: { id: string; response: st
     await repo.setPhaseZeroFlags(learner.ul.id, { diagnosed: true, skipped: place.skipAll });
     await repo.track(learner.userId, "phase_zero_placed", { language: lang, correct: results.filter((r) => r.correct).length, skip: place.skipAll });
     const state = await repo.getReadingState(learner.ul.id);
-    const progress = phaseProgress(phaseZeroUnits(lang), phaseDone(state.phase, state.alphabet), state.skipped);
+    const progress = phaseProgress(phaseZeroUnits(lang, learner.profile.latinScript), phaseDone(state.phase, state.alphabet), state.skipped);
     revalidatePath("/app", "layout");
     return {
       correct: results.filter((r) => r.correct).length,

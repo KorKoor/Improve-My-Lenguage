@@ -201,3 +201,36 @@ export function ComfortSettings({ initial }: { initial: { textSize: TextSize; si
     </div>
   );
 }
+
+/** Japonés o chino sin kanji/hanzi: todo en letras latinas (rōmaji o pinyin). */
+export function LatinScriptSetting({ initial, language }: { initial: boolean; language: "ja" | "zh" }) {
+  const [on, setOn] = useState(initial);
+  const [saved, setSaved] = useState(false);
+  const [, start] = useTransition();
+  const name = language === "ja" ? "rōmaji" : "pinyin";
+  const toggle = () => {
+    const next = !on;
+    setOn(next);
+    setSaved(false);
+    start(async () => {
+      const res = await updateSettingsAction({ latinScript: next });
+      setSaved(res.ok);
+    });
+  };
+  return (
+    <div>
+      <button type="button" role="switch" aria-checked={on} onClick={toggle} className={cn("flex w-full items-start gap-3 rounded-2xl border border-border bg-surface p-4 text-left transition hover:border-primary/60", on && "border-primary bg-primary-soft")}>
+        <span className={cn("mt-0.5 flex h-6 w-11 shrink-0 items-center rounded-full p-0.5 transition", on ? "bg-primary" : "bg-border")}>
+          <span className={cn("size-5 rounded-full bg-white shadow transition", on && "translate-x-5")} />
+        </span>
+        <span>
+          <span className="block font-semibold">{language === "ja" ? "Aprender sin kanji ni kana: todo en rōmaji" : "Aprender sin caracteres: todo en pinyin"}</span>
+          <span className="text-sm text-muted">
+            Palabras, frases y opciones se muestran en letras latinas ({name}) y puedes responder escribiendo así. El audio es el mismo. Te saltas las lecciones de {language === "ja" ? "kana, kanji y trazos" : "caracteres y trazos"}{language === "zh" ? "; el pinyin y los tonos se siguen aprendiendo" : ""}. Puedes cambiarlo cuando quieras.
+          </span>
+        </span>
+      </button>
+      {saved && <p role="status" className="mt-2 flex items-center gap-1 text-sm text-success-ink"><Check size={16} aria-hidden /> Guardado</p>}
+    </div>
+  );
+}

@@ -49,11 +49,20 @@ export function optionInfoFor(ex: Exercise, native: LanguageCode, vocab: (l: Lan
   return Object.keys(out).length ? out : undefined;
 }
 
-/** Añade `optionInfo` a los ejercicios de una sesión. */
+/** Lectura en letras latinas del enunciado, si está en otra escritura (modo sólo letras latinas). */
+export function promptReadingFor(ex: Exercise, vocab: (l: LanguageCode) => VocabItem[]): string | undefined {
+  const lang = ex.language;
+  if (!ex.prompt || !hasAlphabet(lang) || !/[^\u0000-\u024f]/.test(ex.prompt)) return undefined;
+  const v = lemmaIndex(lang, vocab).get(ex.prompt);
+  return transliterate(lang, ex.prompt, v?.reading) ?? undefined;
+}
+
+/** Añade `optionInfo` (y la lectura del enunciado) a los ejercicios de una sesión. */
 export function annotateOptions(steps: SessionStep[], native: LanguageCode, vocab: (l: LanguageCode) => VocabItem[]): SessionStep[] {
   return steps.map((s) => {
     if (s.kind !== "exercise") return s;
     const info = optionInfoFor(s.exercise, native, vocab);
-    return info ? { ...s, exercise: { ...s.exercise, optionInfo: info } } : s;
+    const promptReading = promptReadingFor(s.exercise, vocab);
+    return info || promptReading ? { ...s, exercise: { ...s.exercise, ...(info ? { optionInfo: info } : {}), ...(promptReading ? { promptReading } : {}) } } : s;
   });
 }

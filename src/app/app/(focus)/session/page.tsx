@@ -15,7 +15,7 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
   const lesson = /^\d{1,2}$/.test(sp.lesson ?? "") ? Math.max(1, Math.min(30, Number(sp.lesson))) : null;
   const minutes = Math.max(5, Math.min(60, Number(sp.minutes) || (await sessionMinutesFor(learner))));
   // Unidad de la Fase 0 (aprender a leer).
-  const phase = sp.phase ? phaseZeroUnits(learner.language.code).find((u) => u.id === sp.phase && u.kind !== "strokes") : undefined;
+  const phase = sp.phase ? phaseZeroUnits(learner.language.code, learner.profile.latinScript).find((u) => u.id === sp.phase && u.kind !== "strokes") : undefined;
   // Unidad de «Escritura y ortografía».
   const writing = sp.writing ? writingUnits(learner.language.code).find((u) => u.id === sp.writing) : undefined;
   return (
@@ -35,6 +35,7 @@ export default async function SessionPage({ searchParams }: { searchParams: Prom
       gentle={(await getSkills(learner.ul.id)).get("listening")!.theta < -1.1}
       romanLevel={await romanLevelFor(learner)}
       audioFirst={learner.profile.audioFirst}
+      latinOnly={learner.profile.latinScript && (learner.language.code === "ja" || learner.language.code === "zh")}
       title={phase ? phase.title : writing ? writing.title : lesson ? `Lección ${lesson}` : sp.focus === "leeches" ? "Palabras rebeldes" : sp.focus === "letters" ? "Repaso de letras" : "Sesión de estudio"}
     />
   );
