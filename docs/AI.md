@@ -12,7 +12,7 @@
 
 ## Proveedores (`src/lib/ai/provider.ts`)
 
-- `AI_PROVIDER=gemini` (por defecto): API REST de Gemini, sin SDK. Clave en `GEMINI_API_KEY` (también `gemini_api_key`, `GOOGLE_API_KEY` o `GOOGLE_GENERATIVE_AI_API_KEY`). Modelos por defecto: `gemini-3.5-flash-lite` (fast) y `gemini-3.5-flash` (smart); se pueden cambiar con `AI_MODEL_FAST` y `AI_MODEL_SMART`.
+- `AI_PROVIDER=gemini` (por defecto): API REST de Gemini, sin SDK. Clave en `GEMINI_API_KEY` (también `GOOGLE_API_KEY` o `GOOGLE_GENERATIVE_AI_API_KEY`; el nombre no distingue mayúsculas: `Gemini_API_Key` vale). Modelos por defecto: `gemini-3.5-flash-lite` (fast) y `gemini-3.5-flash` (smart); se pueden cambiar con `AI_MODEL_FAST` y `AI_MODEL_SMART`.
   - **Cadena de respaldo** (`src/lib/ai/gemini.ts`): si el modelo no existe para la clave (404), se prueba el alias `gemini-flash(-lite)-latest` y luego `gemini-2.5-flash(-lite)`. El que responde se recuerda en la instancia, así que la búsqueda sólo cuesta la primera vez.
   - **Sin «pensar» de más:** el tutor y el feedback no necesitan razonamiento largo; se pide `thinkingBudget: 0` (2.x) o `thinkingLevel` bajo (3.x). Si la API rechaza el ajuste, se prueba el siguiente; si el modelo agota los tokens pensando sin escribir nada, se repite una vez con más margen. Las partes de «pensamiento» nunca se muestran.
   - **Errores claros:** clave inválida (401/403) y contenido bloqueado se traducen a mensajes para el usuario.
