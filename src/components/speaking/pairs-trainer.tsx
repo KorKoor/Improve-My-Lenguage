@@ -101,7 +101,7 @@ export function PairsTrainer({ sets, locale, language }: { sets: PairSet[]; loca
       </div>
       {answer && (
         <div className="mt-4 flex items-center gap-3">
-          <p className={cn("flex flex-1 items-center gap-1.5 font-semibold", answer === cur!.side ? "text-success" : "text-danger")}>
+          <p className={cn("flex flex-1 items-center gap-1.5 font-semibold", answer === cur!.side ? "text-success-ink" : "text-danger-ink")}>
             {answer === cur!.side ? <Check size={18} aria-hidden /> : <X size={18} aria-hidden />} {answer === cur!.side ? "¡Bien!" : <>Era <span lang={language}>«{target}»</span></>}
           </p>
           <Button size="sm" variant="ghost" onClick={() => { speak(pair!.a, 0.8); setTimeout(() => speak(pair!.b, 0.8), 1300); }}>Oír los dos</Button>

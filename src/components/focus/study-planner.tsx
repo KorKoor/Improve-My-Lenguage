@@ -124,7 +124,7 @@ export function StudyPlanner({
                     <p className="truncate text-xs text-muted">{why.get(b.code)!.join(" · ")}</p>
                   ) : null}
                 </div>
-                <span className="rounded-full px-2.5 py-1 text-xs font-bold text-white tabular-nums" style={{ background: color(b.code) }}>{b.minutes} min</span>
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-1 text-xs font-bold tabular-nums"><span className="size-2 rounded-full" style={{ background: color(b.code) }} aria-hidden />{b.minutes} min</span>
               </li>
             ) : (
               <li key={`${minutes}-${i}`} className="flex items-center gap-3 rounded-2xl border border-dashed border-success/50 px-3 py-2 text-sm text-muted">
@@ -148,7 +148,7 @@ export function StudyPlanner({
           <p className="mt-1 text-sm text-muted">Aprendida de tus sesiones: el minuto en que tu precisión empieza a bajar. Los descansos caen justo antes.</p>
         </div>
         <div className="card p-4">
-          <Sun size={20} className="text-warning" aria-hidden />
+          <Sun size={20} className="text-warning-ink" aria-hidden />
           {best ? (
             <>
               <p className="mt-2 font-semibold">Rindes mejor {best.label}</p>
@@ -162,7 +162,7 @@ export function StudyPlanner({
           )}
         </div>
         <div className="card p-4">
-          <Coffee size={20} className="text-success" aria-hidden />
+          <Coffee size={20} className="text-success-ink" aria-hidden />
           <p className="mt-2 font-semibold">Descansos que ayudan</p>
           <p className="mt-1 text-sm text-muted">Pausas cortas y activas (vista, respiración, moverte) consolidan la memoria y separan idiomas parecidos.</p>
         </div>

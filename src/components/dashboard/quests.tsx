@@ -82,7 +82,7 @@ export function QuestBoard({ quests: initial, xp: initialXp }: { quests: QuestVi
         </p>
       )}
       {freeze && (
-        <p className="mt-3 rounded-xl bg-warning-soft px-3 py-2 text-center text-sm font-bold text-warning animate-pop-in" role="status">
+        <p className="mt-3 rounded-xl bg-warning-soft px-3 py-2 text-center text-sm font-bold text-warning-ink animate-pop-in" role="status">
           🛡️ ¡Ganaste un protector de racha! Si un día no puedes estudiar, tu racha sigue a salvo.
         </p>
       )}
@@ -91,7 +91,7 @@ export function QuestBoard({ quests: initial, xp: initialXp }: { quests: QuestVi
           const pct = Math.round((q.value / q.target) * 100);
           return (
             <li key={q.id} className={cn("relative flex items-center gap-3 rounded-2xl border p-3 transition-colors", q.claimed ? "border-success/40 bg-success-soft/60" : q.done ? "border-primary/50 bg-primary-soft/40" : "border-border")}>
-              <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl text-xl", q.claimed ? "bg-success text-white" : "bg-surface-muted")} aria-hidden>
+              <span className={cn("grid size-10 shrink-0 place-items-center rounded-xl text-xl", q.claimed ? "bg-success-ink text-on-status" : "bg-surface-muted")} aria-hidden>
                 {q.claimed ? <Check size={20} strokeWidth={3} /> : q.icon}
               </span>
               <div className="min-w-0 flex-1">
@@ -117,7 +117,7 @@ export function QuestBoard({ quests: initial, xp: initialXp }: { quests: QuestVi
                   {pendingId === q.id ? <Loader2 size={14} className="animate-spin" aria-hidden /> : <Gift size={14} aria-hidden />} +{q.xp} XP
                 </button>
               ) : (
-                <span className={cn("shrink-0 text-xs font-bold tabular-nums", q.claimed ? "text-success" : "text-muted")}>+{q.xp} XP</span>
+                <span className={cn("shrink-0 text-xs font-bold tabular-nums", q.claimed ? "text-success-ink" : "text-muted")}>+{q.xp} XP</span>
               )}
               {gain?.id === q.id && gain.xp > 0 && (
                 <span className="pointer-events-none absolute right-4 -top-2 font-display text-lg font-extrabold text-primary animate-xp-float" aria-hidden>
@@ -128,9 +128,9 @@ export function QuestBoard({ quests: initial, xp: initialXp }: { quests: QuestVi
           );
         })}
       </ul>
-      {error && <p className="mt-2 text-sm text-danger" role="alert">{error}</p>}
+      {error && <p className="mt-2 text-sm text-danger-ink" role="alert">{error}</p>}
       {done === quests.length ? (
-        <p className="mt-3 text-center text-sm font-semibold text-success">¡Todas las misiones cumplidas! Vuelve mañana por más.</p>
+        <p className="mt-3 text-center text-sm font-semibold text-success-ink">¡Todas las misiones cumplidas! Vuelve mañana por más.</p>
       ) : (
         <p className="mt-3 text-center text-xs text-muted">Completa las tres y ganas un 🛡️ protector de racha.</p>
       )}

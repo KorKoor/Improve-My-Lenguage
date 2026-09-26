@@ -51,7 +51,7 @@ export function OwnTextReader({ languageName }: { languageName: string }) {
           </Button>
           <span className="text-sm text-muted">{text.length.toLocaleString("es")} / 8 000</span>
         </div>
-        {error ? <p role="alert" className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">{error}</p> : null}
+        {error ? <p role="alert" className="rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger-ink">{error}</p> : null}
       </form>
     </div>
   );

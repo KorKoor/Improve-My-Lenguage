@@ -104,8 +104,8 @@ export function ListeningRunner({ languageName, beginner = false }: { languageNa
         </span>
         <h1 className="mt-5 font-display text-3xl font-extrabold">Escucha</h1>
         <p className="mt-2 text-muted">10 frases reales en {languageName.toLowerCase()} elegidas para tu nivel. Puedes repetirlas, escucharlas despacio y cambiar la velocidad. Usa audífonos si puedes.</p>
-        {state === "empty" && <p className="mt-4 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning">Aún no hay suficientes frases a tu nivel. Practica un poco de vocabulario y vuelve.</p>}
-        {state === "error" && <p className="mt-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">No pudimos preparar la sesión. Inténtalo de nuevo.</p>}
+        {state === "empty" && <p className="mt-4 rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning-ink">Aún no hay suficientes frases a tu nivel. Practica un poco de vocabulario y vuelve.</p>}
+        {state === "error" && <p className="mt-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger-ink">No pudimos preparar la sesión. Inténtalo de nuevo.</p>}
         <Button size="lg" className="mt-6 w-full sm:w-auto" onClick={() => void start()} disabled={state === "loading"}>
           {state === "loading" ? <Loader2 className="animate-spin" size={18} /> : <Headphones size={18} />} Empezar a escuchar
         </Button>
@@ -118,7 +118,7 @@ export function ListeningRunner({ languageName, beginner = false }: { languageNa
     return (
       <div className="mx-auto max-w-xl animate-rise py-6 text-center">
         {pct >= 60 ? <Confetti /> : null}
-        <Trophy className="mx-auto text-warning" size={48} />
+        <Trophy className="mx-auto text-warning-ink" size={48} />
         <h1 className="mt-3 font-display text-3xl font-extrabold">{pct >= 80 ? "¡Tienes buen oído!" : pct >= 50 ? "¡Buen trabajo!" : "Cada escucha entrena tu oído"}</h1>
         <p className="mt-2 text-muted">{score} de {items.length} correctas. Tu nivel de listening se actualizó.</p>
         {achievements.length ? <div className="mt-4 flex flex-wrap justify-center gap-2">{achievements.map((a) => <Chip key={a.id} tone="warning">{a.icon} {a.title}</Chip>)}</div> : null}
@@ -194,8 +194,8 @@ export function ListeningRunner({ languageName, beginner = false }: { languageNa
                   className={cn(
                     "rounded-2xl border px-4 py-3.5 text-left text-lg font-medium transition",
                     !fb && "border-border bg-surface hover:border-primary",
-                    st === "ok" && "animate-pop border-success bg-success-soft text-success",
-                    st === "bad" && "animate-shake border-danger bg-danger-soft text-danger",
+                    st === "ok" && "animate-pop border-success bg-success-soft text-success-ink",
+                    st === "bad" && "animate-shake border-danger bg-danger-soft text-danger-ink",
                     fb && !st && "border-border opacity-50",
                   )}
                 >
@@ -209,11 +209,11 @@ export function ListeningRunner({ languageName, beginner = false }: { languageNa
 
       {fb && (
         <div role="status" className={cn("mt-6 animate-sheet rounded-3xl p-5", fb.correct ? "bg-success-soft" : "bg-danger-soft")}>
-          <p className={cn("font-display text-xl font-extrabold", fb.correct ? "text-success" : "text-danger")}>{fb.correct ? "¡Correcto!" : "Casi, mira la frase:"}</p>
+          <p className={cn("font-display text-xl font-extrabold", fb.correct ? "text-success-ink" : "text-danger-ink")}>{fb.correct ? "¡Correcto!" : "Casi, mira la frase:"}</p>
           {fb.diff ? (
             <p className="mt-2 text-lg leading-relaxed" lang={locale}>
               {fb.diff.map((p, k) => (
-                <span key={k} className={cn("mr-1.5 rounded px-1", p.kind === "ok" && "text-success", p.kind === "typo" && "bg-warning-soft text-warning", p.kind === "missing" && "bg-danger/15 text-danger underline decoration-dotted", p.kind === "extra" && "text-muted line-through")}>
+                <span key={k} className={cn("mr-1.5 rounded px-1", p.kind === "ok" && "text-success-ink", p.kind === "typo" && "bg-warning-soft text-warning-ink", p.kind === "missing" && "bg-danger/15 text-danger-ink underline decoration-dotted", p.kind === "extra" && "text-muted line-through")}>
                   {p.text}
                 </span>
               ))}

@@ -37,9 +37,9 @@ function buildSteps(name: string | null, language: string, simple: boolean): Ste
           <div className="flex items-center gap-4">
             <Afi size={72} mood="waving" />
             <div className="space-y-1.5 text-sm">
-              <p className="flex items-center gap-2"><Check size={16} className="text-success" /> Practicas unos minutos al día</p>
-              <p className="flex items-center gap-2"><Check size={16} className="text-success" /> La app elige qué te conviene</p>
-              <p className="flex items-center gap-2"><Check size={16} className="text-success" /> Ves tu progreso real</p>
+              <p className="flex items-center gap-2"><Check size={16} className="text-success-ink" /> Practicas unos minutos al día</p>
+              <p className="flex items-center gap-2"><Check size={16} className="text-success-ink" /> La app elige qué te conviene</p>
+              <p className="flex items-center gap-2"><Check size={16} className="text-success-ink" /> Ves tu progreso real</p>
             </div>
           </div>
         </Preview>
@@ -104,7 +104,7 @@ function buildSteps(name: string | null, language: string, simple: boolean): Ste
           </div>
           <div className="mt-3 flex items-center gap-2 rounded-xl bg-success-soft px-3 py-2 text-xs">
             <span className="flex-1 text-muted">¿Lo sabías con seguridad?</span>
-            <span className="rounded-full bg-surface px-2 py-0.5 font-semibold text-success">Sí</span>
+            <span className="rounded-full bg-surface px-2 py-0.5 font-semibold text-success-ink">Sí</span>
             <span className="rounded-full bg-surface px-2 py-0.5 font-semibold">Adiviné</span>
           </div>
         </Preview>

@@ -194,7 +194,7 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
           <Button className="mt-5" disabled={busy} onClick={() => void start(null)}>
             {busy ? <Loader2 className="animate-spin" size={16} aria-hidden /> : <Sparkles size={16} aria-hidden />} Sorpréndeme
           </Button>
-          {error && <p role="alert" className="mt-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">{error}</p>}
+          {error && <p role="alert" className="mt-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger-ink">{error}</p>}
           {scenarios.length > 0 && (
             <div className="mt-8">
               <h2 className="font-display text-xl font-extrabold">Escenarios con misión</h2>
@@ -235,7 +235,7 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
   if (feedback) {
     return (
       <Card className="animate-rise">
-        <h2 className="flex items-center gap-2 font-display text-2xl font-extrabold"><CheckCircle2 className="text-success" aria-hidden /> Tu feedback</h2>
+        <h2 className="flex items-center gap-2 font-display text-2xl font-extrabold"><CheckCircle2 className="text-success-ink" aria-hidden /> Tu feedback</h2>
         <p className="mt-3">{feedback.summary}</p>
         {feedback.strengths.length > 0 && (
           <div className="mt-5">
@@ -249,8 +249,8 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
             <ul className="mt-3 space-y-3">
               {feedback.mistakes.map((m, i) => (
                 <li key={i} className="rounded-2xl bg-surface-muted p-4 text-sm">
-                  <p lang={language}><span className="font-bold text-danger">✗ </span>{m.userText}</p>
-                  <p className="mt-1" lang={language}><span className="font-bold text-success">✓ </span>{m.correction}</p>
+                  <p lang={language}><span className="font-bold text-danger-ink">✗ </span>{m.userText}</p>
+                  <p className="mt-1" lang={language}><span className="font-bold text-success-ink">✓ </span>{m.correction}</p>
                   <p className="mt-2 text-muted">{m.explanation}</p>
                 </li>
               ))}
@@ -289,8 +289,8 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
             {scenario.goals.map((g, i) => {
               const ok = goalsDone.includes(i + 1);
               return (
-                <li key={g} className={cn("flex max-w-[75%] shrink-0 items-start gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors sm:max-w-none", ok ? "bg-success-soft text-success" : "bg-surface text-muted")}>
-                  <span className={cn("mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border", ok ? "animate-pop-in border-success bg-success text-white" : "border-border")} aria-hidden>
+                <li key={g} className={cn("flex max-w-[75%] shrink-0 items-start gap-2 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors sm:max-w-none", ok ? "bg-success-soft text-success-ink" : "bg-surface text-muted")}>
+                  <span className={cn("mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border", ok ? "animate-pop-in border-success-ink bg-success-ink text-on-status" : "border-border")} aria-hidden>
                     {ok && <Check size={10} strokeWidth={3} />}
                   </span>
                   <span className={ok ? "line-through decoration-1" : ""}>{g}</span>
@@ -298,7 +298,7 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
               );
             })}
           </ul>
-          {party && <p className="mt-2 text-center text-sm font-bold text-success animate-pop-in">🎉 ¡Escenario superado! Termina para ver tu feedback.</p>}
+          {party && <p className="mt-2 text-center text-sm font-bold text-success-ink animate-pop-in">🎉 ¡Escenario superado! Termina para ver tu feedback.</p>}
         </div>
       )}
       <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4" aria-live="polite">
@@ -311,10 +311,10 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
         {busy && <p className="flex items-center gap-2 text-sm text-muted"><Loader2 className="animate-spin" size={14} aria-hidden /> Escribiendo…</p>}
         <div ref={endRef} />
       </div>
-      {error && <p role="alert" className="mx-5 mb-2 rounded-xl bg-danger-soft px-4 py-2 text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="mx-5 mb-2 rounded-xl bg-danger-soft px-4 py-2 text-sm text-danger-ink">{error}</p>}
       <form onSubmit={send} className="flex items-center gap-2 border-t border-border p-3">
         {micSupported && (
-          <button type="button" onClick={toggleMic} aria-pressed={listening} aria-label={listening ? "Detener dictado" : "Dictar por voz"} className={cn("grid size-11 shrink-0 place-items-center rounded-full", listening ? "bg-danger text-white" : "bg-surface-muted text-muted")}>
+          <button type="button" onClick={toggleMic} aria-pressed={listening} aria-label={listening ? "Detener dictado" : "Dictar por voz"} className={cn("grid size-11 shrink-0 place-items-center rounded-full", listening ? "bg-danger-ink text-on-status" : "bg-surface-muted text-muted")}>
             {listening ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
         )}

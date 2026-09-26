@@ -69,7 +69,7 @@ export default async function LanguagesPage() {
             {o.tips.map((t) => (
               <li key={`${t.a}-${t.b}`} className="card flex gap-3 p-4 text-sm">
                 <span className="flex shrink-0 -space-x-2"><LanguageMark code={t.a} size={30} /><LanguageMark code={t.b} size={30} className="ring-2 ring-surface" /></span>
-                <p>{t.level === 2 && <AlertTriangle size={14} className="mr-1 inline text-warning" aria-label="Atención" />}{t.text}</p>
+                <p>{t.level === 2 && <AlertTriangle size={14} className="mr-1 inline text-warning-ink" aria-label="Atención" />}{t.text}</p>
               </li>
             ))}
           </ul>

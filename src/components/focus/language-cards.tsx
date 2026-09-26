@@ -43,7 +43,7 @@ export function LanguageCards({ cards, todayIdx }: { cards: LanguageCard[]; toda
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      {error && <p role="alert" className="text-sm text-danger md:col-span-2">{error}</p>}
+      {error && <p role="alert" className="text-sm text-danger-ink md:col-span-2">{error}</p>}
       {cards.map((c) => {
         const max = Math.max(10, ...c.week);
         return (

@@ -119,7 +119,7 @@ export function NotificationSettings({ serverReady }: { serverReady: boolean }) 
         Un recordatorio al día, sólo si aún no has estudiado: repasos pendientes, tu racha o tu sesión diaria. Se activa por dispositivo.
       </p>
       {status === "denied" ? (
-        <p role="status" className="rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning">
+        <p role="status" className="rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning-ink">
           Bloqueaste las notificaciones para este sitio. Puedes permitirlas desde la configuración del navegador.
         </p>
       ) : (
@@ -138,7 +138,7 @@ export function NotificationSettings({ serverReady }: { serverReady: boolean }) 
         </div>
       )}
       {note && (
-        <p role={note.tone === "error" ? "alert" : "status"} className={`rounded-xl px-4 py-3 text-sm ${note.tone === "error" ? "bg-danger-soft text-danger" : "bg-success-soft text-success"}`}>
+        <p role={note.tone === "error" ? "alert" : "status"} className={`rounded-xl px-4 py-3 text-sm ${note.tone === "error" ? "bg-danger-soft text-danger-ink" : "bg-success-soft text-success-ink"}`}>
           {note.text}
         </p>
       )}

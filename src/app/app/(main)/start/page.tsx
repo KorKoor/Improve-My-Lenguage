@@ -74,7 +74,7 @@ export default async function StartPage() {
                 return (
                   <li key={u.id} className="min-w-0">
                     <Link href={unitHref(u)} aria-current={current ? "step" : undefined} className={cn("card lift flex items-center gap-3 p-3 hover:border-primary", current && "border-2 border-primary bg-primary-soft/40")}>
-                      <span className={cn("grid size-11 shrink-0 place-items-center rounded-xl text-sm font-extrabold", ok ? "bg-success text-white" : current ? "bg-primary text-on-primary" : "bg-surface-muted text-muted")}>
+                      <span className={cn("grid size-11 shrink-0 place-items-center rounded-xl text-sm font-extrabold", ok ? "bg-success-ink text-on-status" : current ? "bg-primary text-on-primary" : "bg-surface-muted text-muted")}>
                         {ok ? <Check size={18} aria-label="Hecho" /> : u.n}
                       </span>
                       <span className="min-w-0 flex-1">

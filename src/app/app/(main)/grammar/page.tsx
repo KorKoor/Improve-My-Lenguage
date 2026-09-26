@@ -39,7 +39,7 @@ export default async function GrammarPage({ searchParams }: { searchParams: Prom
               aria-current={level === l ? "page" : undefined}
               className={`rounded-full px-3 py-1 text-sm font-semibold transition ${level === l ? "bg-primary text-on-primary" : "bg-surface-muted text-muted hover:text-text"}`}
             >
-              {l ?? "Todos"} {l ? <span className="font-normal opacity-80">({all.filter((g) => g.cefr === l).length})</span> : null}
+              {l ?? "Todos"} {l ? <span className="font-normal">({all.filter((g) => g.cefr === l).length})</span> : null}
             </Link>
           ))}
         </nav>

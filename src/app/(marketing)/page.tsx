@@ -149,7 +149,7 @@ export default function Landing() {
                 { icon: Sparkles, text: "Explicaciones paso a paso en español" },
               ].map(({ icon: Icon, text }) => (
                 <li key={text} className="flex items-center gap-3">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-success-soft text-success" aria-hidden><Icon size={20} /></span>
+                  <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-success-soft text-success-ink" aria-hidden><Icon size={20} /></span>
                   <span className="font-medium">{text}</span>
                 </li>
               ))}

@@ -121,7 +121,7 @@ export function WritingStudio({ prompts, level, aiEnabled, locale, languageName,
         <div className="flex items-center gap-2"><Chip>{prompt.level}</Chip><span className="text-xs text-muted">Objetivo: ~{prompt.words} palabras</span></div>
         <h1 className="mt-2 font-display text-2xl font-extrabold">{prompt.title}</h1>
         <p className="mt-1 text-lg">{prompt.task}</p>
-        <ul className="mt-3 space-y-1 text-sm text-muted">{prompt.tips.map((t) => <li key={t} className="flex gap-2"><Lightbulb size={15} className="mt-0.5 shrink-0 text-warning" />{t}</li>)}</ul>
+        <ul className="mt-3 space-y-1 text-sm text-muted">{prompt.tips.map((t) => <li key={t} className="flex gap-2"><Lightbulb size={15} className="mt-0.5 shrink-0 text-warning-ink" />{t}</li>)}</ul>
       </Card>
 
       {!result ? (
@@ -148,7 +148,7 @@ export function WritingStudio({ prompts, level, aiEnabled, locale, languageName,
               <Sparkles size={15} className="text-primary" /> Corrección detallada con el tutor de IA
             </label>
           ) : null}
-          {error ? <p role="alert" className="mt-3 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">{error}</p> : null}
+          {error ? <p role="alert" className="mt-3 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger-ink">{error}</p> : null}
           <Button size="lg" className="mt-4 w-full sm:w-auto" onClick={() => void submit()} disabled={busy || text.trim().length < 10}>
             {busy ? <Loader2 className="animate-spin" size={18} /> : <Wand2 size={18} />} Revisar mi texto
           </Button>
@@ -205,7 +205,7 @@ function Result({ result, text, locale, onRetry }: { result: WritingResult; text
         ) : a.issues.length ? (
           <p className="mt-3 text-sm text-muted">Toca las palabras marcadas para ver la sugerencia.</p>
         ) : (
-          <p className="mt-3 flex items-center gap-2 text-sm text-success"><CheckCircle2 size={16} /> No detectamos errores de ortografía, acentos ni mayúsculas.</p>
+          <p className="mt-3 flex items-center gap-2 text-sm text-success-ink"><CheckCircle2 size={16} /> No detectamos errores de ortografía, acentos ni mayúsculas.</p>
         )}
       </Card>
 
@@ -216,19 +216,19 @@ function Result({ result, text, locale, onRetry }: { result: WritingResult; text
             <ul className="space-y-3">
               {ai.mistakes.map((m, k) => (
                 <li key={k} className="rounded-2xl bg-surface-muted p-4">
-                  <p lang={locale}><span className="text-danger line-through">{m.original}</span> → <strong className="text-success">{m.correction}</strong></p>
+                  <p lang={locale}><span className="text-danger-ink line-through">{m.original}</span> → <strong className="text-success-ink">{m.correction}</strong></p>
                   <p className="mt-1 text-sm text-muted">{m.explanation}</p>
                 </li>
               ))}
             </ul>
-          ) : <p className="text-success">¡Sin errores importantes!</p>}
+          ) : <p className="text-success-ink">¡Sin errores importantes!</p>}
           <h3 className="mt-5 font-semibold">Versión mejorada</h3>
           <p className="mt-1 whitespace-pre-wrap rounded-2xl bg-success-soft p-4 leading-relaxed" lang={locale}>{ai.corrected}</p>
           {ai.strengths.length ? <><h3 className="mt-4 font-semibold">Lo que hiciste bien</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-sm">{ai.strengths.map((s) => <li key={s}>{s}</li>)}</ul></> : null}
           {ai.suggestions.length ? <><h3 className="mt-4 font-semibold">Para sonar más natural</h3><ul className="mt-1 list-disc space-y-1 pl-5 text-sm">{ai.suggestions.map((s) => <li key={s}>{s}</li>)}</ul></> : null}
         </Card>
       ) : result.aiError ? (
-        <p className="rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning">{result.aiError} Mostramos la revisión automática.</p>
+        <p className="rounded-xl bg-warning-soft px-4 py-3 text-sm text-warning-ink">{result.aiError} Mostramos la revisión automática.</p>
       ) : null}
 
       {result.newAchievements.length ? <div className="flex flex-wrap gap-2">{result.newAchievements.map((x) => <Chip key={x.id} tone="warning">{x.icon} {x.title}</Chip>)}</div> : null}

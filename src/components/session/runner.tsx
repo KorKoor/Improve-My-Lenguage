@@ -284,7 +284,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         </div>
         {summary?.newAchievements.length ? (
           <div className="card w-full max-w-md p-4 text-left">
-            <p className="flex items-center gap-2 font-semibold"><Trophy size={18} className="text-warning" aria-hidden /> Nuevos logros</p>
+            <p className="flex items-center gap-2 font-semibold"><Trophy size={18} className="text-warning-ink" aria-hidden /> Nuevos logros</p>
             <ul className="mt-2 space-y-1 text-sm">{summary.newAchievements.map((a) => <li key={a.id}>{a.icon} {a.title}</li>)}</ul>
           </div>
         ) : null}
@@ -427,7 +427,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         </span>
         {"retry" in step && step.retry ? <Chip tone="warning">Otra oportunidad</Chip> : null}
         {lightened > 0 ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success animate-pop-in" title="Con cansancio las palabras nuevas se fijan peor: volverán en otra sesión.">
+          <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success-ink animate-pop-in" title="Con cansancio las palabras nuevas se fijan peor: volverán en otra sesión.">
             🪶 Sesión aligerada: sin palabras nuevas
           </span>
         ) : null}
@@ -436,12 +436,12 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
             🐢 Vamos más despacio: menos opciones y una pista
           </span>
         ) : challenge ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success animate-pop-in">
+          <span className="inline-flex items-center gap-1 rounded-full bg-success-soft px-2.5 py-0.5 text-xs font-semibold text-success-ink animate-pop-in">
             🚀 Vas genial: menos ayudas
           </span>
         ) : null}
         {combo.now >= 3 ? (
-          <span key={combo.now} className="ml-auto inline-flex items-center gap-1 rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-bold text-warning animate-pop-in" aria-label={`${combo.now} aciertos seguidos`}>
+          <span key={combo.now} className="ml-auto inline-flex items-center gap-1 rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-bold text-warning-ink animate-pop-in">
             <span className="animate-flame" aria-hidden>🔥</span> {combo.now} seguidas
           </span>
         ) : null}
@@ -565,13 +565,13 @@ function IntroStep({ step, locale, language, rtl, onNext, gentle = false, roman 
         {!latin && <LetterTiles text={w.lemma} language={language} rtl={rtl} onSay={(t) => speak(t, 0.8)} />}
         <p className="mt-4 text-xl font-semibold text-primary">{w.translation.join(", ")}</p>
         {w.friend?.kind === "cognate" && (
-          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success animate-pop-in">
+          <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1 text-sm font-semibold text-success-ink animate-pop-in">
             🤝 Se parece al español: «{w.friend.looksLike}». ¡Palabra regalo!
           </p>
         )}
         {w.friend?.kind === "false_friend" && (
           <p className="mt-3 rounded-2xl bg-danger-soft p-3 text-sm animate-pop-in">
-            <strong className="text-danger">⚠️ Falso amigo.</strong> Parece «{w.friend.looksLike}», pero significa <strong>{w.friend.means}</strong>.
+            <strong className="text-danger-ink">⚠️ Falso amigo.</strong> Parece «{w.friend.looksLike}», pero significa <strong>{w.friend.means}</strong>.
           </p>
         )}
         {w.example && (
@@ -585,7 +585,7 @@ function IntroStep({ step, locale, language, rtl, onNext, gentle = false, roman 
           </div>
         )}
         {w.usageNote && (
-          <p className="mt-4 flex gap-2 rounded-2xl bg-warning-soft p-4 text-sm"><Lightbulb size={18} className="mt-0.5 shrink-0 text-warning" aria-hidden /> {w.usageNote}</p>
+          <p className="mt-4 flex gap-2 rounded-2xl bg-warning-soft p-4 text-sm"><Lightbulb size={18} className="mt-0.5 shrink-0 text-warning-ink" aria-hidden /> {w.usageNote}</p>
         )}
         <div className="mt-3 flex justify-end"><ReportButton itemId={w.id} /></div>
       </div>
@@ -641,8 +641,8 @@ function TipStep({ step, language, onNext }: { step: Extract<SessionStep, { kind
         {g.example && <p className="mt-4 rounded-2xl bg-surface-muted p-4 text-lg" lang={language}>{g.example}</p>}
         {g.mistake && (
           <div className="mt-4 grid gap-2 text-sm sm:grid-cols-2">
-            <p className="rounded-xl bg-danger-soft p-3"><span className="font-semibold text-danger">✗ </span><span lang={language}>{g.mistake.wrong}</span></p>
-            <p className="rounded-xl bg-success-soft p-3"><span className="font-semibold text-success">✓ </span><span lang={language}>{g.mistake.right}</span></p>
+            <p className="rounded-xl bg-danger-soft p-3"><span className="font-semibold text-danger-ink">✗ </span><span lang={language}>{g.mistake.wrong}</span></p>
+            <p className="rounded-xl bg-success-soft p-3"><span className="font-semibold text-success-ink">✓ </span><span lang={language}>{g.mistake.right}</span></p>
             <p className="text-muted sm:col-span-2">{g.mistake.why}</p>
           </div>
         )}
@@ -822,7 +822,7 @@ function ExerciseStep({
 
       {struggling && ex.clue && !answered && (
         <p className="mt-4 flex gap-2 rounded-2xl bg-warning-soft p-3 text-sm animate-pop-in" role="note">
-          <Lightbulb size={18} className="mt-0.5 shrink-0 text-warning" aria-hidden /> <span><strong>Pista:</strong> <span lang={ex.type === "read_word" || ex.type === "letter_pair" ? language : "es"}>{ex.clue}</span></span>
+          <Lightbulb size={18} className="mt-0.5 shrink-0 text-warning-ink" aria-hidden /> <span><strong>Pista:</strong> <span lang={ex.type === "read_word" || ex.type === "letter_pair" ? language : "es"}>{ex.clue}</span></span>
         </p>
       )}
 
@@ -880,7 +880,7 @@ function ExerciseStep({
           />
           {!latinOnly && <ScriptKeyboard lang={language} locale={locale} value={text} onChange={setText} disabled={disabled} romanOk={ex.type === "recall" || ex.type === "cloze" || ex.type === "dictation_word"} defaultOpen={ex.type === "spell_word" ? true : undefined} />}
           {showHint && ex.hint && !feedback && (
-            <p className="mt-2 font-mono text-lg tracking-wider text-primary animate-pop-in" lang={language} aria-label="Pista">{ex.hint}</p>
+            <p className="mt-2 font-mono text-lg tracking-wider text-primary animate-pop-in" lang={language}><span className="sr-only" lang="es">Pista: </span>{ex.hint}</p>
           )}
           {!feedback && (
             <Button type="submit" size="lg" className="mt-4 w-full" disabled={!text.trim() || submitting}>
@@ -894,7 +894,7 @@ function ExerciseStep({
       {!feedback && ex.input !== "match" && ex.input !== "speech" && (
         <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
           {ex.input === "text" && ex.hint && !showHint && (
-            <button type="button" onClick={() => setShowHint(true)} className="rounded-full bg-warning-soft px-3.5 py-2 text-sm font-semibold text-warning hover:brightness-95">
+            <button type="button" onClick={() => setShowHint(true)} className="rounded-full bg-warning-soft px-3.5 py-2 text-sm font-semibold text-warning-ink hover:brightness-95">
               💡 Pista
             </button>
           )}
@@ -906,7 +906,7 @@ function ExerciseStep({
 
       {ex.input === "order" && ex.tokens && (
         <div className="mt-5">
-          <div className="min-h-16 rounded-2xl border-2 border-dashed border-border p-3" aria-label="Tu frase" aria-live="polite" lang={language} dir={dir}>
+          <div className="min-h-16 rounded-2xl border-2 border-dashed border-border p-3" role="group" aria-label="Tu frase" aria-live="polite" lang={language} dir={dir}>
             <div className="flex flex-wrap gap-2">
               {order.map((ti, pos) => (
                 <button key={`${ti}-${pos}`} type="button" disabled={disabled} onClick={() => setOrder((o) => o.filter((_, p) => p !== pos))} className="rounded-xl border border-primary bg-primary-soft px-3 py-2 font-medium text-primary">
@@ -995,13 +995,13 @@ function SpeechInput({ locale, disabled, onResult, onSkip }: { locale: string; d
         disabled={disabled}
         aria-pressed={listening}
         aria-label={listening ? "Detener" : "Pulsa y lee la frase"}
-        className={cn("relative grid size-20 place-items-center rounded-full text-white shadow-lg transition active:scale-95 disabled:opacity-50", listening ? "bg-danger" : "bg-primary hover:scale-105")}
+        className={cn("relative grid size-20 place-items-center rounded-full shadow-lg transition active:scale-95 disabled:opacity-50", listening ? "bg-danger-ink text-on-status" : "bg-primary text-on-primary hover:scale-105")}
       >
         {listening && <span className="absolute inset-0 animate-ping rounded-full bg-danger opacity-40" aria-hidden />}
         <Mic size={32} aria-hidden />
       </button>
       <p className="text-sm text-muted" aria-live="polite">{listening ? "Te escucho…" : "Pulsa el micrófono y lee la frase"}</p>
-      {err && <p className="text-sm text-danger" role="alert">{err}</p>}
+      {err && <p className="text-sm text-danger-ink" role="alert">{err}</p>}
       {!disabled && !listening && (
         <button type="button" onClick={onSkip} className="text-xs text-muted hover:text-text">Ahora no puedo hablar</button>
       )}
@@ -1064,7 +1064,7 @@ function ConfidenceCheck({ attemptId }: { attemptId: string }) {
   return (
     <div className="mt-3 flex items-center gap-2 text-sm text-muted">
       <span className="flex-1">¿Lo sabías con seguridad?</span>
-      <button type="button" onClick={() => choose(false)} className="rounded-full bg-surface px-3 py-1 font-semibold text-success hover:brightness-95">Sí</button>
+      <button type="button" onClick={() => choose(false)} className="rounded-full bg-surface px-3 py-1 font-semibold text-success-ink hover:brightness-95">Sí</button>
       <button type="button" onClick={() => choose(true)} className="rounded-full bg-surface px-3 py-1 font-semibold text-text hover:brightness-95">Adiviné</button>
     </div>
   );
@@ -1098,8 +1098,8 @@ function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain, ex
             <Button size="lg" className="mt-4 w-full" onClick={onNext} autoFocus>Continuar</Button>
           </>
         ) : (<>
-        <p className={cn("flex items-center gap-2 font-display text-xl font-extrabold", ok ? "text-success" : "text-danger")}>
-          <span className={cn("grid size-8 place-items-center rounded-full text-white animate-pop-in", ok ? "bg-success" : "bg-danger")} aria-hidden>
+        <p className={cn("flex items-center gap-2 font-display text-xl font-extrabold", ok ? "text-success-ink" : "text-danger-ink")}>
+          <span className={cn("grid size-8 place-items-center rounded-full text-on-status animate-pop-in", ok ? "bg-success-ink" : "bg-danger-ink")} aria-hidden>
             {ok ? <Check size={18} strokeWidth={3} /> : <X size={18} strokeWidth={3} />}
           </span>
           {ok ? (f.nearMiss ? "Casi perfecto." : praise) : f.expected ? "Respuesta correcta:" : "Todavía no"}
@@ -1120,7 +1120,7 @@ function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain, ex
         )}
         {why.state === "loading" && <p className="mt-3 flex items-center gap-2 text-sm text-muted"><Loader2 size={14} className="animate-spin" aria-hidden /> Tu tutor lo está pensando…</p>}
         {why.state === "done" && <p className="mt-3 rounded-xl bg-surface p-3 text-sm leading-relaxed animate-fade">💡 {why.text}</p>}
-        {why.state === "error" && <p className="mt-3 text-sm text-danger">{why.text}</p>}
+        {why.state === "error" && <p className="mt-3 text-sm text-danger-ink">{why.text}</p>}
         {ok && f.attemptId && <ConfidenceCheck attemptId={f.attemptId} />}
         {reportId && <div className="mt-2"><ReportButton itemId={reportId} /></div>}
         <Button size="lg" variant={ok ? "success" : "danger"} className="mt-4 w-full" onClick={onNext} autoFocus>
@@ -1139,12 +1139,12 @@ function SessionClock({ seconds, target }: { seconds: number; target: number }) 
   const r = 9;
   const c = 2 * Math.PI * r;
   return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold tabular-nums", over ? "bg-success-soft text-success" : "bg-surface-muted text-muted")} title={`Objetivo: ${Math.round(target / 60)} min`}>
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-semibold tabular-nums", over ? "bg-success-soft text-success-ink" : "bg-surface-muted text-muted")} title={`Objetivo: ${Math.round(target / 60)} min`}>
       <svg width={22} height={22} viewBox="0 0 22 22" className="-rotate-90" aria-hidden>
         <circle cx={11} cy={11} r={r} fill="none" stroke="var(--border)" strokeWidth={3} />
         <circle cx={11} cy={11} r={r} fill="none" stroke={over ? "var(--success)" : "var(--primary)"} strokeWidth={3} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct)} />
       </svg>
-      <span aria-label={`Tiempo de estudio ${formatClock(seconds)} de ${Math.round(target / 60)} minutos`}>{formatClock(seconds)}</span>
+      <span><span className="sr-only">Tiempo de estudio </span>{formatClock(seconds)}<span className="sr-only"> de {Math.round(target / 60)} minutos</span></span>
     </span>
   );
 }

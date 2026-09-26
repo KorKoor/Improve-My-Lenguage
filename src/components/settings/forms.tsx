@@ -82,8 +82,8 @@ export function PreferencesForm({ initial, topics, natives, aiAvailable }: { ini
       </label>
       <div className="flex items-center gap-3">
         <Button type="submit" disabled={pending}>{pending ? <Loader2 className="animate-spin" size={16} aria-hidden /> : null} Guardar cambios</Button>
-        {saved === "ok" && <span role="status" className="flex items-center gap-1 text-sm text-success"><Check size={16} aria-hidden /> Guardado</span>}
-        {saved === "error" && <span role="alert" className="text-sm text-danger">No se pudo guardar.</span>}
+        {saved === "ok" && <span role="status" className="flex items-center gap-1 text-sm text-success-ink"><Check size={16} aria-hidden /> Guardado</span>}
+        {saved === "error" && <span role="alert" className="text-sm text-danger-ink">No se pudo guardar.</span>}
       </div>
     </form>
   );
@@ -99,13 +99,13 @@ export function DangerZone() {
   const [error, setError] = useState<string | null>(null);
   return (
     <Card className="border-danger/40">
-      <h2 className="font-display text-lg font-extrabold text-danger">Eliminar cuenta</h2>
+      <h2 className="font-display text-lg font-extrabold text-danger-ink">Eliminar cuenta</h2>
       <p className="mt-1 text-sm text-muted">Se borrarán de forma permanente tu cuenta y todos tus datos de aprendizaje, en todos los idiomas. No se puede deshacer. Te recomendamos descargar tus datos antes.</p>
       <label className="mt-4 block text-sm font-medium">
         Escribe <strong>ELIMINAR</strong> para confirmar
         <input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-1.5 h-11 w-full max-w-xs rounded-xl border border-border bg-surface px-3.5 outline-none focus:border-danger" />
       </label>
-      {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-sm text-danger-ink">{error}</p>}
       <Button
         variant="danger"
         className="mt-4"
@@ -196,7 +196,7 @@ export function ComfortSettings({ initial }: { initial: { textSize: TextSize; si
       </button>
       <div className="flex flex-wrap items-center gap-3">
         <a href="/app?tutorial=1" className="inline-flex h-11 items-center gap-2 rounded-[14px] border border-border bg-surface px-5 text-[15px] font-semibold text-primary hover:bg-surface-muted">Ver el tutorial otra vez</a>
-        {saved && <span role="status" className="flex items-center gap-1 text-sm text-success"><Check size={16} aria-hidden /> Guardado</span>}
+        {saved && <span role="status" className="flex items-center gap-1 text-sm text-success-ink"><Check size={16} aria-hidden /> Guardado</span>}
       </div>
     </div>
   );

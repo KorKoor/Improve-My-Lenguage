@@ -20,7 +20,7 @@ export function ReportButton({ itemId, className }: { itemId: string; className?
   const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [msg, setMsg] = useState("");
 
-  if (state === "sent") return <span className={cn("text-xs font-semibold text-success", className)}>✓ ¡Gracias! Lo revisaremos.</span>;
+  if (state === "sent") return <span className={cn("text-xs font-semibold text-success-ink", className)}>✓ ¡Gracias! Lo revisaremos.</span>;
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)} className={cn("inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold text-muted hover:bg-surface-muted hover:text-text", className)}>
@@ -56,7 +56,7 @@ export function ReportButton({ itemId, className }: { itemId: string; className?
         Cómo debería ser (opcional)
         <input value={note} onChange={(e) => setNote(e.target.value)} maxLength={300} className="mt-1 h-9 w-full rounded-xl border border-border bg-bg px-3 text-sm text-text" placeholder="p. ej. «tu» significa «tú», no «callar»" />
       </label>
-      {state === "error" && <p className="mt-2 text-xs text-danger">{msg}</p>}
+      {state === "error" && <p className="mt-2 text-xs text-danger-ink">{msg}</p>}
       <div className="mt-2 flex justify-end gap-2">
         <button type="button" onClick={() => setOpen(false)} className="rounded-full px-3 py-1.5 text-xs font-semibold text-muted">Cancelar</button>
         <button type="submit" disabled={state === "sending"} className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-on-primary">

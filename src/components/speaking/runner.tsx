@@ -189,7 +189,7 @@ export function SpeakingRunner({ languageName }: { languageName: string }) {
     return (
       <div className="card mx-auto max-w-xl space-y-4 p-8 text-center animate-rise">
         {pct >= 70 && <Confetti />}
-        <Trophy className="mx-auto text-warning animate-pop-in" size={44} aria-hidden />
+        <Trophy className="mx-auto text-warning-ink animate-pop-in" size={44} aria-hidden />
         <h2 className="font-display text-2xl font-extrabold">{pct >= 90 ? "¡Pronunciación de lujo!" : pct >= 70 ? "¡Muy bien dicho!" : "¡Buen entrenamiento!"}</h2>
         <p className="text-muted">Se entendieron {score} de {items.length} frases a la primera o tras repetir.</p>
         {achievements.map((a) => (
@@ -229,8 +229,8 @@ export function SpeakingRunner({ languageName }: { languageName: string }) {
             aria-pressed={listening}
             aria-label={listening ? "Detener" : "Pulsa y lee la frase"}
             className={cn(
-              "relative grid size-20 place-items-center rounded-full text-white shadow-lg transition-transform active:scale-95",
-              listening ? "bg-danger" : "bg-primary hover:scale-105",
+              "relative grid size-20 place-items-center rounded-full shadow-lg transition-transform active:scale-95",
+              listening ? "bg-danger-ink text-on-status" : "bg-primary text-on-primary hover:scale-105",
             )}
           >
             {listening && <span className="absolute inset-0 animate-ping rounded-full bg-danger opacity-40" aria-hidden />}
@@ -239,13 +239,13 @@ export function SpeakingRunner({ languageName }: { languageName: string }) {
           <p className="min-h-6 text-center text-sm text-muted" aria-live="polite">
             {listening ? (interim ? `«${interim}»` : "Te escucho…") : busy ? "Comparando…" : fb ? "" : "Pulsa el micrófono y lee la frase"}
           </p>
-          {err && <p className="text-center text-sm text-danger" role="alert">{err}</p>}
+          {err && <p className="text-center text-sm text-danger-ink" role="alert">{err}</p>}
         </div>
 
         {fb && (
           <div className={cn("space-y-3 rounded-2xl p-4 animate-sheet", fb.correct ? "bg-success-soft" : "bg-warning-soft")} role="status">
             <div className="flex items-center gap-3">
-              <span className={cn("font-display text-3xl font-extrabold animate-pop-in", fb.correct ? "text-success" : "text-warning")}>{Math.round(fb.score * 100)} %</span>
+              <span className={cn("font-display text-3xl font-extrabold animate-pop-in", fb.correct ? "text-success-ink" : "text-warning-ink")}>{Math.round(fb.score * 100)} %</span>
               <p className="text-sm font-semibold">{fb.tip}</p>
             </div>
             <p lang={locale} className="flex flex-wrap gap-x-1.5 gap-y-1 text-lg">
@@ -254,9 +254,9 @@ export function SpeakingRunner({ languageName }: { languageName: string }) {
                   key={k}
                   className={cn(
                     "rounded px-1",
-                    p.kind === "ok" && "text-success",
-                    p.kind === "typo" && "bg-warning-soft text-warning",
-                    p.kind === "missing" && "bg-danger-soft text-danger line-through decoration-2",
+                    p.kind === "ok" && "text-success-ink",
+                    p.kind === "typo" && "bg-warning-soft text-warning-ink",
+                    p.kind === "missing" && "bg-danger-soft text-danger-ink line-through decoration-2",
                   )}
                 >
                   {p.text}

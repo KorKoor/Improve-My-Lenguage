@@ -80,7 +80,7 @@ export function IdentityEditor({ avatar, name, avatars }: { avatar: string | nul
           ))}
         </div>
       </fieldset>
-      {error && <p className="text-sm text-danger" role="alert">{error}</p>}
+      {error && <p className="text-sm text-danger-ink" role="alert">{error}</p>}
       <div className="flex gap-2">
         <Button onClick={save} disabled={pending}>{pending ? "Guardando…" : "Guardar"}</Button>
         <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>

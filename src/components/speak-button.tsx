@@ -187,7 +187,7 @@ export function VoiceWarning({ locale, languageName }: { locale: string; languag
   if (hidden || hasPack || (status !== "missing" && status !== "unsupported")) return null;
   return (
     <div role="status" className="mt-3 flex gap-3 rounded-2xl border border-warning/40 bg-warning-soft p-3 text-sm">
-      <AlertTriangle size={18} className="mt-0.5 shrink-0 text-warning" aria-hidden />
+      <AlertTriangle size={18} className="mt-0.5 shrink-0 text-warning-ink" aria-hidden />
       <div className="flex-1">
         <p className="font-semibold">{status === "unsupported" ? "Tu navegador no puede leer en voz alta" : `Tu dispositivo no tiene voz en ${languageName.toLowerCase()}`}</p>
         <p className="text-muted">

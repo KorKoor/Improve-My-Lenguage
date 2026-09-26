@@ -62,7 +62,8 @@ export function CountUp({ value, duration = 900, suffix = "" }: { value: number;
     return () => cancelAnimationFrame(raf);
   }, [value, duration]);
   return (
-    <span aria-label={`${value}${suffix}`}>
+    <span>
+      <span className="sr-only">{`${value}${suffix}`}</span>
       <span aria-hidden>{shown.toLocaleString("es")}{suffix}</span>
     </span>
   );

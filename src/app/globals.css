@@ -33,6 +33,8 @@
   --success-ink: #1f7a52;
   --warning-ink: #8a5208;
   --danger-ink: #a8322d;
+  /* Texto sobre un fondo de estado sólido (bg-success-ink, bg-danger-ink). */
+  --on-status: #ffffff;
   color-scheme: light;
 }
 
@@ -44,6 +46,7 @@
   --success-ink: var(--success);
   --warning-ink: var(--warning);
   --danger-ink: var(--danger);
+  --on-status: #121630;
   --border: #2f3760;
   --text: #f3f1fb;
   --text-muted: #b0acd0;
@@ -88,6 +91,7 @@
   --color-success-ink: var(--success-ink);
   --color-warning-ink: var(--warning-ink);
   --color-danger-ink: var(--danger-ink);
+  --color-on-status: var(--on-status);
   --color-skill-vocabulary: var(--skill-vocabulary);
   --color-skill-grammar: var(--skill-grammar);
   --color-skill-listening: var(--skill-listening);

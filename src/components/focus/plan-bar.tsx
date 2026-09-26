@@ -86,7 +86,7 @@ export function PlanBar({ inline = false }: { inline?: boolean }) {
       role="status"
       aria-label="Modo estudio en curso"
     >
-      <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl", over ? "bg-success-soft text-success" : "bg-primary-soft text-primary")}>
+      <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl", over ? "bg-success-soft text-success-ink" : "bg-primary-soft text-primary")}>
         <Timer size={18} aria-hidden />
       </span>
       <div className="min-w-0 flex-1">
@@ -99,7 +99,7 @@ export function PlanBar({ inline = false }: { inline?: boolean }) {
         type="button"
         disabled={pending}
         onClick={() => start(() => nextBlock(router.push))}
-        className={cn("inline-flex h-9 shrink-0 items-center gap-1 rounded-xl px-3 font-semibold", over ? "bg-success text-white" : "bg-primary-soft text-primary")}
+        className={cn("inline-flex h-9 shrink-0 items-center gap-1 rounded-xl px-3 font-semibold", over ? "bg-success-ink text-on-status" : "bg-primary-soft text-primary")}
       >
         {pending ? <Loader2 size={15} className="animate-spin" aria-hidden /> : null}
         {nextB ? "Siguiente" : "Terminar"} <ArrowRight size={15} aria-hidden />

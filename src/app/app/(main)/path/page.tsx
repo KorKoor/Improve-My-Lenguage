@@ -60,13 +60,13 @@ export default async function PathPage() {
               <div className="relative z-10 grid size-16 shrink-0 place-items-center rounded-full bg-bg">
                 <Ring value={l.progress} status={l.status} />
                 <span className={cn("absolute font-display text-lg font-extrabold", l.status === "locked" && "text-muted")}>
-                  {l.status === "done" ? <Check className="text-success" strokeWidth={3} /> : l.level}
+                  {l.status === "done" ? <Check className="text-success-ink" strokeWidth={3} /> : l.level}
                 </span>
               </div>
               <section className={cn("card flex-1 p-5", active && "border-primary shadow-[0_10px_30px_rgb(91_95_214/0.15)]", l.status === "locked" && "opacity-70")}>
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-display text-lg font-extrabold">{l.level} · {t.name}</h2>
-                  {l.status === "done" && <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success">Completado</span>}
+                  {l.status === "done" && <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success-ink">Completado</span>}
                   {active && <span className="rounded-full bg-primary-soft px-2 py-0.5 text-xs font-bold text-primary">Estás aquí · {pct} %</span>}
                   {l.status === "locked" && <Lock size={14} className="text-muted" aria-label="Más adelante" />}
                 </div>

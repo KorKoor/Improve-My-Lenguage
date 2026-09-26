@@ -32,8 +32,8 @@ export function WordActions({ id, status, compact = false }: { id: string; statu
   return (
     <div className="flex flex-wrap gap-2">
       {btn("saved", "Guardar", Bookmark, "border-primary bg-primary-soft text-primary")}
-      {btn("known", "Ya la sé", Check, "border-success bg-success-soft text-success")}
-      {btn("difficult", "Difícil", Flag, "border-warning bg-warning-soft text-warning")}
+      {btn("known", "Ya la sé", Check, "border-success bg-success-soft text-success-ink")}
+      {btn("difficult", "Difícil", Flag, "border-warning bg-warning-soft text-warning-ink")}
     </div>
   );
 }
