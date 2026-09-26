@@ -102,7 +102,7 @@ export function VerbTrainer({ verbs, level, language, languageName, initialVerb 
             {state === "loading" && !focusVerb ? <Loader2 className="animate-spin" size={18} aria-hidden /> : <Shuffle size={18} aria-hidden />} Empezar
           </Button>
         </section>
-        {err && <p className="text-sm text-danger" role="alert">{err}</p>}
+        {err && <p className="text-sm text-danger-ink" role="alert">{err}</p>}
         <section className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="font-display text-xl font-bold">O elige un verbo</h2>
@@ -135,7 +135,7 @@ export function VerbTrainer({ verbs, level, language, languageName, initialVerb 
     return (
       <div className="card mx-auto max-w-xl space-y-4 p-8 text-center animate-rise">
         {pct >= 70 && <Confetti />}
-        <Trophy className="mx-auto text-warning animate-pop-in" size={44} aria-hidden />
+        <Trophy className="mx-auto text-warning-ink animate-pop-in" size={44} aria-hidden />
         <h2 className="font-display text-2xl font-extrabold">{pct >= 90 ? "¡Dominas estos verbos!" : pct >= 70 ? "¡Muy bien conjugado!" : "¡Buen entrenamiento!"}</h2>
         <p className="text-muted">{score} de {questions.length} formas correctas. Los fallos vuelven en tus próximas sesiones.</p>
         {achievements.map((a) => <p key={a.id} className="font-semibold text-primary">{a.icon} Logro: {a.title}</p>)}
@@ -153,7 +153,7 @@ export function VerbTrainer({ verbs, level, language, languageName, initialVerb 
     <div className="mx-auto max-w-2xl space-y-5">
       <div className="flex items-center gap-3">
         <ProgressBar value={i / questions.length} label={`Forma ${i + 1} de ${questions.length}`} height={10} className="flex-1" />
-        {streak >= 3 && <span key={streak} className="rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-bold text-warning animate-pop-in">🔥 {streak}</span>}
+        {streak >= 3 && <span key={streak} className="rounded-full bg-warning-soft px-2.5 py-0.5 text-xs font-bold text-warning-ink animate-pop-in">🔥 {streak}</span>}
       </div>
       <section key={cur.key} className={cn("card space-y-5 p-6 sm:p-8", fb && !fb.correct ? "animate-shake" : "animate-rise")}>
         <div className="flex flex-wrap items-center gap-2">
@@ -185,11 +185,11 @@ export function VerbTrainer({ verbs, level, language, languageName, initialVerb 
           )}
         </form>
         {!fb && <ScriptKeyboard lang={language} locale={locale} value={answer} onChange={setAnswer} romanOk={false} />}
-        {err && <p className="text-sm text-danger" role="alert">{err}</p>}
+        {err && <p className="text-sm text-danger-ink" role="alert">{err}</p>}
         {fb && (
           <div className={cn("space-y-3 rounded-2xl p-4 animate-sheet", fb.correct ? "bg-success-soft" : "bg-danger-soft")} role="status">
-            <p className={cn("flex items-center gap-2 font-display text-lg font-extrabold", fb.correct ? "text-success" : "text-danger")}>
-              <span className={cn("grid size-7 place-items-center rounded-full text-white animate-pop-in", fb.correct ? "bg-success" : "bg-danger")} aria-hidden>
+            <p className={cn("flex items-center gap-2 font-display text-lg font-extrabold", fb.correct ? "text-success-ink" : "text-danger-ink")}>
+              <span className={cn("grid size-7 place-items-center rounded-full text-on-status animate-pop-in", fb.correct ? "bg-success-ink" : "bg-danger-ink")} aria-hidden>
                 {fb.correct ? <Check size={16} strokeWidth={3} /> : <X size={16} strokeWidth={3} />}
               </span>
               {fb.correct ? (fb.nearMiss ? "¡Casi! Ojo con los acentos" : "¡Correcto!") : "Se dice:"}
@@ -202,7 +202,7 @@ export function VerbTrainer({ verbs, level, language, languageName, initialVerb 
                 {fb.row.map((r, k) => (
                   <tr key={k} className={cn(k === cur.person && "font-bold")}>
                     <td className="w-1/3 py-0.5 pr-3 text-muted" lang={language}>{r.pronoun}</td>
-                    <td lang={language} className={cn(k === cur.person && (fb.correct ? "text-success" : "text-danger"))}>{r.form ?? "—"}</td>
+                    <td lang={language} className={cn(k === cur.person && (fb.correct ? "text-success-ink" : "text-danger-ink"))}>{r.form ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

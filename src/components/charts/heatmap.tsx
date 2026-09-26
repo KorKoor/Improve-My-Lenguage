@@ -23,8 +23,9 @@ export function Heatmap({ days, today, weeks = 20, metric = "minutes" }: { days:
   const height = 7 * (cell + gap);
   return (
     <figure>
-      <div className="overflow-x-auto">
-        <svg width={width} height={height} role="img" aria-label={`Actividad de las últimas ${weeks} semanas`} className="block">
+      {/* Se encoge con la pantalla (viewBox) en vez de desbordar: en móvil no hace falta desplazar. */}
+      <div>
+        <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Actividad de las últimas ${weeks} semanas`} className="block h-auto w-full" style={{ maxWidth: width }}>
           {cells.map((c) => (
             <rect key={c.day} x={c.x} y={c.y} width={cell} height={cell} rx={4} fill={c.v > 0 ? "var(--primary)" : "var(--surface-muted)"} fillOpacity={c.v > 0 ? level(c.v) : 1}>
               <title>{`${c.day}: ${c.v} ${unit}`}</title>

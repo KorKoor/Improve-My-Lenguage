@@ -146,7 +146,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <WhatsNew version={CHANGELOG_VERSION} count={CHANGELOG.length} />
 
       {d.freezeUsed.length > 0 && (
-        <p className="rounded-2xl bg-warning-soft px-4 py-3 text-sm font-semibold text-warning animate-pop-in" role="status">
+        <p className="rounded-2xl bg-warning-soft px-4 py-3 text-sm font-semibold text-warning-ink animate-pop-in" role="status">
           🛡️ Tu protector de racha cubrió {d.freezeUsed.length === 1 ? "el día que no estudiaste" : `${d.freezeUsed.length} días sin estudiar`}: tu racha de {d.streak} {d.streak === 1 ? "día" : "días"} sigue viva. ¡A por hoy!
         </p>
       )}

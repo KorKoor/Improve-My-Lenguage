@@ -152,7 +152,7 @@ export function PersonalityQuiz() {
               <span className="text-muted">Dificultad, profundidad de las explicaciones, motivación y el reparto del plan diario. Puedes cambiarlo cuando quieras en Configuración.</span>
             </span>
           </label>
-          {error && <p className="text-sm text-danger" role="alert">{error}</p>}
+          {error && <p className="text-sm text-danger-ink" role="alert">{error}</p>}
           <Button size="lg" onClick={submit} disabled={pending} className="w-full sm:w-auto">
             <Sparkles size={18} /> {pending ? "Analizando…" : "Ver mi resultado"}
           </Button>

@@ -86,7 +86,7 @@ export function AlphabetTrainer({ alphabet, locale, rtl, languageName, initialPr
         <ProgressBar value={done / alphabet.groups.length} label={`${done} de ${alphabet.groups.length} grupos`} height={10} className="mt-2" />
         <div className="mt-4 flex flex-wrap gap-2">
           {alphabet.groups.map((g, i) => (
-            <button key={g.id} type="button" onClick={() => openGroup(i)} aria-pressed={i === gi} className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition", i === gi ? "border-primary bg-primary text-on-primary" : progress[g.id] ? "border-success/40 bg-success-soft text-success" : "border-border bg-surface text-muted hover:border-primary")}>
+            <button key={g.id} type="button" onClick={() => openGroup(i)} aria-pressed={i === gi} className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition", i === gi ? "border-primary bg-primary text-on-primary" : progress[g.id] ? "border-success/40 bg-success-soft text-success-ink" : "border-border bg-surface text-muted hover:border-primary")}>
               {progress[g.id] ? <Check size={14} aria-label="Practicado" /> : <span className="text-xs">{i + 1}</span>} {g.title}
             </button>
           ))}
@@ -190,7 +190,7 @@ function Quiz({ group, questions, lang, dir, say, onExit, onSaved, onNext, onRet
       <div className="flex flex-col items-center gap-5 py-16 text-center animate-rise">
         {result.state === "done" && result.stars >= 2 && <Confetti />}
         <h1 className="font-display text-3xl font-extrabold">¡Grupo practicado!</h1>
-        <p className="text-4xl" aria-label={`${result.stars} estrellas de 3`}>
+        <p className="text-4xl" role="img" aria-label={`${result.stars} estrellas de 3`}>
           {[1, 2, 3].map((s) => <span key={s} className={cn("inline-block", s <= result.stars ? "animate-pop-in" : "opacity-25 grayscale")}>⭐</span>)}
         </p>
         <p className="text-muted">{score.correct} de {score.total} a la primera. {result.stars < 3 ? "Repetir un par de veces ayuda mucho a fijarlas." : "¡Ya las reconoces!"}</p>
@@ -231,8 +231,8 @@ function Quiz({ group, questions, lang, dir, say, onExit, onSaved, onNext, onRet
   };
   const optionClass = (o: string) => {
     if (!answer) return "border-border bg-surface hover:border-primary hover:bg-primary-soft/40";
-    if (o === target) return "border-2 border-success bg-success-soft text-success";
-    if (o === answer.chosen) return "border-2 border-danger bg-danger-soft text-danger";
+    if (o === target) return "border-2 border-success bg-success-soft text-success-ink";
+    if (o === answer.chosen) return "border-2 border-danger bg-danger-soft text-danger-ink";
     return "border-border bg-surface opacity-60";
   };
 
@@ -276,7 +276,7 @@ function Quiz({ group, questions, lang, dir, say, onExit, onSaved, onNext, onRet
       {answer && (
         <div role="status" className={cn("fixed inset-x-0 bottom-0 z-40 animate-rise rounded-t-3xl px-4 pb-[max(env(safe-area-inset-bottom),20px)] pt-5", answer.ok ? "bg-success-soft" : "bg-danger-soft")}>
           <div className="mx-auto max-w-2xl">
-            <p className={cn("flex items-center gap-2 font-display text-xl font-extrabold", answer.ok ? "text-success" : "text-danger")}>
+            <p className={cn("flex items-center gap-2 font-display text-xl font-extrabold", answer.ok ? "text-success-ink" : "text-danger-ink")}>
               {answer.ok ? <Check size={22} aria-hidden /> : <X size={22} aria-hidden />} {answer.ok ? "¡Muy bien!" : "Casi. Es:"}
             </p>
             <p className="mt-1 text-lg font-semibold"><span className="text-2xl" lang={lang}>{q.letter.g}</span> = {q.letter.r}</p>

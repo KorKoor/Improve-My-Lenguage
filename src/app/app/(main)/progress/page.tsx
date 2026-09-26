@@ -148,14 +148,14 @@ export default async function ProgressPage() {
       </Card>
 
       <Card>
-        <CardHeader title="Logros" icon={<Award className="text-warning" aria-hidden />} />
+        <CardHeader title="Logros" icon={<Award className="text-warning-ink" aria-hidden />} />
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {ACHIEVEMENT_RULES.map((a) => {
             const at = unlocked.get(a.id);
             return (
-              <li key={a.id} className={`flex items-center gap-3 rounded-2xl p-3 ${at ? "bg-warning-soft" : "bg-surface-muted opacity-70"}`}>
+              <li key={a.id} className={`flex items-center gap-3 rounded-2xl p-3 ${at ? "bg-warning-soft" : "border border-dashed border-border"}`}>
                 <span className="text-2xl" aria-hidden>{at ? a.icon : <Lock size={20} className="text-muted" />}</span>
-                <span className="text-sm"><span className="block font-semibold">{a.title}</span><span className="text-muted">{a.description}</span></span>
+                <span className="text-sm"><span className="block font-semibold">{at ? null : <span className="sr-only">Por conseguir: </span>}{a.title}</span><span className="text-muted">{a.description}</span></span>
               </li>
             );
           })}
@@ -185,7 +185,7 @@ function Delta({ now, before, unit = "" }: { now: number; before: number; unit?:
   const pct = unit.trim() === "%" ? null : before > 0 ? Math.round((diff / before) * 100) : null;
   const label = unit.trim() === "%" ? `${Math.abs(diff)} pts` : pct === null ? `+${diff}` : `${Math.abs(pct)} %`;
   return (
-    <span className={`text-xs font-semibold ${up ? "text-success" : "text-danger"}`}>
+    <span className={`text-xs font-semibold ${up ? "text-success-ink" : "text-danger-ink"}`}>
       {up ? "▲" : "▼"} {label}
     </span>
   );
@@ -219,7 +219,7 @@ function WeekCard({ week }: { week: import("@/lib/engine/insights").WeekReport }
             </div>
           ))}
         </dl>
-        <div className="flex h-32 gap-2" aria-label="Minutos por día esta semana">
+        <div className="flex h-32 gap-2" role="group" aria-label="Minutos por día esta semana">
           {week.daily.map((d, i) => (
             <div key={d.day} className="flex flex-1 flex-col items-center gap-1">
               <div className="relative w-full flex-1 overflow-hidden rounded-lg bg-surface-muted" title={`${d.minutes} min`}>

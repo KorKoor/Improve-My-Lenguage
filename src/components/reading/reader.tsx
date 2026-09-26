@@ -211,7 +211,7 @@ export function Reader({ data }: { data: ReaderData }) {
             <div className="mt-2 flex items-center gap-2"><Chip tone="muted">{w.cefr}</Chip>{w.known ? <Chip tone="success">Probablemente la conoces</Chip> : <Chip>Nueva para ti</Chip>}</div>
             <div className="mt-4 flex gap-2">
               {saved.has(active) ? (
-                <span className="inline-flex h-10 items-center gap-1.5 text-sm font-semibold text-success"><Check size={16} /> Guardada para repasar</span>
+                <span className="inline-flex h-10 items-center gap-1.5 text-sm font-semibold text-success-ink"><Check size={16} /> Guardada para repasar</span>
               ) : (
                 <>
                   <Button size="sm" onClick={() => void save(active, "saved")}><BookmarkPlus size={16} /> Repasarla</Button>
@@ -233,7 +233,7 @@ export function Reader({ data }: { data: ReaderData }) {
               <button type="button" onClick={() => setLookup(null)} className="grid size-9 place-items-center rounded-full text-muted hover:bg-surface-muted" aria-label="Cerrar"><X size={18} /></button>
             </div>
             {lookup.state === "loading" && <p className="mt-3 text-sm text-muted">Buscando en el diccionario…</p>}
-            {lookup.state === "error" && <p className="mt-3 text-sm text-danger">{lookup.error}</p>}
+            {lookup.state === "error" && <p className="mt-3 text-sm text-danger-ink">{lookup.error}</p>}
             {lookup.state === "done" && !lookup.entry && (
               <p className="mt-3 text-sm text-muted">No está en nuestro vocabulario ni en Wiktionary. Puede ser un nombre propio o una forma poco común.</p>
             )}
@@ -325,7 +325,7 @@ function Quiz({ data, started, onDone }: { data: ReaderData; started: number; on
     return (
       <section className="card mt-8 animate-rise p-7 text-center" aria-live="polite">
         {pct >= 60 ? <Confetti /> : null}
-        <Trophy className="mx-auto text-warning" size={40} />
+        <Trophy className="mx-auto text-warning-ink" size={40} />
         <h2 className="mt-3 font-display text-2xl font-extrabold">{pct >= 80 ? "¡Excelente comprensión!" : pct >= 50 ? "¡Buen trabajo!" : "Texto retador, ¡bien por intentarlo!"}</h2>
         <p className="mt-1 text-muted">{score} de {data.quiz.length} respuestas correctas · tu nivel de lectura se actualizó.</p>
         {result.achievements.length ? (
@@ -359,7 +359,7 @@ function Quiz({ data, started, onDone }: { data: ReaderData; started: number; on
       </div>
       {picked ? (
         <div className="mt-5 flex items-center gap-3">
-          <p className={cn("flex-1 font-semibold", picked === q.answer ? "text-success" : "text-danger")}>{picked === q.answer ? "¡Correcto!" : `Era: ${q.answer}`}</p>
+          <p className={cn("flex-1 font-semibold", picked === q.answer ? "text-success-ink" : "text-danger-ink")}>{picked === q.answer ? "¡Correcto!" : `Era: ${q.answer}`}</p>
           <Button onClick={() => void next()}>{i + 1 < data.quiz.length ? "Siguiente" : "Ver resultado"} <ArrowRight size={16} /></Button>
         </div>
       ) : null}

@@ -122,15 +122,15 @@ export function BreakCoach({
           </svg>
           {activity === "breathe" && !done ? (
             <div className="grid size-40 place-items-center rounded-full bg-success-soft animate-breathe" style={{ animationPlayState: paused ? "paused" : "running" }}>
-              <span className="font-display text-xl font-extrabold text-success" aria-live="polite">{phase.label}</span>
+              <span className="font-display text-xl font-extrabold text-success-ink" aria-live="polite">{phase.label}</span>
             </div>
           ) : (
             <div className="grid size-40 place-items-center rounded-full bg-surface shadow-sm">
               <span className={cn("text-6xl", !paused && !done && "animate-float")} aria-hidden>{done ? "✨" : a.icon}</span>
             </div>
           )}
-          <span className="absolute -bottom-2 rounded-full bg-surface px-3 py-1 font-display text-lg font-extrabold tabular-nums shadow-sm" aria-label={`Quedan ${formatClock(left)}`}>
-            {done ? "¡Listo!" : formatClock(left)}
+          <span className="absolute -bottom-2 rounded-full bg-surface px-3 py-1 font-display text-lg font-extrabold tabular-nums shadow-sm">
+            {done ? "¡Listo!" : <><span className="sr-only">Quedan </span>{formatClock(left)}</>}
           </span>
         </div>
 

@@ -137,7 +137,7 @@ export function OnboardingWizard({ adding, languages, topics, defaults }: { addi
                 {data.experience === "standard" && <Check size={18} className="text-primary" aria-hidden />}
               </button>
               <button type="button" role="radio" aria-checked={data.experience === "simple"} onClick={() => chooseExperience("simple")} className={option(data.experience === "simple")}>
-                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-success-soft text-success"><Type size={22} aria-hidden /></span>
+                <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-success-soft text-success-ink"><Type size={22} aria-hidden /></span>
                 <span className="flex-1">
                   <span className="block font-semibold">Sencilla</span>
                   <span className="text-sm text-muted">Letra grande, audio más lento, explicaciones paso a paso y un solo botón para empezar. Ideal si no usas muchas apps.</span>
@@ -292,7 +292,7 @@ export function OnboardingWizard({ adding, languages, topics, defaults }: { addi
         )}
       </div>
 
-      {error && <p role="alert" className="mt-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-4 rounded-xl bg-danger-soft px-4 py-3 text-sm text-danger-ink">{error}</p>}
       <div className="sticky bottom-0 mt-8 bg-bg pb-6 pt-3">
         {step < steps.length - 1 ? (
           <Button size="lg" className="w-full" disabled={!canNext} onClick={() => setStep((s) => s + 1)}>Continuar <ArrowRight size={18} aria-hidden /></Button>

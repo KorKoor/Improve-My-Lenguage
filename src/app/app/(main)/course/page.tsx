@@ -67,14 +67,14 @@ export default async function CoursePage() {
                 className={cn("card lift flex items-center gap-3 p-3 hover:border-primary", current && "border-2 border-primary bg-primary-soft/40", ahead && "border-dashed bg-surface-muted/50")}
                 aria-current={current ? "step" : undefined}
               >
-                <span className={cn("grid size-11 shrink-0 place-items-center rounded-xl text-sm font-extrabold", stars ? "bg-success text-white" : current ? "bg-primary text-on-primary" : "bg-surface-muted text-muted")}>
+                <span className={cn("grid size-11 shrink-0 place-items-center rounded-xl text-sm font-extrabold", stars ? "bg-success-ink text-on-status" : current ? "bg-primary text-on-primary" : "bg-surface-muted text-muted")}>
                   {stars ? <Check size={18} aria-label="Aprobada" /> : ahead ? <Lock size={15} aria-label="Más adelante" /> : l.n}
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold"><span aria-hidden>{l.emoji}</span> {l.n}. {l.title}</p>
                   <p className="truncate text-xs text-muted">{l.goal}</p>
                 </div>
-                {stars > 0 && <span className="shrink-0 text-xs" aria-label={`${stars} estrellas`}>{"⭐".repeat(stars)}</span>}
+                {stars > 0 && <span className="shrink-0 text-xs" role="img" aria-label={`${stars} estrellas`}>{"⭐".repeat(stars)}</span>}
               </Link>
             </li>
           );

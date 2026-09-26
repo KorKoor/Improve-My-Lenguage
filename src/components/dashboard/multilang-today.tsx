@@ -29,7 +29,7 @@ export function MultiLangToday({ o }: { o: LanguagesOverview }) {
               <LanguageMark code={a.code} size={26} />
               <span className="font-semibold">{c.name}</span>
               <span className="truncate text-xs text-muted">{a.mode === "review" ? "repaso" : "sesión"}{c.due ? ` · ${c.due} pendientes` : ""}</span>
-              <span className={`ml-auto shrink-0 text-xs font-bold tabular-nums ${done ? "text-success" : "text-muted"}`}>{done ? "✓ " : ""}{Math.min(c.minutesToday, a.minutes)}/{a.minutes} min</span>
+              <span className={`ml-auto shrink-0 text-xs font-bold tabular-nums ${done ? "text-success-ink" : "text-muted"}`}>{done ? "✓ " : ""}{Math.min(c.minutesToday, a.minutes)}/{a.minutes} min</span>
             </li>
           );
         })}

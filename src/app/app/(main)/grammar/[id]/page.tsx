@@ -48,8 +48,8 @@ export default async function GrammarDetail({ params }: { params: Promise<{ id: 
         <ul className="mt-4 space-y-4">
           {g.commonMistakes.map((m) => (
             <li key={m.wrong} className="grid gap-2 sm:grid-cols-2">
-              <p className="rounded-xl bg-danger-soft px-4 py-3" lang={lang}><span className="font-bold text-danger">✗ </span>{m.wrong}</p>
-              <p className="rounded-xl bg-success-soft px-4 py-3" lang={lang}><span className="font-bold text-success">✓ </span>{m.right}</p>
+              <p className="rounded-xl bg-danger-soft px-4 py-3" lang={lang}><span className="font-bold text-danger-ink">✗ </span>{m.wrong}</p>
+              <p className="rounded-xl bg-success-soft px-4 py-3" lang={lang}><span className="font-bold text-success-ink">✓ </span>{m.right}</p>
               {verbose && <p className="text-sm text-muted sm:col-span-2">{m.why}</p>}
             </li>
           ))}

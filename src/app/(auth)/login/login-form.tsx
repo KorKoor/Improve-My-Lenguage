@@ -145,7 +145,7 @@ export function LoginForm({ next, initialMode, error }: { next: string; initialM
           </label>
         )}
         {message && (
-          <p role={message.tone === "error" ? "alert" : "status"} className={`rounded-xl px-4 py-3 text-sm ${message.tone === "error" ? "bg-danger-soft text-danger" : "bg-success-soft text-success"}`}>
+          <p role={message.tone === "error" ? "alert" : "status"} className={`rounded-xl px-4 py-3 text-sm ${message.tone === "error" ? "bg-danger-soft text-danger-ink" : "bg-success-soft text-success-ink"}`}>
             {message.text}
           </p>
         )}

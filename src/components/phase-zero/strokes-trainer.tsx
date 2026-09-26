@@ -90,9 +90,9 @@ function TraceCanvas({ ch, onOk }: { ch: StrokeChar; onOk: () => void }) {
         <Button size="sm" variant="secondary" onClick={reset}><Eraser size={16} aria-hidden /> Borrar</Button>
       </div>
       <p className="mt-2 min-h-5 text-sm" role="status">
-        {verdict === 0 ? <span className="font-semibold text-success">¡Muy bien! Orden y dirección correctos.</span>
-          : verdict === -1 ? <span className="text-danger">Tiene {ch.strokes.length} {ch.strokes.length === 1 ? "trazo" : "trazos"}; has hecho {strokes.length}. Borra y prueba otra vez.</span>
-          : verdict ? <span className="text-danger">Revisa el trazo {verdict}: empieza en el punto de su color y sigue el mismo sentido que en la animación.</span>
+        {verdict === 0 ? <span className="font-semibold text-success-ink">¡Muy bien! Orden y dirección correctos.</span>
+          : verdict === -1 ? <span className="text-danger-ink">Tiene {ch.strokes.length} {ch.strokes.length === 1 ? "trazo" : "trazos"}; has hecho {strokes.length}. Borra y prueba otra vez.</span>
+          : verdict ? <span className="text-danger-ink">Revisa el trazo {verdict}: empieza en el punto de su color y sigue el mismo sentido que en la animación.</span>
           : null}
       </p>
     </div>

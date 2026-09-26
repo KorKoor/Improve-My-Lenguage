@@ -53,7 +53,7 @@ export default async function WritingSystemPage() {
             return (
               <li key={u.id}>
                 <Link href={writingHref(u.id)} className={cn("card lift flex items-center gap-3 p-3 hover:border-primary", pick?.unit.id === u.id && "border-2 border-primary")}>
-                  <span className={cn("grid size-11 shrink-0 place-items-center rounded-xl text-xs font-extrabold", ok ? "bg-success text-white" : "bg-surface-muted text-muted")}>{ok ? <Check size={18} aria-label="Hecha" /> : u.level}</span>
+                  <span className={cn("grid size-11 shrink-0 place-items-center rounded-xl text-xs font-extrabold", ok ? "bg-success-ink text-on-status" : "bg-surface-muted text-muted")}>{ok ? <Check size={18} aria-label="Hecha" /> : u.level}</span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-semibold">{u.title}</span>
                     <span className="block text-xs text-muted">{KIND_LABEL[u.kind] ?? u.kind} · {u.level}</span>

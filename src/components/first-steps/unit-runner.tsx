@@ -177,7 +177,7 @@ export function FirstStepsRunner({
         {phase === "done" && (result?.stars ?? 0) >= 2 && <Confetti />}
         <Afi size={120} mood="celebrating" motion="hop" />
         <h1 className="font-display text-3xl font-extrabold">¡Unidad completada!</h1>
-        <p className="text-4xl" aria-label={`${result?.stars ?? 0} estrellas de 3`}>
+        <p className="text-4xl" role="img" aria-label={`${result?.stars ?? 0} estrellas de 3`}>
           {[1, 2, 3].map((s) => <span key={s} className={cn("inline-block", s <= (result?.stars ?? 0) ? "animate-pop-in" : "opacity-25 grayscale")} style={{ animationDelay: `${s * 150}ms` }}>⭐</span>)}
         </p>
         <p className="text-muted">{pct} % de aciertos. Ya sabes decir {phrases.length} cosas nuevas.</p>
@@ -197,8 +197,8 @@ export function FirstStepsRunner({
   const optionClass = (o: string) => {
     if (!answer) return "border-border bg-surface hover:border-primary hover:bg-primary-soft/40";
     const target = task.kind === "listen" ? ph.es : ph.text;
-    if (o === target) return "border-2 border-success bg-success-soft text-success";
-    if (o === answer.chosen) return "border-2 border-danger bg-danger-soft text-danger";
+    if (o === target) return "border-2 border-success bg-success-soft text-success-ink";
+    if (o === answer.chosen) return "border-2 border-danger bg-danger-soft text-danger-ink";
     return "border-border bg-surface opacity-60";
   };
 
@@ -261,7 +261,7 @@ export function FirstStepsRunner({
       {answer && (
         <div role="status" className={cn("fixed inset-x-0 bottom-0 z-40 animate-rise rounded-t-3xl px-4 pb-[max(env(safe-area-inset-bottom),20px)] pt-5", answer.ok ? "bg-success-soft" : "bg-danger-soft")}>
           <div className="mx-auto max-w-2xl">
-            <p className={cn("flex items-center gap-2 font-display text-xl font-extrabold", answer.ok ? "text-success" : "text-danger")}>
+            <p className={cn("flex items-center gap-2 font-display text-xl font-extrabold", answer.ok ? "text-success-ink" : "text-danger-ink")}>
               {answer.ok ? <Check size={22} aria-hidden /> : <X size={22} aria-hidden />} {answer.ok ? "¡Muy bien!" : "Casi. Se dice:"}
             </p>
             <p className="mt-1 text-lg font-semibold" lang={language} dir={dir}>{ph.text}</p>

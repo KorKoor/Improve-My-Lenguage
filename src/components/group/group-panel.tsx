@@ -60,7 +60,7 @@ export function GroupPanel({ group }: { group: GroupView | null }) {
             Unirme
           </Button>
         </section>
-        {error && <p className="text-sm text-danger md:col-span-2" role="alert">{error}</p>}
+        {error && <p className="text-sm text-danger-ink md:col-span-2" role="alert">{error}</p>}
         <p className="text-xs text-muted md:col-span-2">
           En el grupo se comparte sólo tu nombre, avatar, idioma y nivel, racha y minutos de esta semana. Nunca tus errores, textos ni tu correo. Puedes salir cuando quieras.
         </p>
@@ -85,7 +85,7 @@ export function GroupPanel({ group }: { group: GroupView | null }) {
         </div>
         <button type="button" onClick={copy} className="lift inline-flex items-center gap-3 rounded-2xl border-2 border-dashed border-primary/50 bg-primary-soft px-4 py-2" aria-label={`Copiar código ${group.code}`}>
           <span className="font-display text-2xl font-extrabold tracking-[0.25em] text-primary">{group.code}</span>
-          {copied ? <Check size={18} className="text-success" aria-hidden /> : <Copy size={18} className="text-primary" aria-hidden />}
+          {copied ? <Check size={18} className="text-success-ink" aria-hidden /> : <Copy size={18} className="text-primary" aria-hidden />}
         </button>
       </section>
 
@@ -105,15 +105,15 @@ export function GroupPanel({ group }: { group: GroupView | null }) {
                     <LanguageMark code={m.language.code} size={16} /> {m.language.name}{m.language.level ? ` ${m.language.level}` : ""}
                   </span>
                 )}
-                <span className="inline-flex items-center gap-0.5"><Flame size={13} className={m.streak ? "text-warning" : ""} aria-hidden /> {m.streak} d</span>
+                <span className="inline-flex items-center gap-0.5"><Flame size={13} className={m.streak ? "text-warning-ink" : ""} aria-hidden /> {m.streak} d</span>
                 <span>{m.weekMinutes} min/sem</span>
               </p>
-              {m.studiedToday ? <p className="text-xs font-semibold text-success">✓ Ya estudió hoy</p> : <p className="text-xs text-muted">Aún no estudia hoy</p>}
+              {m.studiedToday ? <p className="text-xs font-semibold text-success-ink">✓ Ya estudió hoy</p> : <p className="text-xs text-muted">Aún no estudia hoy</p>}
             </div>
             {!m.isMe && (
               <div className="flex shrink-0 flex-col items-end gap-1">
                 {sent[m.id] ? (
-                  <span className="animate-pop-in text-2xl" aria-label="Ánimo enviado">{sent[m.id]}</span>
+                  <span className="animate-pop-in text-2xl" role="img" aria-label="Ánimo enviado">{sent[m.id]}</span>
                 ) : (
                   <div className="flex gap-0.5" role="group" aria-label={`Mandar ánimo a ${m.name}`}>
                     {CHEERS.slice(0, 3).map((c) => (
@@ -142,7 +142,7 @@ export function GroupPanel({ group }: { group: GroupView | null }) {
           </li>
         ))}
       </ul>
-      {error && <p className="text-sm text-danger" role="alert">{error}</p>}
+      {error && <p className="text-sm text-danger-ink" role="alert">{error}</p>}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-muted">Se comparte: nombre, avatar, idioma y nivel, racha y minutos de la semana. Nada más.</p>
         <Button variant="ghost" size="sm" onClick={() => { if (confirm("¿Seguro que quieres salir del grupo?")) act(() => leaveGroupAction()); }} disabled={pending}>

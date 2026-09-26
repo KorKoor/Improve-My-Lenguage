@@ -70,7 +70,7 @@ export default async function WordPage({ params }: { params: Promise<{ id: strin
       </Card>
 
       {v.usageNote && (
-        <Card className="flex gap-3 bg-warning-soft"><Lightbulb className="mt-0.5 shrink-0 text-warning" aria-hidden /><p>{v.usageNote}</p></Card>
+        <Card className="flex gap-3 bg-warning-soft"><Lightbulb className="mt-0.5 shrink-0 text-warning-ink" aria-hidden /><p>{v.usageNote}</p></Card>
       )}
 
       <Card>

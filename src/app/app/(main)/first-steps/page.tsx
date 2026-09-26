@@ -60,8 +60,8 @@ export default async function FirstStepsPage() {
                   <p className="text-sm text-muted">{u.goal}</p>
                   <p className="mt-2 truncate text-sm" lang={lang.code} dir={lang.rtl ? "rtl" : "ltr"}>{sample.map((s) => s.text).join(" · ")}</p>
                 </div>
-                <span className="shrink-0 text-sm" aria-label={stars ? `${stars} estrellas` : "Sin empezar"}>
-                  {stars ? <><Check size={16} className="inline text-success" aria-hidden /> {"⭐".repeat(stars)}</> : null}
+                <span className="shrink-0 text-sm" role="img" aria-label={stars ? `${stars} estrellas` : "Sin empezar"}>
+                  {stars ? <><Check size={16} className="inline text-success-ink" aria-hidden /> {"⭐".repeat(stars)}</> : null}
                 </span>
               </Link>
             </li>
