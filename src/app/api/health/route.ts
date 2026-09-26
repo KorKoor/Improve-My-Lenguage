@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { timingSafeEqual } from "node:crypto";
 import { aiAvailable } from "@/lib/ai/provider";
 import { vocabFor } from "@/lib/content";
-import { isBackendConfigured } from "@/lib/env";
+import { env, isBackendConfigured } from "@/lib/env";
 import { firestore } from "@/lib/firebase/admin";
 import { recentErrorCounts } from "@/lib/log";
 
@@ -38,7 +38,7 @@ export async function GET(req: Request) {
     content = "error";
   }
   const degraded = database === "error" || content === "error";
-  const body: Record<string, unknown> = { status: degraded ? "degraded" : "ok", database, content, ai: aiAvailable() };
+  const body: Record<string, unknown> = { status: degraded ? "degraded" : "ok", database, content, ai: aiAvailable(), aiProvider: env.aiProvider };
   if (authorized(req)) {
     body.version = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local";
     body.checkMs = Date.now() - started;
