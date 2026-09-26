@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState, useTransition } from "react";
 import { savePersonalityAction } from "@/app/app/profile-actions";
 import { Confetti } from "@/components/celebrate";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
 import { Button, buttonClass } from "@/components/ui/button";
 import { ARCHETYPES, LIKERT, PERSONALITY_QUESTIONS, type PersonalityResult } from "@/lib/engine/personality";
 import { cn } from "@/lib/cn";
@@ -88,7 +88,7 @@ export function PersonalityQuiz() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <header className="flex items-center gap-4">
-        <Mascot size={72} mood="cheer" />
+        <Afi size={72} mood="thinking" />
         <div>
           <h1 className="font-display text-2xl font-extrabold">¿Cómo aprendes mejor?</h1>
           <p className="text-sm text-muted">{total} preguntas rápidas · 2 minutos. No hay respuestas buenas ni malas: sirve para ajustar los ejercicios a ti.</p>

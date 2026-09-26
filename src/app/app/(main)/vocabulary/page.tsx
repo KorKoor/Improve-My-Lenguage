@@ -110,7 +110,7 @@ export default async function VocabularyPage({ searchParams }: { searchParams: P
       </p>
 
       {words.length === 0 ? (
-        <Card><EmptyState title="Sin resultados">Prueba con otra búsqueda o quita algún filtro.</EmptyState></Card>
+        <Card><EmptyState title="Sin resultados" mood="curious">Prueba con otra búsqueda o quita algún filtro.</EmptyState></Card>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {shown.map((v) => {

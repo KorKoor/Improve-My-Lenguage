@@ -37,25 +37,26 @@
 }
 
 .dark {
-  --bg: #14121c;
-  --surface: #1c1a27;
-  --surface-muted: #242134;
+  /* Noche: azul profundo (no negro), lavanda y mint; la estrella sigue dorada. */
+  --bg: #121630;
+  --surface: #1a1f3d;
+  --surface-muted: #232a4d;
   --success-ink: var(--success);
   --warning-ink: var(--warning);
   --danger-ink: var(--danger);
-  --border: #2e2a40;
-  --text: #f2f0fa;
-  --text-muted: #a7a2bc;
+  --border: #2f3760;
+  --text: #f3f1fb;
+  --text-muted: #b0acd0;
   --primary: #8e93f5;
   --primary-hover: #a3a7f8;
-  --primary-soft: #2a2a4a;
-  --on-primary: #14121c;
+  --primary-soft: #252b58;
+  --on-primary: #121630;
   --success: #4cc792;
-  --success-soft: #173327;
+  --success-soft: #16353a;
   --warning: #f2b84b;
-  --warning-soft: #3a2e17;
+  --warning-soft: #3a3226;
   --danger: #f07a75;
-  --danger-soft: #3a1c1c;
+  --danger-soft: #3d2236;
   --skill-vocabulary: #9a9df6;
   --skill-grammar: #6ccba5;
   --skill-listening: #f2bf66;
@@ -63,7 +64,7 @@
   --skill-speaking: #78c9e8;
   --skill-writing: #ef9cc0;
   --skill-pronunciation: #b9a0f0;
-  --shadow: 0 6px 20px rgb(0 0 0 / 0.25);
+  --shadow: 0 6px 20px rgb(6 9 30 / 0.35);
   color-scheme: dark;
 }
 
@@ -222,7 +223,25 @@ html[data-text="xl"] { font-size: 125%; }
 @keyframes drift { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(8px, -10px); } }
 .animate-drift { animation: drift 7s ease-in-out infinite; }
 
+/* ── Afi: movimientos pequeños y suaves (docs/BRAND.md) ─────────────────── */
+:root { --afi-shadow: #dfdbf6; }
+.dark { --afi-shadow: #2b3160; }
+.afi-body { transform-box: fill-box; transform-origin: 50% 100%; }
+@keyframes afi-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.015, 0.985); } }
+@keyframes afi-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes afi-hop { 0%, 100% { transform: translateY(0) scale(1); } 30% { transform: translateY(-9px) scale(1.02, 0.98); } 55% { transform: translateY(0) scale(1.03, 0.96); } 75% { transform: translateY(-3px); } }
+@keyframes afi-sway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+@keyframes afi-wave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-18deg); } }
+.afi-breathe .afi-body { animation: afi-breathe 4.5s ease-in-out infinite; }
+.afi-float .afi-body { animation: afi-float 3.6s ease-in-out infinite; }
+.afi-hop .afi-body { animation: afi-hop 0.9s ease-out 1; }
+.afi-sway .afi-body { animation: afi-sway 1.6s ease-in-out 1; }
+.afi-wave { transform-box: fill-box; transform-origin: 20% 90%; animation: afi-wave 1.2s ease-in-out 2; }
+/* Al pasar el ratón (o enfocar) algo que contiene a Afi, se balancea un poco. */
+.afi-host:hover .afi-body, .afi-host:focus-visible .afi-body { animation: afi-sway 1.6s ease-in-out 1; }
+
 @media (prefers-reduced-motion: reduce) {
+  .afi-body, .afi-wave { animation: none !important; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;

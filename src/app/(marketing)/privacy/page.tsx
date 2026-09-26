@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Privacidad", description: "Qué datos guarda Improve My Languages, para qué y cómo controlarlos." };
+export const metadata: Metadata = { alternates: { canonical: "/privacy" }, title: "Privacidad", description: "Qué datos guarda Improve My Languages, para qué y cómo controlarlos." };
 
 export default function Privacy() {
   return (

@@ -6,7 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { explainMistakeAction, tooHardAction, finishSessionAction, reviseConfidenceAction, startSessionAction, submitAnswerAction } from "@/app/app/actions";
 import { BLOCK_META } from "@/components/app/labels";
 import { Confetti, CountUp } from "@/components/celebrate";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
+import { afiAnswerLine, afiSessionLine } from "@/lib/engine/afi-voice";
 import { SpeakButton, useSpeech, VoiceWarning } from "@/components/speak-button";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
@@ -230,7 +231,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
     return (
       <div className="grid flex-1 place-items-center py-20 text-center" aria-live="polite">
         <div className="flex flex-col items-center gap-4">
-          <Mascot size={100} />
+          <Afi size={100} mood="thinking" motion="breathe" />
           <p className="font-display text-xl font-extrabold">Preparando tu sesión…</p>
           <p className="text-sm text-muted">Revisando qué estás a punto de olvidar y qué te conviene practicar.</p>
           <Loader2 className="animate-spin text-primary" aria-hidden />
@@ -242,7 +243,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
     return (
       <div className="grid flex-1 place-items-center py-20 text-center">
         <div className="flex max-w-sm flex-col items-center gap-4">
-          <Mascot size={100} mood="calm" />
+          <Afi size={100} mood="supportive" />
           <p className="font-display text-xl font-extrabold">No pudimos preparar tu sesión</p>
           <p className="text-sm text-muted">{error}</p>
           <div className="flex gap-2">
@@ -257,7 +258,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
     return (
       <div className="grid flex-1 place-items-center py-20 text-center">
         <div className="flex max-w-sm flex-col items-center gap-4">
-          <Mascot size={110} mood="cheer" />
+          <Afi size={110} mood="happy" />
           <p className="font-display text-2xl font-extrabold">¡Estás al día!</p>
           <p className="text-sm text-muted">No hay nada pendiente aquí ahora mismo. Tu memoria lo agradece.</p>
           <ButtonLink href="/app/session">Hacer una sesión normal</ButtonLink>
@@ -270,9 +271,9 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-5 py-16 text-center animate-rise" aria-live="polite">
         {status === "done" && acc !== null && acc >= 70 && <Confetti />}
-        <Mascot size={130} mood="cheer" className="animate-float" />
-        <h1 className="font-display text-3xl font-extrabold">{acc === null ? "¡Sesión completada!" : acc >= 90 ? "¡Sesión brillante!" : acc >= 70 ? "¡Muy bien hecho!" : "¡Sesión completada!"}</h1>
-        {acc !== null && acc < 70 && <p className="-mt-2 max-w-sm text-sm text-muted">Los errores de hoy son los repasos de mañana: volverán en el momento justo para fijarlos.</p>}
+        <Afi size={130} mood={afiSessionLine(acc).mood} motion="hop" />
+        <h1 className="font-display text-3xl font-extrabold">{acc !== null && acc >= 90 ? "Sesión brillante" : "Sesión completada"}</h1>
+        <p className="-mt-2 max-w-sm text-sm text-muted"><span className="sr-only">Afi: </span>{afiSessionLine(acc).text}</p>
         <div className="stagger grid w-full max-w-md grid-cols-3 gap-3">
           <div className="card p-4"><p className="font-display text-2xl font-extrabold"><CountUp value={results.total} /></p><p className="text-xs text-muted">ejercicios</p></div>
           <div className="card p-4"><p className="font-display text-2xl font-extrabold">{acc === null ? "—" : <CountUp value={acc} suffix=" %" />}</p><p className="text-xs text-muted">precisión</p></div>
@@ -1063,8 +1064,6 @@ function ConfidenceCheck({ attemptId }: { attemptId: string }) {
   );
 }
 
-const PRAISE = ["¡Correcto!", "¡Eso es!", "¡Genial!", "¡Muy bien!", "¡Perfecto!", "¡Exacto!"];
-
 function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain, explainKey }: { feedback: AnswerFeedback; gaveUp?: boolean; onNext: () => void; combo: number; explain: { key: string; response: string } | null; explainKey?: string }) {
   const ok = f.correct;
   const [why, setWhy] = useState<{ state: "idle" | "loading" | "done" | "error"; text?: string }>({ state: "idle" });
@@ -1076,7 +1075,10 @@ function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain, ex
   };
   // Ítem del ejercicio (palabra o frase) para «Reportar un error»; no en gramática ni emparejar.
   const reportId = explainKey && /^(meaning_mc|reverse_mc|recall|cloze|listen_mc|listen_pick|dictation_word|phrase_listen|phrase_pick)\|/.test(explainKey) ? explainKey.split("|")[1]! : null;
-  const praise = combo >= 5 ? `¡Imparable! ${combo} seguidas` : combo >= 3 ? `¡En racha! ${combo} seguidas` : PRAISE[(combo + (f.attemptId?.length ?? 0)) % PRAISE.length]!;
+  // Afi reacciona: acompaña en los aciertos y nunca castiga en los fallos.
+  const seed = combo + (f.attemptId?.length ?? 0) + (f.expected?.length ?? 0);
+  const afi = afiAnswerLine(ok, combo, seed);
+  const praise = combo >= 3 ? `${combo} seguidas. ${afi.text}` : afi.text;
   return (
     <div role="status" aria-live="assertive" className={cn("fixed inset-x-0 bottom-0 z-40 animate-rise rounded-t-3xl px-4 pb-[max(env(safe-area-inset-bottom),20px)] pt-5 shadow-[0_-8px_30px_rgb(0_0_0/0.08)]", ok ? "bg-success-soft" : gaveUp ? "bg-primary-soft" : "bg-danger-soft")}>
       <div className="mx-auto max-w-2xl">
@@ -1094,7 +1096,8 @@ function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain, ex
           <span className={cn("grid size-8 place-items-center rounded-full text-white animate-pop-in", ok ? "bg-success" : "bg-danger")} aria-hidden>
             {ok ? <Check size={18} strokeWidth={3} /> : <X size={18} strokeWidth={3} />}
           </span>
-          {ok ? (f.nearMiss ? "¡Casi perfecto!" : praise) : f.expected ? "Respuesta correcta:" : "Ups"}
+          {ok ? (f.nearMiss ? "Casi perfecto." : praise) : f.expected ? "Respuesta correcta:" : "Todavía no"}
+          <Afi size={40} mood={ok ? afi.mood : "supportive"} motion={ok ? "hop" : "sway"} className="ml-auto" />
         </p>
         {!ok && f.expected && <p className="mt-1 text-lg font-semibold">{f.expected}</p>}
         {ok && f.nearMiss && (
@@ -1102,7 +1105,8 @@ function FeedbackSheet({ feedback: f, gaveUp = false, onNext, combo, explain, ex
         )}
         {f.explanation && <p className="mt-2 text-sm leading-relaxed">{f.explanation}</p>}
         {f.milestone && <p className="mt-3 rounded-xl bg-surface px-3 py-2 font-display text-lg font-extrabold text-primary animate-pop-in">🎉 {f.milestone}</p>}
-        {!ok && f.errorLabel && <p className="mt-2 text-xs text-muted">Registrado como: {f.errorLabel}. Lo tendremos en cuenta en tus próximas sesiones.</p>}
+        {!ok && <p className="mt-2 text-sm"><span className="sr-only">Afi: </span>{afi.text}</p>}
+        {!ok && f.errorLabel && <p className="mt-1 text-xs text-muted">Registrado como: {f.errorLabel}. Lo tendremos en cuenta en tus próximas sesiones.</p>}
         {explain && why.state === "idle" && (
           <button type="button" onClick={() => void askWhy()} className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-sm font-semibold text-primary shadow-sm hover:brightness-95">
             <Lightbulb size={15} aria-hidden /> ¿Por qué? Explícamelo

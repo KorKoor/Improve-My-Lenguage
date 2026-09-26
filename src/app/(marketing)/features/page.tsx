@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ButtonLink } from "@/components/ui/button";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = { alternates: { canonical: "/features" },
   title: "Cómo funciona",
   description: "El motor adaptativo de Improve My Languages: diagnóstico CAT, vector de habilidades, FSRS, inteligencia de errores y recomendaciones explicadas.",
 };
@@ -30,6 +31,14 @@ export default function Features() {
           </section>
         ))}
       </div>
+      <nav aria-labelledby="deeper" className="mt-10">
+        <h2 id="deeper" className="font-display text-xl font-extrabold">Para saber más</h2>
+        <ul className="mt-3 space-y-2">
+          {[["/guias/aprendizaje-adaptativo", "¿Qué es el aprendizaje adaptativo?"], ["/guias/nivel-mcer", "Niveles MCER y cómo saber tu nivel real"], ["/guias/repeticion-espaciada", "Repetición espaciada y FSRS"], ["/guias/errores-recurrentes", "Por qué repetimos los mismos errores"], ["/guias/ia-en-idiomas", "Qué personaliza de verdad la IA"]].map(([href, t]) => (
+            <li key={href}><Link href={href!} className="font-medium text-primary underline-offset-4 hover:underline">{t}</Link></li>
+          ))}
+        </ul>
+      </nav>
       <ButtonLink href="/login?mode=signup" size="lg" className="mt-10">Probarlo gratis</ButtonLink>
     </div>
   );

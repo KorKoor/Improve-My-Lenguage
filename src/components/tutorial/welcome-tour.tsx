@@ -3,7 +3,7 @@ import { ArrowLeft, ArrowRight, BarChart3, Check, Headphones, Play, Repeat, Sett
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { completeTutorialAction } from "@/app/app/actions";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
@@ -35,7 +35,7 @@ function buildSteps(name: string | null, language: string, simple: boolean): Ste
       preview: (
         <Preview>
           <div className="flex items-center gap-4">
-            <Mascot size={72} mood="happy" />
+            <Afi size={72} mood="waving" />
             <div className="space-y-1.5 text-sm">
               <p className="flex items-center gap-2"><Check size={16} className="text-success" /> Practicas unos minutos al día</p>
               <p className="flex items-center gap-2"><Check size={16} className="text-success" /> La app elige qué te conviene</p>

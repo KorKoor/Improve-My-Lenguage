@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { applyComfort } from "@/components/comfort";
 import { saveOnboarding, type OnboardingInput } from "@/app/app/actions";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
@@ -102,7 +102,7 @@ export function OnboardingWizard({ adding, languages, topics, defaults }: { addi
       <div key={current} className="mt-8 flex-1 animate-rise">
         {current === "language" && (
           <>
-            {!adding && <Mascot size={84} />}
+            {!adding && <Afi size={84} mood="waving" />}
             <h1 className="mt-3 font-display text-3xl font-extrabold">{adding ? "¿Qué idioma quieres añadir?" : "¡Hola! ¿Qué idioma quieres aprender?"}</h1>
             {!adding && (
               <label className="mt-6 block">

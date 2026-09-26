@@ -101,7 +101,7 @@ export default async function ReadPage({ searchParams }: { searchParams: Promise
       {cards.length > 0 && <h2 className="font-display text-xl font-extrabold">Artículos reales</h2>}
       {cards.length === 0 ? (
         <Card>
-          <EmptyState title="No pudimos traer lecturas ahora">
+          <EmptyState title="No pudimos traer lecturas ahora" mood="reading">
             Las fuentes públicas no respondieron o no hay resultados para esa búsqueda. Prueba con otro tema o pega tu propio texto.
           </EmptyState>
         </Card>

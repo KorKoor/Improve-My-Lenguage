@@ -7,7 +7,8 @@ import { Heatmap } from "@/components/charts/heatmap";
 import { SimpleHome } from "@/components/dashboard/simple-home";
 import { WordOfDay } from "@/components/dashboard/word-of-day";
 import { WelcomeTour } from "@/components/tutorial/welcome-tour";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
+import { afiDashboardLine } from "@/lib/engine/afi-voice";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
@@ -96,15 +97,8 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   }
   const today = localDay(new Date(), learner.profile.timezone);
   const personality = learner.profile.personality;
-  const mascotLine = d.studiedToday
-    ? "¡Ya estudiaste hoy! Todo lo extra suma."
-    : d.streak >= 3
-      ? `¡Mantén tu racha de ${d.streak} días!`
-      : d.dueCount >= 20
-        ? "Tus repasos te esperan: son los más rentables."
-        : d.streak === 0 && d.bestStreak > 0
-          ? "¡Hoy es un gran día para volver!"
-          : "¿Empezamos? Solo son unos minutos.";
+  // Afi traduce los datos del motor (errores recurrentes, repasos, racha) en una frase.
+  const afi = afiDashboardLine(d);
   const weekDays = ["L", "M", "X", "J", "V", "S", "D"];
   const goalMonths = d.goal?.deadline ? Math.max(0, Math.round((new Date(d.goal.deadline).getTime() - Date.now()) / (30 * 86_400_000))) : null;
   // Distancia recorrida en la escala θ desde el inicio (A1 bajo) hasta el umbral del nivel objetivo.
@@ -171,10 +165,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                 <p className="mt-1 hidden text-muted sm:block">{d.plan.totalMinutes} minutos repartidos según lo que más te ayuda ahora mismo.</p>
               </div>
               <div className="hidden shrink-0 flex-col items-center sm:flex">
-                <p className="relative mb-1 max-w-[180px] rounded-2xl bg-primary-soft px-3 py-2 text-center text-xs font-semibold text-primary animate-pop-in after:absolute after:-bottom-1.5 after:left-1/2 after:size-3 after:-translate-x-1/2 after:rotate-45 after:bg-primary-soft">
-                  {mascotLine}
+                <p className="relative mb-1 max-w-[220px] rounded-2xl bg-primary-soft px-3 py-2 text-center text-xs font-semibold text-primary animate-pop-in after:absolute after:-bottom-1.5 after:left-1/2 after:size-3 after:-translate-x-1/2 after:rotate-45 after:bg-primary-soft">
+                  <span className="sr-only">Afi: </span>{afi.text}
                 </p>
-                <Mascot size={96} className="animate-float" />
+                <Afi size={96} mood={afi.mood} motion="float" />
               </div>
               <Chip tone="muted" className="px-3 py-1 text-sm sm:hidden">{d.plan.totalMinutes} min</Chip>
             </div>
@@ -218,7 +212,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           </Card>
         ) : (
           <Card className="flex flex-col items-start gap-4 p-7 sm:flex-row sm:items-center">
-            <Mascot size={110} mood="cheer" />
+            <Afi size={110} mood="curious" />
             <div className="flex-1">
               <Chip tone="primary"><Gauge size={13} aria-hidden /> Paso 1</Chip>
               <h2 className="mt-2 font-display text-2xl font-extrabold">Descubre tu nivel real de {lang.name.toLowerCase()}</h2>

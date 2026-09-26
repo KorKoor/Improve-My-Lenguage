@@ -6,7 +6,7 @@ import { packMeta } from "@/lib/content/packs";
 import { humanRecordings } from "@/lib/content/audio-credits";
 import { PREGEN_VOICES } from "@/lib/audio-key";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = { alternates: { canonical: "/creditos" },
   title: "Créditos y licencias",
   description: "Fuentes de datos abiertos que alimentan el vocabulario, los ejemplos y la pronunciación de Improve My Languages.",
 };

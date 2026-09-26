@@ -4,9 +4,9 @@ import Link from "next/link";
 import { Chip } from "@/components/ui/chip";
 import { LANGUAGES } from "@/lib/content";
 
-export const metadata: Metadata = {
-  title: "Idiomas",
-  description: "Idiomas disponibles en Improve My Languages: inglés, francés, japonés y más en camino.",
+export const metadata: Metadata = { alternates: { canonical: "/languages" },
+  title: "Idiomas que puedes aprender",
+  description: "Los 12 idiomas que puedes aprender con Improve My Languages, con explicaciones en español: inglés, francés, alemán, italiano, portugués, neerlandés, sueco, ruso, árabe, japonés, coreano y chino.",
 };
 
 const STATUS = { available: ["Disponible", "success"], beta: ["Beta", "primary"], planned: ["Próximamente", "muted"] } as const;

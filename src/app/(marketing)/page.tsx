@@ -1,12 +1,21 @@
+import type { Metadata } from "next";
 import { ArrowRight, Users, CircleHelp, Compass, Gauge, Headphones, MessageCircle, Mic, Newspaper, PenLine, Repeat, Snail, Sparkles, Target, Type, UserRound } from "lucide-react";
 import { LanguageMark } from "@/components/language-mark";
 import Link from "next/link";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
+import { AfiMessage } from "@/components/afi/afi-message";
+import { JsonLd } from "@/components/seo/json-ld";
+import { GUIDES } from "@/lib/content/guides";
+import { graph, webAppLd } from "@/lib/seo";
 import { ButtonLink } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { IconBox } from "@/components/ui/icon-box";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { LANGUAGES } from "@/lib/content";
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const LOOP = ["Diagnóstico", "Perfil de habilidades", "Sesión adaptada", "Evaluación", "Actualización del perfil"];
 
@@ -29,27 +38,33 @@ export default function Landing() {
   const available = LANGUAGES.filter((l) => l.status !== "planned");
   return (
     <>
+      <JsonLd data={graph(webAppLd(available.map((l) => l.name)))} />
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-12 sm:px-6 md:grid-cols-[1.1fr_0.9fr] md:pt-20">
         <div className="animate-rise">
-          <Chip tone="primary"><Sparkles size={13} aria-hidden /> Aprendizaje adaptativo, no un curso fijo</Chip>
+          <Chip tone="primary"><Sparkles size={13} aria-hidden /> Aprendizaje adaptativo de idiomas</Chip>
           <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
-            El usuario no se adapta al curso.
-            <span className="block text-primary">El curso se adapta a ti.</span>
+            Aprende idiomas con un curso
+            <span className="block text-primary">que se adapta a ti.</span>
           </h1>
           <p className="mt-5 max-w-xl text-lg text-muted">
-            Improve My Languages averigua qué necesitas aprender <em>ahora mismo</em>: evalúa tu nivel real, detecta tus errores recurrentes y construye cada sesión para que mejores de verdad.
+            Improve My Languages mide tu nivel en cada habilidad, detecta los errores que repites y programa tus repasos antes de que olvides. Con esos datos construye cada sesión: practicas lo que necesitas <em>ahora</em>, no lo que toca en un temario.
           </p>
+          <ol className="mt-6 grid max-w-xl gap-2 text-sm sm:grid-cols-3">
+            {["Diagnóstico de ~5 min", "Perfil por habilidad", "Sesiones a tu medida"].map((t, i) => (
+              <li key={t} className="flex items-center gap-2 rounded-2xl bg-surface px-3 py-2 font-semibold shadow-[var(--shadow)]"><span className="grid size-6 shrink-0 place-items-center rounded-full bg-primary-soft text-xs text-primary">{i + 1}</span>{t}</li>
+            ))}
+          </ol>
           <div className="mt-8 flex flex-wrap items-center gap-3">
-            <ButtonLink href="/login?mode=signup" size="lg">Empieza tu diagnóstico <ArrowRight size={18} aria-hidden /></ButtonLink>
+            <ButtonLink href="/login?mode=signup" size="lg">Descubre qué necesitas practicar <ArrowRight size={18} aria-hidden /></ButtonLink>
             <ButtonLink href="/features" variant="secondary" size="lg">Cómo funciona</ButtonLink>
           </div>
-          <p className="mt-4 text-sm text-muted">Gratis · Sin tarjeta · Tus datos se pueden exportar o borrar cuando quieras</p>
+          <p className="mt-4 text-sm text-muted">Gratis · Sin tarjeta · {available.length} idiomas · Tus datos se pueden exportar o borrar cuando quieras</p>
         </div>
 
         {/* Vista previa del producto (HTML real, no una imagen) */}
         <div className="relative animate-rise [animation-delay:120ms]">
           <div className="card relative p-6">
-            <Mascot size={96} className="absolute -top-10 right-6" />
+            <Afi size={96} mood="listening" motion="float" className="absolute -top-12 right-6" />
             <p className="text-xs font-bold uppercase tracking-wide text-primary">Tu sesión de hoy · 20 min</p>
             <div className="mt-4 flex gap-1" aria-hidden>
               {[6, 5, 5, 4].map((m, i) => (
@@ -92,6 +107,21 @@ export default function Landing() {
         </div>
       </section>
 
+      <section aria-labelledby="meet-afi" className="mx-auto max-w-6xl px-4 pt-16 sm:px-6">
+        <div className="card grid items-center gap-8 p-6 sm:p-10 md:grid-cols-[auto_1fr]">
+          <Afi mood="waving" size={150} className="mx-auto" />
+          <div>
+            <h2 id="meet-afi" className="font-display text-2xl font-extrabold sm:text-3xl">Conoce a Afi, tu compañera de aprendizaje</h2>
+            <p className="mt-3 text-muted">El sistema mide y decide; Afi te lo cuenta. Cuando un error se repite, te dice «He notado que este error aparece varias veces. Vamos a practicarlo». Cuando fallas, no te castiga: «Este ejercicio nos ayuda a saber qué necesitas practicar».</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <AfiMessage mood="thinking" size={48}>Preposiciones: 4 errores en tus últimas sesiones. Hoy lo reforzamos un poco.</AfiMessage>
+              <AfiMessage mood="proud" size={48}>Esto ya está empezando a consolidarse.</AfiMessage>
+            </div>
+            <Link href="/afi" className="mt-5 inline-flex items-center gap-1 font-semibold text-primary underline-offset-4 hover:underline">Más sobre Afi <ArrowRight size={15} aria-hidden /></Link>
+          </div>
+        </div>
+      </section>
+
       <section aria-labelledby="features" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <h2 id="features" className="font-display text-2xl font-extrabold sm:text-3xl">Diseñado para que aprendas, no para que acumules puntos</h2>
         <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -128,7 +158,7 @@ export default function Landing() {
           {/* Vista previa del modo sencillo */}
           <div className="rounded-[26px] bg-bg p-5 sm:p-6" aria-hidden>
             <div className="flex items-center gap-3">
-              <Mascot size={56} />
+              <Afi size={56} mood="waving" />
               <div>
                 <p className="font-display text-2xl font-extrabold">Hola, Rosa</p>
                 <p className="text-muted">Vamos a practicar inglés.</p>
@@ -147,14 +177,23 @@ export default function Landing() {
         </div>
       </section>
 
+      <section aria-labelledby="learn-more" className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
+        <h2 id="learn-more" className="font-display text-2xl font-extrabold sm:text-3xl">Entiende cómo aprendes</h2>
+        <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {GUIDES.slice(0, 6).map((g) => (
+            <li key={g.slug}><Link href={`/guias/${g.slug}`} className="card lift flex h-full items-center justify-between gap-3 p-5 font-semibold hover:border-primary">{g.h1}<ArrowRight size={16} className="shrink-0 text-primary" aria-hidden /></Link></li>
+          ))}
+        </ul>
+      </section>
+
       <section aria-labelledby="langs" className="mx-auto max-w-6xl px-4 pb-16 sm:px-6">
         <div className="card flex flex-col gap-6 p-8 md:flex-row md:items-center">
           <div className="flex-1">
-            <h2 id="langs" className="font-display text-2xl font-extrabold">Agnóstico al idioma desde el primer día</h2>
-            <p className="mt-2 text-muted">Escrituras latinas, kana y kanji, derecha a izquierda… el motor es el mismo. Empieza con {available.map((l) => l.name.toLowerCase()).join(", ")}; más idiomas en camino.</p>
+            <h2 id="langs" className="font-display text-2xl font-extrabold">{available.length} idiomas, el mismo motor adaptativo</h2>
+            <p className="mt-2 text-muted">Escrituras latinas, cirílico, árabe, hangul, kana, kanji y hanzi: si el idioma usa otro alfabeto, primero aprendes a leerlo. Disponibles: {available.map((l) => l.name.toLowerCase()).join(", ")}.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {LANGUAGES.slice(0, 8).map((l) => (
+            {available.map((l) => (
               <Link key={l.code} href={`/languages/${l.code}`} className="rounded-full border border-border bg-surface px-3 py-1.5 text-sm font-medium hover:border-primary">
                 <span className="inline-flex items-center gap-2"><LanguageMark code={l.code} size={20} /> {l.name}</span>
               </Link>
@@ -164,9 +203,9 @@ export default function Landing() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-20 text-center sm:px-6">
-        <Mascot size={100} mood="cheer" className="mx-auto" />
-        <h2 className="mt-4 font-display text-3xl font-extrabold">Pequeños pasos, grandes logros</h2>
-        <p className="mx-auto mt-3 max-w-xl text-muted">5 minutos de diagnóstico y tendrás tu primera sesión personalizada.</p>
+        <Afi size={100} mood="encouraging" className="mx-auto" />
+        <h2 className="mt-4 font-display text-3xl font-extrabold">Learn smarter. Become better.</h2>
+        <p className="mx-auto mt-3 max-w-xl text-muted">Unos 5 minutos de diagnóstico y tendrás tu primera sesión personalizada.</p>
         <ButtonLink href="/login?mode=signup" size="lg" className="mt-6">Crear mi cuenta gratis</ButtonLink>
       </section>
     </>

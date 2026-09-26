@@ -3,7 +3,7 @@ import { ArrowRight, Loader2, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { placePhaseZeroAction, type PlacementResult } from "@/app/app/phase-actions";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import type { DiagnosticItem } from "@/lib/engine/phase-zero";
@@ -48,7 +48,7 @@ export function PhaseDiagnostic({ items, language, rtl, languageName }: { items:
   if (result) {
     return (
       <div className="flex flex-col items-center gap-4 py-12 text-center animate-rise" role="status">
-        <Mascot size={110} mood="cheer" />
+        <Afi size={110} mood="curious" />
         <h1 className="font-display text-3xl font-extrabold">{result.skipAll ? `¡Ya sabes leer ${languageName.toLowerCase()}!` : result.correct === 0 ? "Empezamos desde cero" : `Reconoces ${result.correct} de ${result.total}`}</h1>
         <p className="max-w-md text-muted">
           {result.skipAll

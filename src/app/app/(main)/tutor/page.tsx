@@ -39,7 +39,7 @@ export default async function TutorPage() {
       </header>
       {!available ? (
         <Card>
-          <EmptyState title="El tutor de IA no está configurado">
+          <EmptyState title="El tutor de IA no está configurado" mood="resting">
             Para activarlo, añade una clave gratuita de Gemini (<code>GEMINI_API_KEY</code>) o de un proveedor compatible con OpenAI en las variables de entorno. Todo lo demás funciona sin IA.
           </EmptyState>
         </Card>

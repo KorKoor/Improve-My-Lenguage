@@ -6,7 +6,7 @@ import { answerAssessmentAction, startAssessmentAction, startFromZeroAction } fr
 import { DONT_KNOW } from "@/lib/engine/assessment";
 import { useRouter } from "next/navigation";
 import { SKILL_META } from "@/components/app/labels";
-import { Mascot } from "@/components/mascot";
+import { Afi } from "@/components/afi/afi";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -67,7 +67,7 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
   if (phase === "intro") {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-5 py-16 text-center animate-rise">
-        <Mascot size={130} />
+        <Afi size={130} mood="curious" motion="float" />
         <Chip><Gauge size={13} aria-hidden /> Diagnóstico adaptativo</Chip>
         <h1 className="font-display text-3xl font-extrabold">Encontremos tu nivel real de {languageName.toLowerCase()}</h1>
         <ul className="max-w-md space-y-2 text-left text-muted">
@@ -88,7 +88,7 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
   if (phase === "error") {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-        <Mascot size={100} mood="calm" />
+        <Afi size={100} mood="supportive" />
         <p className="font-display text-xl font-extrabold">No pudimos continuar el diagnóstico</p>
         <p className="text-sm text-muted">{error}</p>
         <Button onClick={() => void begin()}>Reintentar</Button>
@@ -99,7 +99,7 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
     const r = step.result;
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-5 py-14 text-center animate-rise">
-        <Mascot size={120} mood="cheer" />
+        <Afi size={120} mood="proud" motion="hop" />
         <p className="text-sm font-semibold text-muted">Tu nivel estimado de {languageName.toLowerCase()}</p>
         <p className="font-display text-6xl font-extrabold text-primary">{r.level}</p>
         <p className="max-w-md text-muted">Respondiste {r.answered} preguntas ({r.correct} correctas). Es una estimación inicial: se afinará con cada ejercicio que hagas.</p>

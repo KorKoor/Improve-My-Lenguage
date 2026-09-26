@@ -45,7 +45,7 @@ export default async function GrammarPage({ searchParams }: { searchParams: Prom
         </nav>
       </header>
       {concepts.length === 0 ? (
-        <Card><EmptyState title="Aún no hay gramática para este idioma">Estamos preparando el contenido revisado.</EmptyState></Card>
+        <Card><EmptyState title="Aún no hay gramática para este idioma" mood="studying">Estamos preparando el contenido revisado.</EmptyState></Card>
       ) : (
         <ul className="grid gap-4 md:grid-cols-2">
           {concepts.map((g) => {
