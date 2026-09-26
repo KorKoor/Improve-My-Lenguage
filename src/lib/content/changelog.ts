@@ -6,9 +6,12 @@ export interface ChangelogItem {
   href: string;
 }
 
-export const CHANGELOG_VERSION = "2026-09-28";
+export const CHANGELOG_VERSION = "2026-09-29";
 
 export const CHANGELOG: ChangelogItem[] = [
+  { icon: "🎮", title: "Minijuegos", text: "Lluvia de palabras (atrápalas antes de que caigan de los audífonos de Afi), Memorama, Oído rápido y Ordena la frase: partidas de 1 a 3 minutos con tus palabras y frases reales. Con récords.", href: "/app/games" },
+  { icon: "☁️", title: "Afi cobra vida", text: "Parpadea, te sigue con la mirada, reacciona cuando la tocas (tiene cosquillas en los audífonos) y se duerme si la dejas sola un rato.", href: "/afi" },
+  { icon: "🧭", title: "Menús más claros", text: "Las secciones se agrupan en Hoy, Aprender, Practicar, Jugar y Tú; puedes plegar los grupos y en «Más» cada sección dice para qué sirve.", href: "/app/more" },
   { icon: "🔤", title: "Aprender a leer desde cero", text: "Antes de las lecciones, en los 12 idiomas: letras y sonidos, cómo se trazan (japonés, chino, coreano y árabe), reglas para leer bien y tus primeras palabras y frases. ¿Ya sabes algo? Haz la prueba de un minuto.", href: "/app/start" },
   { icon: "♿", title: "Modo accesible y alto contraste", text: "Si usas lector de pantalla o ves poco: todo se aprende de oído, con anuncios, foco en cada paso y atajos de teclado (pulsa «?» en una sesión). Y un tema de alto contraste. En Configuración.", href: "/app/settings" },
   { icon: "🔀", title: "Repaso intercalado", text: "Repasa lo pendiente de todos tus idiomas en una sola sesión, alternándolos (con la voz y la dirección de escritura de cada uno). En «Mis idiomas».", href: "/app/languages" },

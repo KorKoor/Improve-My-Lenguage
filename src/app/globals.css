@@ -302,3 +302,18 @@ html[data-text="xl"] { font-size: 125%; }
 .stroke-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: stroke-draw 0.8s ease-in-out forwards; }
 @keyframes stroke-dot { from { opacity: 0; } to { opacity: 1; } }
 .stroke-dot { opacity: 0; animation: stroke-dot 0.2s ease-out forwards; }
+
+/* ── Minijuegos ─────────────────────────────────────────────────────────── */
+.game-card { perspective: 700px; border-radius: 1rem; }
+.game-card-face {
+  position: absolute; inset: 0; display: grid; place-items: center; border-radius: 1rem;
+  border: 1px solid var(--border); backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+.game-card-back { background: linear-gradient(145deg, var(--primary-soft), var(--surface-muted)); }
+.game-card-front { transform: rotateY(180deg); }
+.game-card.is-up .game-card-back { transform: rotateY(-180deg); }
+.game-card.is-up .game-card-front { transform: rotateY(0deg); }
+.game-card:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.game-card:not(.is-up):hover .game-card-back { transform: translateY(-2px); }
+.game-sky { background: linear-gradient(180deg, var(--primary-soft) 0%, var(--surface) 75%); }
