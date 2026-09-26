@@ -116,7 +116,7 @@ export default async function LanguagePage({ params }: { params: Promise<{ code:
             <section className="mt-10">
               <h2 className="font-display text-2xl font-extrabold">Temas de gramática</h2>
               <ul className="mt-4 flex flex-wrap gap-2">
-                {grammar.map((g) => <li key={g.id}><Chip tone="primary">{g.cefr} · {g.title}</Chip></li>)}
+                {grammar.map((g) => <li key={g.id} className="max-w-full"><Chip tone="primary" className="whitespace-normal">{g.cefr} · {g.title}</Chip></li>)}
               </ul>
             </section>
           )}

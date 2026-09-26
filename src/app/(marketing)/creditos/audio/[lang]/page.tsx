@@ -41,7 +41,7 @@ export default async function AudioCreditsPage({ params }: { params: Promise<{ l
       ) : (
         <ul className="mt-8 space-y-4">
           {groups.map((g) => (
-            <li key={`${g.author}|${g.license}`} className="card p-5">
+            <li key={`${g.author}|${g.license}`} className="card min-w-0 p-5 [overflow-wrap:anywhere]">
               <h2 className="font-display text-lg font-extrabold">{g.author}</h2>
               <p className="text-sm text-muted">Licencia: {g.license} · {g.items.length} {g.items.length === 1 ? "grabación" : "grabaciones"}</p>
               <p className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-sm" lang={lang} dir={l.rtl ? "rtl" : "ltr"}>

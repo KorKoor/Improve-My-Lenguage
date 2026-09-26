@@ -18,17 +18,23 @@ const PAGES = ["/", "/features", "/languages", "/languages/en", "/languages/ja",
 const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 let failures = 0;
 for (const theme of ["light", "dark"]) {
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: theme });
+  // Sin animaciones ni transiciones: axe mide los colores finales, no a mitad de un cambio de tema.
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme: theme, reducedMotion: "reduce" });
   for (const path of PAGES) {
     await page.goto(BASE + path, { waitUntil: "networkidle", timeout: 120_000 });
     if (theme === "dark") await page.evaluate(() => document.documentElement.classList.add("dark"));
+    await page.waitForTimeout(400);
     await page.addScriptTag({ content: axe });
     const { violations } = await page.evaluate(() =>
       window.axe.run(document, { resultTypes: ["violations"], runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "best-practice"] } }),
     );
-    const scroll = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+    const scroll = await page.evaluate(() => {
+      if (document.documentElement.scrollWidth <= window.innerWidth) return null;
+      const el = [...document.querySelectorAll("body *")].reverse().find((e) => e.getBoundingClientRect().right > window.innerWidth + 1);
+      return el ? `${el.tagName.toLowerCase()} «${(el.textContent ?? "").trim().slice(0, 40)}»` : "?";
+    });
     if (violations.length || scroll) failures++;
-    console.log(`${violations.length || scroll ? "✗" : "✓"} [${theme}] ${path}${scroll ? " · desborda en horizontal" : ""}`);
+    console.log(`${violations.length || scroll ? "✗" : "✓"} [${theme}] ${path}${scroll ? ` · desborda en horizontal: ${scroll}` : ""}`);
     for (const v of violations) console.log(`    [${v.impact}] ${v.id}: ${v.help} → ${v.nodes.slice(0, 3).map((n) => n.target.join(" ")).join(" | ")}`);
   }
   await page.close();
