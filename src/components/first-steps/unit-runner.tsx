@@ -7,6 +7,7 @@ import { completeFirstStepsUnitAction } from "@/app/app/first-steps-actions";
 import { Confetti } from "@/components/celebrate";
 import { Afi } from "@/components/afi/afi";
 import { useSpeech, VoiceWarning } from "@/components/speak-button";
+import { ChoiceList } from "@/components/ui/choice-list";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
@@ -236,12 +237,23 @@ export function FirstStepsRunner({
           </>
         )}
         {task.kind !== "build" && (
-          <div className="mt-5 grid gap-2.5">
-            {task.options.map((o) => (
-              <button key={o} type="button" disabled={!!answer} onClick={() => check(o)} className={cn("rounded-2xl border px-4 py-3.5 text-left text-base font-medium transition", optionClass(o))} lang={task.kind === "read" ? language : "es"} dir={task.kind === "read" ? dir : "ltr"}>
-                {o}
-              </button>
-            ))}
+          <div className="mt-5">
+            {/* Tocar una opción la selecciona (y la lee si está en el idioma); se envía con «Comprobar». */}
+            <ChoiceList
+              key={`${task.kind}-${task.i}`}
+              options={task.options}
+              onConfirm={check}
+              answered={!!answer}
+              result={(o) => {
+                const target = task.kind === "listen" ? ph.es : ph.text;
+                return !answer ? null : o === target ? "ok" : o === answer.chosen ? "bad" : null;
+              }}
+              locale={task.kind === "read" ? locale : undefined}
+              lang={task.kind === "read" ? language : "es"}
+              dir={task.kind === "read" ? dir : "ltr"}
+              info={task.kind === "read" ? Object.fromEntries(phrases.map((p) => [p.text, { reading: p.roman, meaning: p.es }])) : undefined}
+              meaningBefore={false}
+            />
           </div>
         )}
       </div>

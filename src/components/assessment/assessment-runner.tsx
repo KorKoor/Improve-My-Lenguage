@@ -11,6 +11,7 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
+import { ChoiceList } from "@/components/ui/choice-list";
 import { useSpeech } from "@/components/speak-button";
 import { Snail, Volume2 } from "lucide-react";
 import type { AssessmentStep } from "@/lib/services/assessment";
@@ -53,16 +54,6 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
     setPhase(res.data.done ? "result" : "question");
   }
 
-  useEffect(() => {
-    if (phase !== "question" || !step || step.done) return;
-    const onKey = (e: KeyboardEvent) => {
-      const opt = step.item.options[Number(e.key) - 1];
-      if (opt) void answer(opt);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, step]);
 
   if (phase === "intro") {
     return (
@@ -151,13 +142,18 @@ export function AssessmentRunner({ languageName, language, rtl, restart, already
         {item.passage && <p className="card mt-4 p-5 leading-relaxed" lang={language} dir={rtl ? "rtl" : "ltr"}>{item.passage}</p>}
         {item.audio && <AudioPrompt key={item.id} text={item.audio} speak={speak} />}
         <p className="mt-5 font-display text-2xl font-extrabold leading-snug" lang={language}>{item.prompt}</p>
-        <div className="mt-6 grid gap-2.5">
-          {item.options.map((o, i) => (
-            <button key={o} type="button" disabled={busy} onClick={() => void answer(o)} className={cn("flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3.5 text-left font-medium transition hover:border-primary hover:bg-primary-soft/40", busy && "opacity-60")}>
-              <kbd className="hidden size-6 place-items-center rounded-md border border-border text-[11px] text-muted sm:grid">{i + 1}</kbd>
-              <span lang={language}>{o}</span>
-            </button>
-          ))}
+        {/* Tocar una opción la selecciona (y la lee en voz alta); se envía con «Responder». */}
+        <div className="mt-6">
+          <ChoiceList
+            options={item.options}
+            onConfirm={(o) => void answer(o)}
+            busy={busy}
+            locale={locale}
+            lang={language}
+            dir={rtl ? "rtl" : "ltr"}
+            listen={!item.audio}
+            confirmLabel="Responder"
+          />
         </div>
         <button type="button" disabled={busy} onClick={() => void answer(DONT_KNOW)} className="mt-3 w-full rounded-2xl border border-dashed border-border px-4 py-3 text-sm font-semibold text-muted hover:border-primary hover:text-primary">
           🤷 No lo sé

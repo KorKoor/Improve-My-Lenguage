@@ -10,6 +10,7 @@ import { useSpeech, VoiceWarning } from "@/components/speak-button";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { cn } from "@/lib/cn";
+import { ChoiceList } from "@/components/ui/choice-list";
 import type { Story } from "@/lib/content/stories";
 
 export interface StoryToken {
@@ -73,17 +74,15 @@ export function StoryReader({ story, tokens, locale, language, languageName, rtl
         </div>
         <p className="mt-6 text-sm font-semibold text-muted">Comprensión · {q + 1} de {story.questions.length}</p>
         <h2 className="mt-2 font-display text-2xl font-extrabold">{cur.q}</h2>
-        <div className="mt-5 grid gap-2.5">
-          {cur.options.map((o) => {
-            const state = chosen ? (o === cur.answer ? "ok" : o === chosen ? "bad" : null) : null;
-            return (
-              <button key={o} type="button" disabled={!!chosen} onClick={() => { setChosen(o); if (o === cur.answer) setCorrect((c) => c + 1); }} className={cn("flex items-center gap-2 rounded-2xl border px-4 py-3.5 text-left font-medium", state === "ok" ? "border-2 border-success bg-success-soft text-success" : state === "bad" ? "border-2 border-danger bg-danger-soft text-danger" : "border-border bg-surface hover:border-primary")}>
-                <span className="flex-1">{o}</span>
-                {state === "ok" && <Check size={18} aria-hidden />}
-                {state === "bad" && <X size={18} aria-hidden />}
-              </button>
-            );
-          })}
+        <div className="mt-5">
+          <ChoiceList
+            key={q}
+            options={cur.options}
+            onConfirm={(o) => { setChosen(o); if (o === cur.answer) setCorrect((c) => c + 1); }}
+            answered={!!chosen}
+            result={(o) => (!chosen ? null : o === cur.answer ? "ok" : o === chosen ? "bad" : null)}
+            lang="es"
+          />
         </div>
         {chosen && (
           <Button size="lg" className="mt-6 w-full" autoFocus disabled={saving} onClick={() => {
