@@ -7,6 +7,7 @@ import { explainMistakeAction, tooHardAction, finishSessionAction, reviseConfide
 import { BLOCK_META } from "@/components/app/labels";
 import { Confetti, CountUp } from "@/components/celebrate";
 import { Afi } from "@/components/afi/afi";
+import { LiveAfi } from "@/components/afi/live-afi";
 import { afiAnswerLine, afiSessionLine } from "@/lib/engine/afi-voice";
 import { SpeakButton, useSpeech, VoiceWarning } from "@/components/speak-button";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -274,7 +275,7 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-5 py-16 text-center animate-rise" aria-live="polite">
         {status === "done" && acc !== null && acc >= 70 && <Confetti />}
-        <Afi size={130} mood={afiSessionLine(acc).mood} motion="hop" />
+        <LiveAfi size={130} mood={afiSessionLine(acc).mood} motion="hop" sleepy={false} />
         <h1 className="font-display text-3xl font-extrabold">{acc !== null && acc >= 90 ? "Sesión brillante" : "Sesión completada"}</h1>
         <p className="-mt-2 max-w-sm text-sm text-muted"><span className="sr-only">Afi: </span>{afiSessionLine(acc).text}</p>
         <div className="stagger grid w-full max-w-md grid-cols-3 gap-3">

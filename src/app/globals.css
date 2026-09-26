@@ -230,22 +230,65 @@ html[data-text="xl"] { font-size: 125%; }
 /* ── Afi: movimientos pequeños y suaves (docs/BRAND.md) ─────────────────── */
 :root { --afi-shadow: #dfdbf6; }
 .dark { --afi-shadow: #2b3160; }
-.afi-body { transform-box: fill-box; transform-origin: 50% 100%; }
+.afi-body, .afi-core, .afi-shadow { transform-box: fill-box; transform-origin: 50% 100%; }
 @keyframes afi-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.015, 0.985); } }
 @keyframes afi-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
 @keyframes afi-hop { 0%, 100% { transform: translateY(0) scale(1); } 30% { transform: translateY(-9px) scale(1.02, 0.98); } 55% { transform: translateY(0) scale(1.03, 0.96); } 75% { transform: translateY(-3px); } }
 @keyframes afi-sway { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+@keyframes afi-wiggle { 0%, 100% { transform: rotate(0) scale(1); } 15% { transform: rotate(-6deg) scale(1.03, 0.97); } 30% { transform: rotate(5deg); } 45% { transform: rotate(-4deg); } 60% { transform: rotate(3deg); } 75% { transform: rotate(-1deg); } }
 @keyframes afi-wave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-18deg); } }
+@keyframes afi-shadow-hop { 0%, 100% { transform: scale(1); opacity: 1; } 30% { transform: scale(0.82); opacity: 0.7; } 55% { transform: scale(1.04); } }
 .afi-breathe .afi-body { animation: afi-breathe 4.5s ease-in-out infinite; }
 .afi-float .afi-body { animation: afi-float 3.6s ease-in-out infinite; }
 .afi-hop .afi-body { animation: afi-hop 0.9s ease-out 1; }
+.afi-hop .afi-shadow { animation: afi-shadow-hop 0.9s ease-out 1; }
 .afi-sway .afi-body { animation: afi-sway 1.6s ease-in-out 1; }
+.afi-wiggle .afi-body { animation: afi-wiggle 0.8s ease-in-out 1; }
 .afi-wave { transform-box: fill-box; transform-origin: 20% 90%; animation: afi-wave 1.2s ease-in-out 2; }
 /* Al pasar el ratón (o enfocar) algo que contiene a Afi, se balancea un poco. */
 .afi-host:hover .afi-body, .afi-host:focus-visible .afi-body { animation: afi-sway 1.6s ease-in-out 1; }
 
+/* Vida propia (sin JS). Cada Afi lleva su desfase (--afi-phase) para no ir al unísono. */
+@keyframes afi-idle { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.012, 0.99); } }
+@keyframes afi-blink { 0%, 90%, 100% { transform: scaleY(1); } 92% { transform: scaleY(0.1); } 94% { transform: scaleY(1); } 96.5% { transform: scaleY(0.1); } 98.5% { transform: scaleY(1); } }
+@keyframes afi-blink-once { 0%, 94%, 100% { transform: scaleY(1); } 96.5% { transform: scaleY(0.1); } }
+@keyframes afi-twinkle { 0%, 100% { transform: scale(1) rotate(0); opacity: 1; } 50% { transform: scale(1.14) rotate(12deg); opacity: 0.85; } }
+@keyframes afi-glow { 0%, 100% { filter: drop-shadow(0 0 1px #f7cb4d); } 50% { filter: drop-shadow(0 0 5px #f7cb4d); } }
+@keyframes afi-rise { 0% { transform: translate(0, 4px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(5px, -10px); opacity: 0; } }
+@keyframes afi-bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-4px); } }
+@keyframes afi-bob { 0%, 100% { transform: translate(0, 0) rotate(0); } 50% { transform: translate(2px, -4px) rotate(8deg); } }
+@keyframes afi-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+@keyframes afi-beat { 0%, 60%, 100% { transform: scale(1); } 20% { transform: scale(1.18); } 40% { transform: scale(0.96); } }
+@keyframes afi-tilt { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(10deg); } }
+@keyframes afi-talk { 0%, 100% { transform: scaleY(1); } 25% { transform: scaleY(0.55); } 60% { transform: scaleY(1.15); } }
+.afi-alive .afi-core { animation: afi-idle 5.2s ease-in-out infinite var(--afi-phase, 0s); }
+.afi-alive .afi-blink { transform-box: fill-box; transform-origin: 50% 55%; animation: afi-blink 7.3s linear infinite var(--afi-phase, 0s); }
+.afi-alive .afi-star, .afi-alive .afi-twinkle { transform-box: fill-box; transform-origin: center; animation: afi-twinkle 3.4s ease-in-out infinite var(--afi-phase, 0s); }
+.afi-alive .afi-glow { animation: afi-twinkle 2.2s ease-in-out infinite, afi-glow 2.2s ease-in-out infinite; }
+.afi-alive .afi-rise { transform-box: fill-box; animation: afi-rise 2.8s ease-out infinite; }
+.afi-alive .afi-bounce { transform-box: fill-box; animation: afi-bounce 1.2s ease-in-out infinite; }
+.afi-alive .afi-bob { transform-box: fill-box; transform-origin: center; animation: afi-bob 2s ease-in-out infinite; }
+.afi-alive .afi-pulse { animation: afi-pulse 1.1s ease-in-out infinite; }
+.afi-alive .afi-beat { transform-box: fill-box; transform-origin: center; animation: afi-beat 1.6s ease-in-out infinite; }
+.afi-alive .afi-tilt { transform-box: fill-box; transform-origin: 50% 90%; animation: afi-tilt 2.4s ease-in-out infinite; }
+.afi-alive .afi-talk { transform-box: fill-box; transform-origin: 50% 20%; animation: afi-talk 0.42s ease-in-out infinite; }
+.afi-alive .afi-d2 { animation-delay: calc(var(--afi-phase, 0s) - 0.35s); }
+.afi-alive .afi-d3 { animation-delay: calc(var(--afi-phase, 0s) - 0.7s); }
+/* Mirada: LiveAfi mueve --afi-lx / --afi-ly (unidades del dibujo). La cara acompaña a los ojos. */
+.afi-look, .afi-look-soft { transition: transform 0.28s cubic-bezier(0.3, 0.7, 0.4, 1); }
+.afi-look { transform: translate(calc(var(--afi-lx, 0) * 1px), calc(var(--afi-ly, 0) * 1px)); }
+.afi-look-soft { transform: translate(calc(var(--afi-lx, 0) * 0.55px), calc(var(--afi-ly, 0) * 0.45px)); }
+/* LiveAfi: se puede tocar. */
+.afi-live { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+.afi-live:focus-visible { outline: 3px solid var(--primary); outline-offset: 4px; border-radius: 9999px; }
+@keyframes afi-pop-heart { 0% { transform: translate(-50%, 0) scale(0.4); opacity: 0; } 20% { opacity: 1; } 100% { transform: translate(calc(-50% + var(--dx, 0px)), -46px) scale(1); opacity: 0; } }
+.afi-particle { position: absolute; left: 50%; top: 18%; pointer-events: none; animation: afi-pop-heart 1.1s ease-out forwards; }
+@keyframes afi-bubble-in { from { opacity: 0; transform: translateY(6px) scale(0.96); } to { opacity: 1; transform: none; } }
+.afi-bubble { animation: afi-bubble-in 0.25s ease-out; }
+
 @media (prefers-reduced-motion: reduce) {
-  .afi-body, .afi-wave { animation: none !important; }
+  .afi-body, .afi-wave, .afi-alive * { animation: none !important; }
+  .afi-look, .afi-look-soft { transition: none; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -259,3 +302,18 @@ html[data-text="xl"] { font-size: 125%; }
 .stroke-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: stroke-draw 0.8s ease-in-out forwards; }
 @keyframes stroke-dot { from { opacity: 0; } to { opacity: 1; } }
 .stroke-dot { opacity: 0; animation: stroke-dot 0.2s ease-out forwards; }
+
+/* ── Minijuegos ─────────────────────────────────────────────────────────── */
+.game-card { perspective: 700px; border-radius: 1rem; }
+.game-card-face {
+  position: absolute; inset: 0; display: grid; place-items: center; border-radius: 1rem;
+  border: 1px solid var(--border); backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+.game-card-back { background: linear-gradient(145deg, var(--primary-soft), var(--surface-muted)); }
+.game-card-front { transform: rotateY(180deg); }
+.game-card.is-up .game-card-back { transform: rotateY(-180deg); }
+.game-card.is-up .game-card-front { transform: rotateY(0deg); }
+.game-card:focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }
+.game-card:not(.is-up):hover .game-card-back { transform: translateY(-2px); }
+.game-sky { background: linear-gradient(180deg, var(--primary-soft) 0%, var(--surface) 75%); }

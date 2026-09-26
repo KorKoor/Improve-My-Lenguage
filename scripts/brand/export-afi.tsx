@@ -19,7 +19,7 @@ const POSES: AfiMood[] = ["happy", "waving", "celebrating", "studying", "listeni
 
 /** SVG autónomo: con xmlns y la sombra con su color (sin variables CSS). */
 function standalone(mood: AfiMood, size = 512): string {
-  return renderToStaticMarkup(<Afi mood={mood} size={size} />)
+  return renderToStaticMarkup(<Afi mood={mood} size={size} still />)
     .replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ')
     .replace(/ class="[^"]*"/, "")
     .replace(' aria-hidden="true"', "")
@@ -28,7 +28,7 @@ function standalone(mood: AfiMood, size = 512): string {
 
 /** Afi centrado en una baldosa redondeada (icono de app, logo cuadrado). */
 function mark(size: number, pad: number, radius: number): string {
-  const inner = renderToStaticMarkup(<Afi mood="happy" size={size - pad * 2} />)
+  const inner = renderToStaticMarkup(<Afi mood="happy" size={size - pad * 2} still />)
     .replace(/<svg [^>]*?viewBox="([^"]+)"[^>]*>/, (_m, vb) => `<svg x="${pad}" y="${pad * 1.1}" width="${size - pad * 2}" height="${size - pad * 2}" viewBox="${vb}">`)
     .replace("var(--afi-shadow, #dcd8f5)", "#d6d1f3");
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><rect width="${size}" height="${size}" rx="${radius}" fill="#eeeefd"/>${inner}</svg>`;

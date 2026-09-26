@@ -34,6 +34,7 @@ import { courseFor } from "@/lib/services/learning";
 import { simpleNextStep } from "@/lib/services/next-step";
 import { listUserLanguages } from "@/lib/db/repositories";
 import { languagesOverview } from "@/lib/services/multilang";
+import { LiveAfi } from "@/components/afi/live-afi";
 
 export const metadata: Metadata = { title: "Inicio" };
 
@@ -168,7 +169,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                 <p className="relative mb-1 max-w-[220px] rounded-2xl bg-primary-soft px-3 py-2 text-center text-xs font-semibold text-primary animate-pop-in after:absolute after:-bottom-1.5 after:left-1/2 after:size-3 after:-translate-x-1/2 after:rotate-45 after:bg-primary-soft">
                   <span className="sr-only">Afi: </span>{afi.text}
                 </p>
-                <Afi size={96} mood={afi.mood} motion="float" />
+                <LiveAfi size={96} mood={afi.mood} motion="float" />
               </div>
               <Chip tone="muted" className="px-3 py-1 text-sm sm:hidden">{d.plan.totalMinutes} min</Chip>
             </div>

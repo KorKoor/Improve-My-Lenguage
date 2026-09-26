@@ -49,6 +49,30 @@ Fuente única: `src/components/afi/afi.tsx` (SVG en línea, sin imágenes extern
 - **Luz y sombra:** un brillo blanco arriba a la izquierda, sombreado lavanda abajo, sombra elíptica suave en el suelo. Sin contorno oscuro.
 - **Tamaño mínimo:** 24 px (se reconoce por audífonos + estrellas).
 
+### Personalidad (quién es)
+
+Afi no es una mascota genérica: tiene historia y manías propias, y todo lo que cuenta de los idiomas es verdad.
+
+- **Una nube que escucha.** Flota por encima de todos los idiomas y cada uno le llueve un poco en los audífonos; por eso nunca se los quita.
+- **Estrellas que se encienden.** Las estrellas doradas brillan un poco más cuando aprendes algo (en `proud`, `celebrating` y `excited` resplandecen).
+- **Manías:** colecciona palabras que suenan bonito («mariposa», «Schmetterling», 雲 *kumo*), tiene cosquillas en los audífonos, se duerme si nadie le hace caso y se despierta sobresaltada («Estaba soñando con verbos irregulares»).
+- **Voz al tocarla:** `afiPoke` en `lib/engine/afi-voice.ts` (1 toque: una frase suya; 3 seguidos: cosquillas; 6: se marea y propone practicar). Saluda distinto por la mañana y de noche.
+
+### Vida propia
+
+Sólo con CSS, en cualquier `<Afi>` (salvo `still`, que usan las exportaciones):
+
+- **Parpadea** a su ritmo, a veces dos veces seguidas; cada Afi con su desfase (`afiPhase`), así que dos Afi en la misma pantalla no parpadean a la vez.
+- **Respira** muy despacio y **sus estrellas titilan**.
+- **Cada estado tiene su gesto:** las «z» suben al dormir, los puntos de `thinking` saltan en orden, la boca se mueve en `speaking`, las notas se mecen en `listening`, el corazón late, el «?» se ladea.
+
+Con `LiveAfi` (`components/afi/live-afi.tsx`, en inicio, bienvenida, login, página de Afi, fin de sesión y 404):
+
+- **Mira hacia el puntero** (ojos y cara con paralaje; `afiGaze` limita el recorrido). En pantallas táctiles mira alrededor de vez en cuando.
+- **Reacciona al tocarla** con salto, meneo o mareo, una partícula (💜 ✨ 💫) y un bocadillo que nunca se sale de la pantalla.
+- **Se duerme** tras 60 s sin actividad (25 s de noche) y cualquier gesto la despierta.
+- Es un botón («Saludar a Afi»): funciona con teclado y lo que dice se anuncia con `aria-live`. Con «reducir movimiento» no se mueve; sólo cambia la cara.
+
 ### Estados (`mood`)
 
 Sólo cambian ojos, boca, cejas y, a veces, un objeto pequeño que no tapa la cara:
@@ -57,7 +81,7 @@ Sólo cambian ojos, boca, cejas y, a veces, un objeto pequeño que no tapa la ca
 
 ### Movimiento (`motion`)
 
-`breathe` (cargando) · `float` (reposo en el inicio) · `hop` (acierto, sesión terminada) · `sway` (fallo; también al pasar el ratón por `.afi-host`). Pequeños y cortos; con `prefers-reduced-motion` no se mueve nada.
+`breathe` (cargando) · `float` (reposo en el inicio) · `hop` (acierto, sesión terminada; la sombra se encoge al saltar) · `sway` (fallo; también al pasar el ratón por `.afi-host`) · `wiggle` (cosquillas). Pequeños y cortos; con `prefers-reduced-motion` no se mueve nada.
 
 ### Dónde aparece (y qué hace)
 

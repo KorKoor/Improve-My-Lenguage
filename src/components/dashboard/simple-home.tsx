@@ -1,11 +1,11 @@
 import { ArrowRight, BookOpen, CalendarCheck, CircleHelp, Clock, Gauge, Lightbulb, Repeat } from "lucide-react";
 import { InstallApp } from "@/components/install-app";
 import Link from "next/link";
-import { Afi } from "@/components/afi/afi";
 import { ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { DashboardData } from "@/lib/services/insights";
 import type { NextStep } from "@/lib/engine/next-step";
+import { LiveAfi } from "@/components/afi/live-afi";
 
 const STEP_EMOJI: Record<NextStep["kind"], string> = { review: "🔁", letters: "🔤", phase: "🔤", writing: "✍️", lesson: "🧭", session: "✨", story: "📚", done: "🌟" };
 
@@ -19,7 +19,7 @@ export function SimpleHome({ d, languageName, greeting, step }: { d: DashboardDa
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <header className="flex items-center gap-4 animate-rise">
-        <Afi size={72} mood={d.studiedToday ? "proud" : "waving"} className="hidden sm:block" />
+        <LiveAfi size={72} mood={d.studiedToday ? "proud" : "waving"} className="!hidden sm:!inline-flex" />
         <div>
           <h1 className="font-display text-3xl font-extrabold tracking-tight">{greeting}{d.greetingName ? `, ${d.greetingName}` : ""}</h1>
           <p className="mt-1 text-lg text-muted">

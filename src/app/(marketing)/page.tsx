@@ -12,6 +12,7 @@ import { Chip } from "@/components/ui/chip";
 import { IconBox } from "@/components/ui/icon-box";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { LANGUAGES } from "@/lib/content";
+import { LiveAfi } from "@/components/afi/live-afi";
 
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -64,7 +65,7 @@ export default function Landing() {
         {/* Vista previa del producto (HTML real, no una imagen) */}
         <div className="relative animate-rise [animation-delay:120ms]">
           <div className="card relative p-6">
-            <Afi size={96} mood="listening" motion="float" className="absolute -top-12 right-6" />
+            <LiveAfi size={96} mood="listening" motion="float" className="!absolute -top-12 right-6" />
             <p className="text-xs font-bold uppercase tracking-wide text-primary">Tu sesión de hoy · 20 min</p>
             <div className="mt-4 flex gap-1" aria-hidden>
               {[6, 5, 5, 4].map((m, i) => (
@@ -109,7 +110,7 @@ export default function Landing() {
 
       <section aria-labelledby="meet-afi" className="mx-auto max-w-6xl px-4 pt-16 sm:px-6">
         <div className="card grid items-center gap-8 p-6 sm:p-10 md:grid-cols-[auto_1fr]">
-          <Afi mood="waving" size={150} className="mx-auto" />
+          <LiveAfi mood="waving" size={150} className="mx-auto" />
           <div>
             <h2 id="meet-afi" className="font-display text-2xl font-extrabold sm:text-3xl">Conoce a Afi, tu compañera de aprendizaje</h2>
             <p className="mt-3 text-muted">El sistema mide y decide; Afi te lo cuenta. Cuando un error se repite, te dice «He notado que este error aparece varias veces. Vamos a practicarlo». Cuando fallas, no te castiga: «Este ejercicio nos ayuda a saber qué necesitas practicar».</p>
@@ -203,7 +204,7 @@ export default function Landing() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 pb-20 text-center sm:px-6">
-        <Afi size={100} mood="encouraging" className="mx-auto" />
+        <LiveAfi size={100} mood="encouraging" className="mx-auto" />
         <h2 className="mt-4 font-display text-3xl font-extrabold">Learn smarter. Become better.</h2>
         <p className="mx-auto mt-3 max-w-xl text-muted">Unos 5 minutos de diagnóstico y tendrás tu primera sesión personalizada.</p>
         <ButtonLink href="/login?mode=signup" size="lg" className="mt-6">Crear mi cuenta gratis</ButtonLink>
