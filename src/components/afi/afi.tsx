@@ -9,6 +9,12 @@ import { cn } from "@/lib/cn";
  * SVG en línea, sin imágenes ni ids (se puede repetir en la página), ligero y
  * nítido a cualquier tamaño. Decorativo por defecto (aria-hidden); con
  * `label` se anuncia como imagen.
+ *
+ * Tiene vida propia sólo con CSS (globals.css → «Afi»): parpadea a su ritmo,
+ * respira, sus estrellas titilan y cada estado tiene su gesto (las «z» suben,
+ * los puntos de «pensando» saltan, la boca se mueve al hablar…). La mirada se
+ * mueve con las variables --afi-lx / --afi-ly (LiveAfi las usa para seguir el
+ * puntero). Con `still` queda quieto (exportaciones, capturas).
  */
 export type AfiMood =
   | "happy"
@@ -34,7 +40,19 @@ export type AfiMood =
   | "waving"
   | "goodbye";
 
-export type AfiMotion = "none" | "breathe" | "float" | "hop" | "sway";
+export type AfiMotion = "none" | "breathe" | "float" | "hop" | "sway" | "wiggle";
+
+// Ojos abiertos: los únicos que parpadean.
+const OPEN_EYES = new Set(["dot", "round", "sparkle"]);
+// Estados en los que las estrellas de los audífonos brillan (algo salió bien).
+const GLOW = new Set<AfiMood>(["proud", "celebrating", "excited"]);
+
+/** Desfase estable (igual en servidor y cliente) para que dos Afi no parpadeen a la vez. */
+export function afiPhase(key: string): number {
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  return (h % 60) / 10;
+}
 
 // Paleta fija de Afi (no cambia con el tema: Afi es el mismo de día y de noche).
 const C = {
@@ -131,15 +149,17 @@ const Cup = () => (
   </g>
 );
 const Heart = ({ x = 80, y = 124, s = 1 }: { x?: number; y?: number; s?: number }) => (
-  <path transform={`translate(${x} ${y}) scale(${s})`} d="M0 6 C-10 -2 -9 -11 -3 -11 C0 -11 0 -8 0 -7 C0 -8 0 -11 3 -11 C9 -11 10 -2 0 6 Z" fill={C.heart} />
+  <g transform={`translate(${x} ${y}) scale(${s})`}>
+    <path d="M0 6 C-10 -2 -9 -11 -3 -11 C0 -11 0 -8 0 -7 C0 -8 0 -11 3 -11 C9 -11 10 -2 0 6 Z" fill={C.heart} className="afi-beat" />
+  </g>
 );
 const Zz = () => (
   <g fill={C.band} fontFamily="system-ui, sans-serif" fontWeight={700}>
-    <text x={132} y={40} fontSize={12}>z</text>
-    <text x={141} y={28} fontSize={16}>z</text>
+    <text x={132} y={40} fontSize={12} className="afi-rise">z</text>
+    <text x={141} y={28} fontSize={16} className="afi-rise afi-d2">z</text>
   </g>
 );
-const Question = () => <text x={130} y={42} fontSize={20} fontWeight={800} fill={C.band} fontFamily="system-ui, sans-serif">?</text>;
+const Question = () => <text x={130} y={42} fontSize={20} fontWeight={800} fill={C.band} fontFamily="system-ui, sans-serif" className="afi-tilt">?</text>;
 const Bulb = () => (
   <g>
     <circle cx={80} cy={8} r={7} fill={C.star} />
@@ -148,20 +168,25 @@ const Bulb = () => (
   </g>
 );
 const Notes = () => (
-  <g fill={C.band}>
+  <g fill={C.band} className="afi-bob">
     <path d="M140 30 v14 a3.5 3 0 1 1 -2 -2.6 v-9 l8 -2 v10 a3.5 3 0 1 1 -2 -2.6 v-6 z" />
   </g>
 );
 const Sparkles = () => (
   <g fill={C.star}>
-    <path d={star(20, 34, 5)} />
-    <path d={star(142, 26, 6)} />
-    <path d={star(150, 58, 3.5)} />
-    <circle cx={14} cy={56} r={2} fill={C.heart} />
+    <path d={star(20, 34, 5)} className="afi-twinkle" />
+    <path d={star(142, 26, 6)} className="afi-twinkle afi-d2" />
+    <path d={star(150, 58, 3.5)} className="afi-twinkle afi-d3" />
+    <circle cx={14} cy={56} r={2} fill={C.heart} className="afi-twinkle afi-d2" />
   </g>
 );
-const Waves = () => <path d="M152 88 q5 5 0 10 M158 83 q9 10 0 20" fill="none" stroke={C.band} strokeWidth={2.4} strokeLinecap="round" />;
-const Dots = () => <g fill={C.band}><circle cx={128} cy={44} r={2.5} /><circle cx={136} cy={36} r={3.2} /><circle cx={145} cy={26} r={4} /></g>;
+const Waves = () => (
+  <g fill="none" stroke={C.band} strokeWidth={2.4} strokeLinecap="round">
+    <path d="M152 88 q5 5 0 10" className="afi-pulse" />
+    <path d="M158 83 q9 10 0 20" className="afi-pulse afi-d2" />
+  </g>
+);
+const Dots = () => <g fill={C.band}><circle cx={128} cy={44} r={2.5} className="afi-bounce" /><circle cx={136} cy={36} r={3.2} className="afi-bounce afi-d2" /><circle cx={145} cy={26} r={4} className="afi-bounce afi-d3" /></g>;
 
 type Face = { eyes: Parameters<typeof Eyes>[0]["kind"]; mouth: Parameters<typeof Mouth>[0]["kind"]; look?: number; brows?: "worried" | "up"; extra?: React.ReactNode; wave?: boolean; blush?: number };
 
@@ -182,7 +207,7 @@ const FACES: Record<AfiMood, Face> = {
   writing: { eyes: "dot", mouth: "small", look: 2.5, extra: <Pencil /> },
   speaking: { eyes: "dot", mouth: "open", extra: <Waves /> },
   error: { eyes: "dot", mouth: "flat", brows: "worried" },
-  proud: { eyes: "happy", mouth: "smile", extra: <path d={star(80, 10, 9)} fill={C.star} stroke={C.starEdge} strokeWidth={1.2} />, blush: 1 },
+  proud: { eyes: "happy", mouth: "smile", extra: <path d={star(80, 10, 9)} fill={C.star} stroke={C.starEdge} strokeWidth={1.2} className="afi-twinkle" />, blush: 1 },
   excited: { eyes: "sparkle", mouth: "open", extra: <Sparkles /> },
   calm: { eyes: "soft", mouth: "small" },
   supportive: { eyes: "soft", mouth: "small", brows: "worried", extra: <Heart /> },
@@ -198,64 +223,89 @@ export function Afi({
   size = 96,
   motion = "none",
   label,
+  still = false,
   className,
+  style,
 }: {
   mood?: AfiMood;
   size?: number;
   motion?: AfiMotion;
   /** Texto para lectores de pantalla; sin él, Afi es decorativo. */
   label?: string;
+  /** Sin vida propia (exportaciones, capturas): ni parpadeo ni respiración. */
+  still?: boolean;
   className?: string;
+  style?: React.CSSProperties;
 }) {
   const f = FACES[mood];
   const a11y = label ? { role: "img" as const, "aria-label": label } : { "aria-hidden": true as const };
+  const phase = afiPhase(`${mood}${size}`);
+  const cheek = 0.7 + (f.blush ?? 0) * 0.25;
+  const starCls = cn("afi-star", GLOW.has(mood) && "afi-glow");
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 -12 160 162"
-      className={cn("afi shrink-0 overflow-visible", motion !== "none" && `afi-${motion}`, className)}
+      className={cn("afi shrink-0 overflow-visible", !still && "afi-alive", motion !== "none" && `afi-${motion}`, className)}
+      style={{ "--afi-phase": `-${phase}s`, ...style } as React.CSSProperties}
+      data-mood={mood}
       focusable="false"
       {...a11y}
     >
-      {/* Sombra en el suelo */}
-      <ellipse cx={80} cy={141} rx={50} ry={6.5} fill="var(--afi-shadow, #dcd8f5)" />
+      {/* Sombra en el suelo (se encoge cuando Afi salta) */}
+      <ellipse cx={80} cy={141} rx={50} ry={6.5} fill="var(--afi-shadow, #dcd8f5)" className="afi-shadow" />
       <g className="afi-body">
-        {/* Cuerpo: una nube redondeada */}
-        <path
-          d="M46 136 C28 136 18 124 23 110 C11 104 11 84 25 77 C21 58 36 44 53 48 C58 31 80 25 94 37 C108 29 128 40 127 58 C142 63 149 84 138 97 C148 110 140 136 116 136 Z"
-          fill={C.body}
-          stroke={C.bodyEdge}
-          strokeWidth={1.6}
-        />
-        {/* Sombreado lavanda abajo y brillo arriba */}
-        <path d="M24 108 C28 126 48 134 80 134 C112 134 134 127 138 99 C126 118 104 125 80 125 C57 125 37 120 24 108 Z" fill={C.shade} />
-        <path d="M60 48 q12 -9 24 -4" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" opacity={0.9} />
-        {/* Patitas */}
-        {!HIDES_PAWS.has(mood) && (
-          <>
-            <ellipse cx={63} cy={133} rx={11} ry={7.5} fill={C.body} stroke={C.bodyEdge} strokeWidth={1.4} />
-            <ellipse cx={97} cy={133} rx={11} ry={7.5} fill={C.body} stroke={C.bodyEdge} strokeWidth={1.4} />
-          </>
-        )}
-        {/* Brazo que saluda */}
-        {f.wave && <ellipse cx={147} cy={98} rx={9} ry={13} transform="rotate(38 147 98)" fill={C.body} stroke={C.bodyEdge} strokeWidth={1.4} className="afi-wave" />}
-        {/* Cara */}
-        {f.brows && <Brows kind={f.brows} />}
-        <Eyes kind={f.eyes} look={f.look} />
-        <ellipse cx={57} cy={100} rx={6.5} ry={3.6} fill={C.cheek} opacity={0.7 + (f.blush ?? 0) * 0.25} />
-        <ellipse cx={103} cy={100} rx={6.5} ry={3.6} fill={C.cheek} opacity={0.7 + (f.blush ?? 0) * 0.25} />
-        <Mouth kind={f.mouth} />
-        {/* Audífonos: diadema, auriculares y la estrella dorada de cada lado */}
-        <path d="M27 86 C19 -2 141 -2 133 86" fill="none" stroke={C.band} strokeWidth={7} strokeLinecap="round" />
-        <path d="M31 70 C30 18 130 18 129 70" fill="none" stroke={C.bandLight} strokeWidth={1.8} strokeLinecap="round" opacity={0.8} />
-        <rect x={12} y={74} width={22} height={34} rx={11} fill={C.cup} />
-        <rect x={29} y={79} width={8} height={24} rx={4} fill={C.cushion} />
-        <rect x={126} y={74} width={22} height={34} rx={11} fill={C.cup} />
-        <rect x={123} y={79} width={8} height={24} rx={4} fill={C.cushion} />
-        <path d={star(26, 73, 7.5)} fill={C.star} stroke={C.starEdge} strokeWidth={1.1} strokeLinejoin="round" />
-        <path d={star(134, 73, 7.5)} fill={C.star} stroke={C.starEdge} strokeWidth={1.1} strokeLinejoin="round" />
-        {f.extra}
+        <g className="afi-core">
+          {/* Cuerpo: una nube redondeada */}
+          <path
+            d="M46 136 C28 136 18 124 23 110 C11 104 11 84 25 77 C21 58 36 44 53 48 C58 31 80 25 94 37 C108 29 128 40 127 58 C142 63 149 84 138 97 C148 110 140 136 116 136 Z"
+            fill={C.body}
+            stroke={C.bodyEdge}
+            strokeWidth={1.6}
+          />
+          {/* Sombreado lavanda abajo y brillo arriba */}
+          <path d="M24 108 C28 126 48 134 80 134 C112 134 134 127 138 99 C126 118 104 125 80 125 C57 125 37 120 24 108 Z" fill={C.shade} />
+          <path d="M60 48 q12 -9 24 -4" fill="none" stroke="#fff" strokeWidth={3} strokeLinecap="round" opacity={0.9} />
+          {/* Patitas */}
+          {!HIDES_PAWS.has(mood) && (
+            <>
+              <ellipse cx={63} cy={133} rx={11} ry={7.5} fill={C.body} stroke={C.bodyEdge} strokeWidth={1.4} />
+              <ellipse cx={97} cy={133} rx={11} ry={7.5} fill={C.body} stroke={C.bodyEdge} strokeWidth={1.4} />
+            </>
+          )}
+          {/* Brazo que saluda */}
+          {/* El giro va en el grupo: la animación CSS del brazo no lo pisa. */}
+          {f.wave && (
+            <g transform="rotate(38 147 98)">
+              <ellipse cx={147} cy={98} rx={9} ry={13} fill={C.body} stroke={C.bodyEdge} strokeWidth={1.4} className="afi-wave" />
+            </g>
+          )}
+          {/* Cara: se desplaza un poco hacia donde mira (paralaje: ojos más, boca menos) */}
+          <g className="afi-look-soft">
+            <ellipse cx={57} cy={100} rx={6.5} ry={3.6} fill={C.cheek} opacity={cheek} className="afi-cheek" />
+            <ellipse cx={103} cy={100} rx={6.5} ry={3.6} fill={C.cheek} opacity={cheek} className="afi-cheek" />
+            <g className={cn("afi-mouth", mood === "speaking" && "afi-talk")}>
+              <Mouth kind={f.mouth} />
+            </g>
+          </g>
+          <g className="afi-look">
+            {f.brows && <Brows kind={f.brows} />}
+            <g className={cn(OPEN_EYES.has(f.eyes) && "afi-blink")}>
+              <Eyes kind={f.eyes} look={f.look} />
+            </g>
+          </g>
+          {/* Audífonos: diadema, auriculares y la estrella dorada de cada lado */}
+          <path d="M27 86 C19 -2 141 -2 133 86" fill="none" stroke={C.band} strokeWidth={7} strokeLinecap="round" />
+          <path d="M31 70 C30 18 130 18 129 70" fill="none" stroke={C.bandLight} strokeWidth={1.8} strokeLinecap="round" opacity={0.8} />
+          <rect x={12} y={74} width={22} height={34} rx={11} fill={C.cup} />
+          <rect x={29} y={79} width={8} height={24} rx={4} fill={C.cushion} />
+          <rect x={126} y={74} width={22} height={34} rx={11} fill={C.cup} />
+          <rect x={123} y={79} width={8} height={24} rx={4} fill={C.cushion} />
+          <path d={star(26, 73, 7.5)} fill={C.star} stroke={C.starEdge} strokeWidth={1.1} strokeLinejoin="round" className={starCls} />
+          <path d={star(134, 73, 7.5)} fill={C.star} stroke={C.starEdge} strokeWidth={1.1} strokeLinejoin="round" className={cn(starCls, "afi-d2")} />
+          {f.extra}
+        </g>
       </g>
     </svg>
   );

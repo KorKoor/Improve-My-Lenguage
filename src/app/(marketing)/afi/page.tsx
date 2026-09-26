@@ -5,6 +5,7 @@ import { AfiMessage } from "@/components/afi/afi-message";
 import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { ButtonLink } from "@/components/ui/button";
 import { BRAND } from "@/lib/seo";
+import { LiveAfi } from "@/components/afi/live-afi";
 
 export const metadata: Metadata = {
   title: "Afi, tu compañera de aprendizaje",
@@ -35,8 +36,20 @@ export default function AfiPage() {
           <p className="mt-3 text-lg text-muted">{BRAND.mascotLine} Es una nube pequeña con audífonos y una estrella dorada en cada lado: escucha cómo aprendes y te acompaña.</p>
           <p className="mt-3 text-muted">El motor adaptativo es la parte racional: mide, calcula y decide. Afi es la parte humana: te cuenta lo que el sistema ha visto de ti en una frase corta y tranquila.</p>
         </div>
-        <Afi mood="waving" size={180} label="Afi saludando" className="mx-auto" />
+        <div className="flex flex-col items-center gap-2">
+          <LiveAfi mood="waving" size={180} className="mx-auto mt-16 sm:mt-10" />
+          <p className="text-sm text-muted">Tócala: tiene cosquillas en los audífonos.</p>
+        </div>
       </header>
+
+      <section aria-labelledby="story" className="card mt-14 p-6 sm:p-8">
+        <h2 id="story" className="font-display text-2xl font-extrabold">Quién es Afi</h2>
+        <div className="mt-4 grid gap-5 leading-relaxed text-muted sm:grid-cols-3">
+          <p><strong className="text-text">Una nube que escucha.</strong> Afi flota por encima de todos los idiomas y cada uno le llueve un poco en los audífonos. Por eso nunca se los quita.</p>
+          <p><strong className="text-text">Estrellas que se encienden.</strong> Las dos estrellas doradas brillan un poco más cada vez que aprendes algo. Cuando una sesión sale muy bien, se nota.</p>
+          <p><strong className="text-text">Sus manías.</strong> Colecciona palabras que suenan bonito («mariposa», «Schmetterling»), parpadea a su ritmo, te sigue con la mirada y, si la dejas sola un rato, se queda dormida.</p>
+        </div>
+      </section>
 
       <section aria-labelledby="does" className="mt-14">
         <h2 id="does" className="font-display text-2xl font-extrabold">Qué hace Afi en la aplicación</h2>
