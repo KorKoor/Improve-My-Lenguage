@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AFI_WAKE, afiGaze, afiPoke, afiSleepAfter, type AfiReaction } from "@/lib/engine/afi-voice";
 import { cn } from "@/lib/cn";
+import type { AfiWear } from "@/lib/engine/afi-bond";
 import { Afi, type AfiMood, type AfiMotion } from "./afi";
 
 /**
@@ -19,6 +20,7 @@ export function LiveAfi({
   motion = "none",
   talk = true,
   sleepy = true,
+  wear,
   className,
 }: {
   /** Estado de base (al que vuelve después de cada reacción). */
@@ -29,6 +31,8 @@ export function LiveAfi({
   talk?: boolean;
   /** Se duerme tras un rato sin actividad. */
   sleepy?: boolean;
+  /** Accesorios ganados (ver lib/engine/afi-bond.ts). */
+  wear?: AfiWear[];
   className?: string;
 }) {
   const ref = useRef<HTMLButtonElement>(null);
@@ -173,7 +177,7 @@ export function LiveAfi({
         className="afi-live relative rounded-full"
         aria-label={asleep ? "Despertar a Afi" : "Saludar a Afi"}
       >
-        <Afi key={motionKey} mood={shown} size={size} motion={shownMotion} />
+        <Afi key={motionKey} mood={shown} size={size} motion={shownMotion} wear={wear} />
         {particles.map((p) => (
           <span key={p.id} className="afi-particle text-lg" style={{ "--dx": `${p.dx}px` } as React.CSSProperties} aria-hidden>
             {p.icon}

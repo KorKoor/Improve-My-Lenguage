@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import type { DashboardData } from "@/lib/services/insights";
 import type { NextStep } from "@/lib/engine/next-step";
 import { LiveAfi } from "@/components/afi/live-afi";
+import { afiWear } from "@/lib/engine/afi-bond";
 
 const STEP_EMOJI: Record<NextStep["kind"], string> = { review: "🔁", letters: "🔤", phase: "🔤", writing: "✍️", lesson: "🧭", session: "✨", story: "📚", done: "🌟" };
 
@@ -19,7 +20,7 @@ export function SimpleHome({ d, languageName, greeting, step }: { d: DashboardDa
   return (
     <div className="mx-auto max-w-2xl space-y-5">
       <header className="flex items-center gap-4 animate-rise">
-        <LiveAfi size={72} mood={d.studiedToday ? "proud" : "waving"} className="!hidden sm:!inline-flex" />
+        <LiveAfi size={72} mood={d.studiedToday ? "proud" : "waving"} wear={afiWear({ bestStreak: d.bestStreak, wordsLearned: d.wordsLearned, level: d.overall?.level ?? null })} className="!hidden sm:!inline-flex" />
         <div>
           <h1 className="font-display text-3xl font-extrabold tracking-tight">{greeting}{d.greetingName ? `, ${d.greetingName}` : ""}</h1>
           <p className="mt-1 text-lg text-muted">

@@ -17,7 +17,7 @@ export interface ScenarioCard { id: string; level: string; icon: string; title: 
 // Tipos mínimos del reconocimiento de voz del navegador (no estándar en TS).
 type SpeechRec = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null };
 
-export function TutorChat({ language, languageName, locale, suggestions, past, scenarios = [] }: { language: string; languageName: string; locale: string; suggestions: string[]; past: Past[]; scenarios?: ScenarioCard[] }) {
+export function TutorChat({ language, languageName, locale, suggestions, past, scenarios = [], initialTopic }: { language: string; languageName: string; locale: string; suggestions: string[]; past: Past[]; scenarios?: ScenarioCard[]; initialTopic?: string }) {
   const [scenario, setScenario] = useState<ScenarioCard | null>(null);
   const [goalsDone, setGoalsDone] = useState<number[]>([]);
   const [party, setParty] = useState(false);
@@ -95,6 +95,15 @@ export function TutorChat({ language, languageName, locale, suggestions, past, s
     setMessages([{ role: "assistant", content: res.data.message }]);
     speakThenListen(res.data.message);
   }
+
+  // Viene con un tema (p. ej. desde «Aprende con el mundo»): la conversación empieza sola, una vez.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!initialTopic || autoStarted.current) return;
+    autoStarted.current = true;
+    void start(initialTopic);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialTopic]);
 
   function speakThenListen(reply: string) {
     if (!voiceRef.current || !("speechSynthesis" in window)) return;
