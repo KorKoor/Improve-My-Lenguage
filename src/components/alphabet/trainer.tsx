@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { completeAlphabetGroupAction } from "@/app/app/first-steps-actions";
 import { Confetti } from "@/components/celebrate";
 import { useSpeech, VoiceWarning } from "@/components/speak-button";
+import { ChoiceList } from "@/components/ui/choice-list";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { arabicForms, type Alphabet, type Letter, type LetterGroup } from "@/lib/content/alphabets";
@@ -253,12 +254,23 @@ function Quiz({ group, questions, lang, dir, say, onExit, onSaved, onNext, onRet
             </>
           )}
         </div>
-        <div className={cn("mt-5 grid gap-2.5", q.kind === "hear" && "grid-cols-2")}>
-          {q.options.map((o) => (
-            <button key={o} type="button" disabled={!!answer} onClick={() => check(o)} className={cn("rounded-2xl border px-4 py-3.5 font-medium transition", q.kind === "hear" ? "text-center text-4xl" : "text-left text-lg", optionClass(o))} lang={q.kind === "hear" ? lang : "es"}>
-              {o}
-            </button>
-          ))}
+        <div className="mt-5">
+          {/* Se selecciona y se confirma; en «Escucha y elige» las letras sólo suenan después de responder. */}
+          <ChoiceList
+            key={pos}
+            options={q.options}
+            onConfirm={check}
+            answered={!!answer}
+            result={(o) => (!answer ? null : o === target ? "ok" : o === answer.chosen ? "bad" : null)}
+            speakOption={q.kind === "hear" ? (o) => { const l = queue.flatMap((x) => [x.letter]).find((x) => x.g === o) ?? group.letters.find((x) => x.g === o); if (l) say(l); } : undefined}
+            listen={false}
+            lang={q.kind === "hear" ? lang : "es"}
+            dir={q.kind === "hear" ? (dir as "ltr" | "rtl") : "ltr"}
+            gridClassName={q.kind === "hear" ? "grid-cols-2" : undefined}
+            info={q.kind === "hear" ? Object.fromEntries(group.letters.map((l) => [l.g, { reading: l.r }])) : undefined}
+            readingMode="after"
+            optionClassName={q.kind === "hear" ? "justify-center text-center text-4xl" : "text-lg"}
+          />
         </div>
       </div>
       {answer && (

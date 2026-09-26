@@ -19,6 +19,7 @@ import { BreakCoach, formatClock } from "@/components/focus/break-coach";
 import { PlanNext } from "@/components/focus/plan-next";
 import { ReportButton } from "@/components/report-button";
 import { ScriptKeyboard } from "@/components/script-keyboard";
+import { ChoiceList } from "@/components/ui/choice-list";
 import { charBreakdown } from "@/lib/content/alphabets";
 import { LetterStep, RuleStep } from "@/components/session/reading-steps";
 import { Stressed } from "@/components/stressed";
@@ -394,11 +395,11 @@ export function SessionRunner({ minutes, focus, surprise, locale, language, rtl,
         <section id="shortcuts" aria-label="Atajos de teclado" className="mt-3 rounded-2xl border border-border bg-surface p-4 text-sm animate-rise">
           <p className="font-semibold">Atajos de teclado</p>
           <ul className="mt-2 grid gap-1 sm:grid-cols-2">
-            <li><kbd className="rounded border border-border px-1.5">1</kbd>–<kbd className="rounded border border-border px-1.5">4</kbd> elegir una opción</li>
+            <li><kbd className="rounded border border-border px-1.5">1</kbd>–<kbd className="rounded border border-border px-1.5">4</kbd> seleccionar (y oír) una opción</li>
             <li><kbd className="rounded border border-border px-1.5">R</kbd> repetir el audio</li>
             <li><kbd className="rounded border border-border px-1.5">L</kbd> audio lento</li>
             <li><kbd className="rounded border border-border px-1.5">N</kbd> no lo sé</li>
-            <li><kbd className="rounded border border-border px-1.5">Intro</kbd> continuar</li>
+            <li><kbd className="rounded border border-border px-1.5">Intro</kbd> comprobar y continuar</li>
             <li><kbd className="rounded border border-border px-1.5">?</kbd> mostrar u ocultar esta ayuda</li>
           </ul>
           <button type="button" onClick={() => setShortcuts(false)} className="mt-2 text-xs font-semibold text-primary hover:underline">Ocultar</button>
@@ -736,22 +737,6 @@ function ExerciseStep({
     return () => window.removeEventListener("keydown", onKey);
   }, [ex, speak, gentle, answered, readingTest, disabled, onSubmit]);
 
-  // Atajos 1–4 para opción múltiple
-  useEffect(() => {
-    if (ex.input !== "choice" || disabled) return;
-    const onKey = (e: KeyboardEvent) => {
-      const n = Number(e.key);
-      const opt = options?.[n - 1];
-      if (opt && !(e.target instanceof HTMLInputElement)) {
-        setChosen(opt);
-        if (!optionsInSpanish) speak(opt, gentle ? 0.8 : 1);
-        onSubmit(ex, opt);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [ex, disabled, onSubmit, speak, gentle, options, optionsInSpanish]);
-
   return (
     <div>
       <h2 ref={heading} tabIndex={-1} className="text-sm font-semibold text-muted outline-none">
@@ -818,37 +803,32 @@ function ExerciseStep({
 
       {/* Entrada */}
       {ex.input === "choice" && (
-        <div className="mt-5 grid gap-2.5" role="group" aria-label="Opciones">
-          {options!.map((o, i) => {
-            const isChosen = chosen === o;
-            const right = feedback?.answer ?? feedback?.expected;
-            const state = feedback && isChosen ? (feedback.correct ? "ok" : "bad") : feedback && !feedback.correct && o === right ? "ok" : null;
-            return (
-              <button
-                key={o}
-                type="button"
-                disabled={disabled}
-                aria-keyshortcuts={String(i + 1)}
-                onClick={() => {
-                  setChosen(o);
-                  if (!optionsInSpanish) speak(o, gentle ? 0.8 : 1);
-                  onSubmit(ex, o);
-                }}
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl border px-4 py-3.5 text-left text-base font-medium transition",
-                  state === "ok" && "border-2 border-success bg-success-soft text-success",
-                  state === "bad" && "border-2 border-danger bg-danger-soft text-danger",
-                  !state && "border-border bg-surface hover:border-primary hover:bg-primary-soft/40",
-                  feedback && !state && "opacity-60",
-                )}
-              >
-                <kbd className="hidden size-6 place-items-center rounded-md border border-border text-[11px] text-muted sm:grid" aria-hidden>{i + 1}</kbd>
-                <span className="flex-1" lang={optionsInSpanish ? "es" : language} dir={optionsInSpanish ? "ltr" : dir}>{o}</span>
-                {state === "ok" && <Check size={18} aria-hidden />}
-                {state === "bad" && <X size={18} aria-hidden />}
-              </button>
-            );
-          })}
+        <div className="mt-5">
+          {/* Tocar una opción la selecciona y la hace sonar; se envía con «Comprobar». */}
+          <ChoiceList
+            options={options!}
+            onConfirm={(o) => {
+              setChosen(o);
+              onSubmit(ex, o);
+            }}
+            answered={Boolean(feedback)}
+            busy={submitting}
+            disabled={disabled}
+            result={(o) => {
+              const right = feedback?.answer ?? feedback?.expected;
+              return feedback && chosen === o ? (feedback.correct ? "ok" : "bad") : feedback && !feedback.correct && o === right ? "ok" : null;
+            }}
+            locale={optionsInSpanish ? undefined : locale}
+            lang={optionsInSpanish ? "es" : language}
+            dir={optionsInSpanish ? "ltr" : dir}
+            // En los ejercicios de oído, oír las opciones antes de responder regalaría la respuesta.
+            listen={!listening}
+            info={ex.optionInfo}
+            // Si el ejercicio es justo leer la escritura, la lectura latina aparece al responder.
+            readingMode={readingTest || ex.type === "letter_hear" || ex.type === "letter_pair" || ex.type === "tone_pick" ? "after" : roman}
+            // El significado en español ayuda a memorizar, salvo cuando la pregunta es justo el significado.
+            meaningBefore={!promptInSpanish && !readingTest && ex.type !== "grammar" && ex.type !== "cloze"}
+          />
         </div>
       )}
 

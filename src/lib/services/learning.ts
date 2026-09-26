@@ -1,4 +1,5 @@
 import "server-only";
+import { annotateOptions } from "../engine/option-info";
 import { catalog, errorLabel, grammarFor, grammarForCategory } from "../content";
 import type { Skill } from "../content/types";
 import { ACHIEVEMENT_RULES, newlyUnlocked } from "../engine/achievements";
@@ -172,7 +173,7 @@ export async function startSession(
     const steps = phaseZeroSteps(unit, learner.language.code, learner.native, catalog, { seed: sessionSeed(ulId, day, `phase-${unit.id}`), audioFirst: learner.profile.audioFirst, confusions: topConfusions(reading.confusions) });
     const session = await repo.createSession(ulId, "focus", 5, phasePlan);
     await repo.track(learner.userId, "phase_unit_started", { unit: unit.id, language: learner.language.code });
-    return { sessionId: session.id, plan: phasePlan, steps };
+    return { sessionId: session.id, plan: phasePlan, steps: annotateOptions(steps, learner.native, catalog.vocab) };
   }
   // Escritura y ortografía: una unidad corta.
   if (focus?.startsWith("writing:")) {
@@ -182,7 +183,7 @@ export async function startSession(
     const steps = writingSteps(unit, learner.language.code, learner.native, catalog, { seed: sessionSeed(ulId, day, `writing-${unit.id}`), audioFirst: learner.profile.audioFirst });
     const session = await repo.createSession(ulId, "focus", 5, writingPlan);
     await repo.track(learner.userId, "writing_unit_started", { unit: unit.id, language: learner.language.code });
-    return { sessionId: session.id, plan: writingPlan, steps };
+    return { sessionId: session.id, plan: writingPlan, steps: annotateOptions(steps, learner.native, catalog.vocab) };
   }
   // Camino guiado: la lección fija sustituye a la sesión planificada.
   if (focus?.startsWith("lesson:")) {
@@ -193,7 +194,7 @@ export async function startSession(
     const steps = lessonSteps(lesson, course[n - 2] ?? null, learner.language.code, learner.native, catalog, grammarFor(learner.language.code), sessionSeed(ulId, day, `lesson-${n}`));
     const session = await repo.createSession(ulId, "focus", 10, lessonPlan);
     await repo.track(learner.userId, "lesson_started", { lesson: n, language: learner.language.code });
-    return { sessionId: session.id, plan: lessonPlan, steps };
+    return { sessionId: session.id, plan: lessonPlan, steps: annotateOptions(steps, learner.native, catalog.vocab) };
   }
   const steps = buildSessionSteps({
     plan,
@@ -226,7 +227,7 @@ export async function startSession(
   const kind = focus === "review" ? "review" : focus ? "focus" : opts.surprise ? "surprise" : "daily";
   const session = await repo.createSession(ulId, kind, plan.totalMinutes, plan);
   await repo.track(learner.userId, "session_started", { kind, minutes: plan.totalMinutes, steps: steps.length });
-  return { sessionId: session.id, plan, steps };
+  return { sessionId: session.id, plan, steps: annotateOptions(steps, learner.native, catalog.vocab) };
 }
 
 export interface AnswerInput {
@@ -712,5 +713,5 @@ async function startMixedReview(learner: Learner, now: Date, day: string): Promi
   const plan: SessionPlan = { totalMinutes: Math.max(5, Math.ceil(steps.length * 0.3)), blocks: [{ kind: "review", minutes: Math.max(5, Math.ceil(steps.length * 0.3)), reason: "Repaso intercalado de todos tus idiomas." }] };
   const session = await repo.createSession(learner.ul.id, "review", plan.totalMinutes, plan);
   await repo.track(learner.userId, "session_started", { kind: "mixed", steps: steps.length });
-  return { sessionId: session.id, plan, steps };
+  return { sessionId: session.id, plan, steps: annotateOptions(steps, learner.native, catalog.vocab) };
 }

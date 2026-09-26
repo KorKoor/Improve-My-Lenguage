@@ -78,6 +78,8 @@ export interface Exercise {
   afterAudio?: string;
   /** Varios audios seguidos (deletreo: el nombre de cada letra). */
   audioSeq?: string[];
+  /** Opciones en otra escritura: lectura en letras latinas y significado (engine/option-info.ts). */
+  optionInfo?: Record<string, { reading?: string; meaning?: string }>;
 }
 
 export interface ResolvedAnswer {

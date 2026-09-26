@@ -11,6 +11,7 @@ import { SpeakButton, useSpeech } from "@/components/speak-button";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
+import { ChoiceList } from "@/components/ui/choice-list";
 import type { DictionaryEntry } from "@/lib/reading/dictionary-parse";
 import type { ReaderData } from "@/lib/services/reading";
 
@@ -343,28 +344,18 @@ function Quiz({ data, started, onDone }: { data: ReaderData; started: number; on
       <p className="text-xs font-bold uppercase tracking-wider text-muted">Pregunta {i + 1} de {data.quiz.length}</p>
       <h2 id="quiz-title" className="mt-2 font-display text-xl font-extrabold">{q.prompt}</h2>
       {q.kind === "cloze" && q.context ? <p className="mt-3 rounded-2xl bg-surface-muted p-4 text-lg" lang={data.locale}>{q.context}</p> : null}
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        {q.options.map((o) => {
-          const state = picked ? (o === q.answer ? "ok" : o === picked ? "bad" : null) : null;
-          return (
-            <button
-              key={o}
-              type="button"
-              disabled={!!picked}
-              onClick={() => setPicked(o)}
-              className={cn(
-                "rounded-2xl border px-4 py-3 text-left font-medium transition",
-                !picked && "border-border bg-surface hover:border-primary",
-                state === "ok" && "animate-pop border-success bg-success-soft text-success",
-                state === "bad" && "animate-shake border-danger bg-danger-soft text-danger",
-                picked && !state && "border-border opacity-60",
-              )}
-              lang={q.kind === "cloze" ? data.locale : undefined}
-            >
-              {o}
-            </button>
-          );
-        })}
+      <div className="mt-4">
+        <ChoiceList
+          key={i}
+          options={q.options}
+          onConfirm={setPicked}
+          answered={!!picked}
+          result={(o) => (!picked ? null : o === q.answer ? "ok" : o === picked ? "bad" : null)}
+          locale={q.kind === "cloze" ? data.locale : undefined}
+          lang={q.kind === "cloze" ? data.locale.slice(0, 2) : "es"}
+          dir={q.kind === "cloze" && data.rtl ? "rtl" : "ltr"}
+          gridClassName="sm:grid-cols-2"
+        />
       </div>
       {picked ? (
         <div className="mt-5 flex items-center gap-3">

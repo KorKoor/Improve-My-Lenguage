@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { placePhaseZeroAction, type PlacementResult } from "@/app/app/phase-actions";
 import { Afi } from "@/components/afi/afi";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { ChoiceList } from "@/components/ui/choice-list";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import type { DiagnosticItem } from "@/lib/engine/phase-zero";
 
@@ -79,12 +80,8 @@ export function PhaseDiagnostic({ items, language, rtl, languageName }: { items:
       <div key={pos} className="card mt-3 grid place-items-center p-10 animate-rise">
         <span className="font-display text-7xl font-extrabold" lang={language} dir={rtl ? "rtl" : "ltr"}>{item.shown}</span>
       </div>
-      <div className="mt-5 grid gap-2.5" role="group" aria-label="Opciones">
-        {item.options.map((o) => (
-          <button key={o} type="button" onClick={() => void answer(o)} className="rounded-2xl border border-border bg-surface px-4 py-3.5 text-left text-lg font-medium transition hover:border-primary hover:bg-primary-soft/40">
-            {o}
-          </button>
-        ))}
+      <div className="mt-5">
+        <ChoiceList options={item.options} onConfirm={(o) => void answer(o)} optionClassName="text-lg" />
       </div>
       <div className="mt-4 text-center">
         <Button variant="ghost" onClick={() => void answer("")}>🤷 No lo sé</Button>
