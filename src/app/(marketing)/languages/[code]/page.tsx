@@ -124,8 +124,10 @@ export default async function LanguagePage({ params }: { params: Promise<{ code:
             <section className="mt-10" aria-labelledby="classics">
               <h2 id="classics" className="font-display text-2xl font-extrabold">Clásicos para leer en {name}</h2>
               <p className="mt-2 text-sm text-muted">Textos originales de dominio público (Wikisource), con traducción al tocar cada palabra.</p>
-              <ul className="mt-4 flex flex-wrap gap-2">
-                {classics.map((c) => <li key={c.title}><Chip tone="muted"><span lang={l.code}>{c.title}</span> · {c.author}</Chip></li>)}
+              <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+                {classics.map((c) => (
+                  <li key={c.title} className="card px-4 py-3 text-sm"><span className="font-semibold" lang={l.code}>{c.title}</span><span className="block text-muted">{c.author}</span></li>
+                ))}
               </ul>
             </section>
           )}

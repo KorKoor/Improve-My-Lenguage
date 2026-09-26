@@ -34,3 +34,18 @@ test("grabaciones humanas: URL de Wikimedia en MP3, sin parámetros", () => {
     }
   }
 });
+
+test("variedad correcta: nada de cantonés en mandarín ni de afrikáans en inglés", async () => {
+  const { audioMatchesLanguage } = await import("../src/lib/audio-key");
+  assert.ok(!audioMatchesLanguage("https://upload.wikimedia.org/wikipedia/commons/transcoded/a/ab/LL-Q9186-Luilui6666-%E4%B8%AD.wav/x.mp3", "zh"));
+  assert.ok(audioMatchesLanguage("https://upload.wikimedia.org/x/LL-Q9192_(cmn)-A-%E4%B8%AD.wav", "zh"));
+  assert.ok(!audioMatchesLanguage("https://upload.wikimedia.org/x/LL-Q14196_(afr)-A-cat.wav", "en"));
+  assert.ok(audioMatchesLanguage("https://upload.wikimedia.org/x/Zh-zh%C5%8Dng.ogg", "zh"));
+  for (const lang of ["en", "fr", "de", "it", "pt", "nl", "sv", "ru", "ar", "ja", "ko", "zh"]) {
+    const m = manifest(lang);
+    for (const url of Object.values(m.human ?? {})) assert.ok(audioMatchesLanguage(url, lang), `${lang}: ${url}`);
+  }
+  const { catalog } = await import("../src/lib/content");
+  const zh = catalog.vocab("zh").filter((v) => v.audioUrl && /LL-Q9186/.test(decodeURIComponent(v.audioUrl)));
+  assert.equal(zh.length, 0, "el vocabulario de chino no trae audio cantonés");
+});

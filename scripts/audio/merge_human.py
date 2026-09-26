@@ -8,12 +8,26 @@ con grabaciones humanas.
   python3 scripts/audio/merge_human.py [idiomas…]
 """
 import json
+import re
 import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 HUMAN = ROOT / "data/audio"
 OUT = ROOT / "public/audio"
+
+
+# Mantener sincronizado con LL_ALLOWED en src/lib/audio-key.ts.
+LL_ALLOWED = {
+    "en": {"Q1860", "Q7979"}, "fr": {"Q150"}, "de": {"Q188"}, "it": {"Q652"}, "pt": {"Q5146"}, "nl": {"Q7411"},
+    "sv": {"Q9027"}, "ru": {"Q7737"}, "ar": {"Q13955"}, "ja": {"Q5287"}, "ko": {"Q9176"}, "zh": {"Q9192", "Q727694"},
+}
+
+
+def right_variety(file: str, lang: str) -> bool:
+    """Descarta grabaciones de otra variedad (p. ej. cantonés en un curso de mandarín)."""
+    m = re.match(r"LL-(Q\d+)", file)
+    return not m or m.group(1) in LL_ALLOWED.get(lang, set())
 
 
 def clean(url: str) -> str:
@@ -34,6 +48,11 @@ def merge(lang: str) -> None:
         print(f"{lang}: sin grabaciones humanas")
         return
     data = json.loads(src.read_text("utf-8"))
+    dropped = [k for k, v in data.items() if not right_variety(v["file"], lang)]
+    for k in dropped:
+        del data[k]
+    if dropped:
+        print(f"  {lang}: {len(dropped)} grabaciones de otra variedad descartadas")
     for v in data.values():
         v["url"] = clean(v["url"])
         v["author"] = " · ".join(x.strip() for x in v["author"].splitlines() if x.strip())

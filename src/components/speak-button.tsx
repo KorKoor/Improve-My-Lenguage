@@ -27,6 +27,19 @@ function loadPack(lang: string): Promise<Pack | null> {
   return p;
 }
 
+/**
+ * URL del audio de un texto (grabación humana o voz libre), o null si sólo
+ * puede sonar con la voz del navegador. Para analizar el audio (entonación).
+ */
+export async function audioUrlFor(lang: string, text: string): Promise<string | null> {
+  const p = await loadPack(lang);
+  const key = audioKey(text);
+  const human = p?.human[key];
+  if (human) return human;
+  const file = p?.files[key];
+  return file ? `/audio/${lang}/${file}` : null;
+}
+
 // Un solo sonido a la vez en toda la app: uno nuevo corta el anterior.
 let current: HTMLAudioElement | null = null;
 let seqToken = 0;

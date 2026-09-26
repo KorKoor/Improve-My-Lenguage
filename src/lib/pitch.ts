@@ -144,3 +144,12 @@ export function describeContour(contour: number[]): string {
   if (maxAt > 0.25 && maxAt < 0.75 && Math.max(...contour) - Math.max(a, z) > 1) return "sube y luego baja";
   return z > a ? "sube" : "baja";
 }
+
+/** Tono de una sílaba en pinyin por su marca (ā á ǎ à); null si es neutro o hay varias sílabas. */
+export function pinyinTone(syllable: string): Tone | null {
+  const s = syllable.normalize("NFD");
+  if (/\s/.test(syllable.trim()) || !/^[a-zǜ-ͯ]+$/i.test(s)) return null;
+  const marks = s.match(/[̄́̌̀]/g) ?? [];
+  if (marks.length !== 1) return null;
+  return ({ "̄": 1, "́": 2, "̌": 3, "̀": 4 } as const)[marks[0] as "̄"] ?? null;
+}

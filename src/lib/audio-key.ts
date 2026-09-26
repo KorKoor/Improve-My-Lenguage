@@ -26,3 +26,30 @@ export const PREGEN_VOICES: Record<string, { voice: string; license: string; sou
   ru: { voice: "ru_RU-denis-medium", license: "CC0", source: "https://github.com/OHF-Voice/voice-datasets" },
   zh: { voice: "zh_CN-chaowen-medium", license: "CC0", source: "https://github.com/OHF-Voice/voice-datasets" },
 };
+
+/**
+ * Variedades aceptadas en las grabaciones de Lingua Libre (código Wikidata
+ * del idioma en el nombre del archivo: «LL-Q9186-…»). Evita, por ejemplo,
+ * que una palabra china suene en cantonés en un curso de mandarín.
+ */
+const LL_ALLOWED: Record<string, string[]> = {
+  en: ["Q1860", "Q7979"], // inglés, inglés británico
+  fr: ["Q150"],
+  de: ["Q188"],
+  it: ["Q652"],
+  pt: ["Q5146"],
+  nl: ["Q7411"],
+  sv: ["Q9027"],
+  ru: ["Q7737"],
+  ar: ["Q13955"],
+  ja: ["Q5287"],
+  ko: ["Q9176"],
+  zh: ["Q9192", "Q727694"], // mandarín (no cantonés Q9186, min Q36759 ni «chino» genérico Q7850)
+};
+
+/** ¿La grabación es de la variedad correcta? (sólo se comprueban las de Lingua Libre). */
+export function audioMatchesLanguage(url: string, lang: string): boolean {
+  const m = decodeURIComponent(url).match(/LL-(Q\d+)/);
+  if (!m) return true;
+  return (LL_ALLOWED[lang] ?? []).includes(m[1]!);
+}

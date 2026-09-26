@@ -105,7 +105,7 @@ export default function CreditsPage() {
         <section className="mt-12" aria-labelledby="packs">
           <h2 id="packs" className="font-display text-2xl font-extrabold">Vocabulario por idioma</h2>
           <p className="mt-2 text-sm text-muted">Palabras disponibles por nivel (ordenadas por frecuencia de uso real).</p>
-          <div className="mt-5 overflow-x-auto">
+          <div className="mt-5 overflow-x-auto" tabIndex={0} role="region" aria-label="Tabla de vocabulario por idioma (desplazable)">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead className="text-muted">
                 <tr><th className="py-2 pr-4 font-semibold">Idioma</th>{["A1", "A2", "B1", "B2", "C1"].map((c) => <th key={c} className="px-2 py-2 text-right font-semibold">{c}</th>)}<th className="py-2 pl-4 text-right font-semibold">Total</th></tr>
@@ -127,7 +127,7 @@ export default function CreditsPage() {
       <section className="mt-12" aria-labelledby="audio">
         <h2 id="audio" className="font-display text-2xl font-extrabold">Audio por idioma</h2>
         <p className="mt-2 text-sm text-muted">Primero suena una persona real; si no hay grabación, una voz libre; y si tampoco, la voz de tu dispositivo.</p>
-        <div className="mt-5 overflow-x-auto">
+        <div className="mt-5 overflow-x-auto" tabIndex={0} role="region" aria-label="Tabla de audio por idioma (desplazable)">
           <table className="w-full min-w-[560px] text-left text-sm">
             <thead className="text-muted">
               <tr><th className="py-2 pr-4 font-semibold">Idioma</th><th className="px-2 py-2 text-right font-semibold">Grabaciones humanas</th><th className="py-2 pl-4 font-semibold">Voz libre (Piper)</th></tr>

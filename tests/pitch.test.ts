@@ -43,3 +43,13 @@ test("tonos del chino: plano, sube, baja y sube, cae", () => {
   assert.equal(tone((t) => 300 - 160 * t), 4);
   assert.equal(describeContour(normalizeContour(pitchTrack(voice((t) => 300 - 160 * t), SR))!), "baja");
 });
+
+test("pinyin: el tono sale de la marca de la vocal", async () => {
+  const { pinyinTone } = await import("../src/lib/pitch");
+  assert.equal(pinyinTone("mā"), 1);
+  assert.equal(pinyinTone("rén"), 2);
+  assert.equal(pinyinTone("nǚ"), 3);
+  assert.equal(pinyinTone("shì"), 4);
+  assert.equal(pinyinTone("ma"), null);
+  assert.equal(pinyinTone("nǐ hǎo"), null);
+});
