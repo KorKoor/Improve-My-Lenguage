@@ -1,4 +1,4 @@
-import { BarChart3, BookA, Gamepad2, SpellCheck, BookHeart, CaseSensitive, BookOpen, Footprints, Milestone, Globe2, Headphones, Home, Timer, Layers, MessageCircle, Mic, Newspaper, PenLine, Play, Repeat, Route, Sparkles, Type, UserRound, Users, type LucideIcon } from "lucide-react";
+import { BarChart3, BookA, Earth, Gamepad2, SpellCheck, BookHeart, CaseSensitive, BookOpen, Footprints, Milestone, Globe2, Headphones, Home, Timer, Layers, MessageCircle, Mic, Newspaper, PenLine, Play, Repeat, Route, Sparkles, Type, UserRound, Users, type LucideIcon } from "lucide-react";
 
 /** Secciones de la app (menú lateral, pantalla «Más»). Módulo sin "use client": lo usan servidor y cliente. */
 export interface NavItem {
@@ -29,7 +29,8 @@ export function navGroups(due: number, simple = false, alphabet = false): NavGro
     ...(alphabet ? [{ href: "/app/alphabet", label: "Alfabeto", icon: CaseSensitive, hint: "Todas las letras con su sonido." }] : []),
     { href: "/app/writing-system", label: "Ortografía", icon: SpellCheck, hint: "Cómo se escribe: acentos, mayúsculas y signos." },
   ];
-  const games: NavItem = { href: "/app/games", label: "Minijuegos", icon: Gamepad2, fresh: true, hint: "Lluvia de palabras, memorama y más: 1–3 minutos." };
+  const games: NavItem = { href: "/app/games", label: "Minijuegos", icon: Gamepad2, hint: "Lluvia de palabras, memorama y más: 1–3 minutos." };
+  const world: NavItem = { href: "/app/world", label: "Aprende con el mundo", icon: Earth, fresh: true, hint: "Un videojuego, una canción, una noticia o un tema, convertido en lección." };
   if (simple) {
     // Modo sencillo: sólo lo esencial, con nombres cotidianos.
     return [
@@ -44,6 +45,7 @@ export function navGroups(due: number, simple = false, alphabet = false): NavGro
         { href: "/app/first-steps", label: "Primeros pasos", icon: Footprints, hint: "Saludar, presentarte, pedir algo." },
       ] },
       { id: "practice", label: "Practicar", items: [
+        world,
         { href: "/app/stories", label: "Historias", icon: BookHeart, hint: "Cuentos cortos a tu nivel." },
         { href: "/app/vocabulary", label: "Mis palabras", icon: BookOpen, hint: "Todas las palabras que estás aprendiendo." },
         { href: "/app/read", label: "Leer", icon: Newspaper, hint: "Textos reales; toca una palabra y la entiendes." },
@@ -73,6 +75,7 @@ export function navGroups(due: number, simple = false, alphabet = false): NavGro
       { href: "/app/path", label: "Camino a C1", icon: Route, hint: "Qué te falta para cada nivel." },
     ] },
     { id: "practice", label: "Practicar", items: [
+      world,
       { href: "/app/vocabulary", label: "Vocabulario", icon: BookOpen, hint: "Miles de palabras por utilidad." },
       { href: "/app/read", label: "Lecturas", icon: Newspaper, hint: "Artículos reales a tu nivel." },
       { href: "/app/stories", label: "Historias", icon: BookHeart, hint: "Cuentos cortos con audio." },

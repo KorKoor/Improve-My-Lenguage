@@ -18,7 +18,8 @@ import type { ReaderData } from "@/lib/services/reading";
 type Phase = "reading" | "quiz" | "done";
 
 /** Lector adaptativo: toca una palabra para verla; al final, preguntas de comprensión. */
-export function Reader({ data }: { data: ReaderData }) {
+/** `embedded`: dentro de otra pantalla (sin volver a «Lecturas» y con el título como h2). */
+export function Reader({ data, embedded = false }: { data: ReaderData; embedded?: boolean }) {
   const [size, setSize] = useState(1);
   const [highlight, setHighlight] = useState(true);
   const [active, setActive] = useState<string | null>(null);
@@ -101,8 +102,14 @@ export function Reader({ data }: { data: ReaderData }) {
       </div>
 
       <header className="animate-rise">
-        <Link href="/app/read" className="text-sm font-semibold text-muted hover:text-text">← Lecturas</Link>
-        <h1 className="mt-3 font-display text-3xl font-extrabold leading-tight sm:text-4xl" lang={undefined}>{data.title}</h1>
+        {embedded ? (
+          <h2 className="font-display text-2xl font-extrabold leading-tight">{data.title}</h2>
+        ) : (
+          <>
+            <Link href="/app/read" className="text-sm font-semibold text-muted hover:text-text">← Lecturas</Link>
+            <h1 className="mt-3 font-display text-3xl font-extrabold leading-tight sm:text-4xl" lang={undefined}>{data.title}</h1>
+          </>
+        )}
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
           <Chip>{data.analysis.level}</Chip>
           <Chip tone={coverage >= 90 ? "success" : coverage >= 80 ? "warning" : "danger"}>Conoces ~{coverage} %</Chip>

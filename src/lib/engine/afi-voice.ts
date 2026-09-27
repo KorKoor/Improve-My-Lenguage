@@ -5,6 +5,7 @@
  * sin culpa, sin superlativos.
  */
 import type { AfiMood } from "@/components/afi/afi";
+import { streakMoment } from "./afi-bond";
 
 export interface AfiLine {
   text: string;
@@ -22,6 +23,9 @@ export interface DashboardSignals {
 
 /** Frase de Afi en el inicio, de lo más útil a lo más general. */
 export function afiDashboardLine(d: DashboardSignals): AfiLine {
+  // Un momento importante (3, 7, 30… días seguidos) va antes que todo lo demás.
+  const moment = streakMoment(d.streak, d.studiedToday);
+  if (moment) return { text: moment.text, mood: moment.big ? "celebrating" : "proud" };
   const w = d.weaknesses[0];
   if (!d.studiedToday && w && w.count >= 3) return { text: `He notado que «${w.label.toLowerCase()}» aparece varias veces en tus errores. Hoy lo reforzamos un poco.`, mood: "thinking" };
   if (!d.studiedToday && d.dueCount >= 20) return { text: `Tienes ${d.dueCount} repasos en su punto justo: son los que más rinden hoy.`, mood: "studying" };
@@ -73,6 +77,10 @@ const POKE_LINES: AfiLine[] = [
   { text: "La lluvia fuerte en japonés hace «zā zā» (ザーザー). Me la sé de memoria.", mood: "listening" },
   { text: "Cuidado con los audífonos: ahí guardo todos los sonidos.", mood: "curious" },
   { text: "Soy una nube, así que cuando llueven palabras no me mojo.", mood: "happy" },
+  // A veces Afi se equivoca… y se corrige (lo que cuenta sigue siendo verdad).
+  { text: "En alemán, nube es «Wolle»… no, espera: «Wolle» es lana. Nube es «Wolke». Casi.", mood: "confused" },
+  { text: "En italiano, «burro» es… ¡mantequilla! No es un animal. Me confundo cada vez.", mood: "surprised" },
+  { text: "¿«Embarrassed» es «embarazada»? No: es «avergonzada». Qué vergüenza la mía.", mood: "confused" },
 ];
 
 /**

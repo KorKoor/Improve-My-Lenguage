@@ -14,7 +14,8 @@ import { requireLearner } from "@/lib/services/viewer";
 
 export const metadata: Metadata = { title: "Tutor" };
 
-export default async function TutorPage() {
+export default async function TutorPage({ searchParams }: { searchParams: Promise<{ topic?: string }> }) {
+  const topic = ((await searchParams).topic ?? "").trim().slice(0, 200) || undefined;
   const learner = await requireLearner();
   const available = aiAvailable();
   const past = available ? await listConversations(learner.ul.id, 6) : [];
@@ -54,6 +55,7 @@ export default async function TutorPage() {
         </Card>
       ) : (
         <TutorChat
+          initialTopic={topic}
           language={learner.language.code}
           languageName={learner.language.name}
           locale={learner.language.speechLocale}

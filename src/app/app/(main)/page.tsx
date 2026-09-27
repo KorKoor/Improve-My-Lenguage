@@ -9,6 +9,8 @@ import { WordOfDay } from "@/components/dashboard/word-of-day";
 import { WelcomeTour } from "@/components/tutorial/welcome-tour";
 import { Afi } from "@/components/afi/afi";
 import { afiDashboardLine } from "@/lib/engine/afi-voice";
+import { afiWear } from "@/lib/engine/afi-bond";
+import { AfiNewWear } from "@/components/afi/new-wear";
 import { ButtonLink } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
@@ -91,6 +93,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       <>
         {tour}
         {cheerBanner && <div className="mx-auto mb-4 max-w-2xl">{cheerBanner}</div>}
+        <div className="mx-auto mb-4 max-w-2xl empty:hidden"><AfiNewWear wear={afiWear({ bestStreak: d.bestStreak, wordsLearned: d.wordsLearned, level: d.overall?.level ?? null })} /></div>
         <SimpleHome d={d} languageName={lang.name} dailyMinutes={learner.profile.dailyMinutes} greeting={greeting(learner.profile.timezone)} step={step} />
         {board && <div className="mx-auto mt-6 max-w-2xl"><QuestBoard quests={board.quests} xp={xp} /></div>}
       </>
@@ -100,6 +103,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const personality = learner.profile.personality;
   // Afi traduce los datos del motor (errores recurrentes, repasos, racha) en una frase.
   const afi = afiDashboardLine(d);
+  const wear = afiWear({ bestStreak: d.bestStreak, wordsLearned: d.wordsLearned, level: d.overall?.level ?? null });
   const weekDays = ["L", "M", "X", "J", "V", "S", "D"];
   const goalMonths = d.goal?.deadline ? Math.max(0, Math.round((new Date(d.goal.deadline).getTime() - Date.now()) / (30 * 86_400_000))) : null;
   // Distancia recorrida en la escala θ desde el inicio (A1 bajo) hasta el umbral del nivel objetivo.
@@ -109,6 +113,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-6">
       {tour}
+      <AfiNewWear wear={wear} />
       {/* Saludo */}
       <header className="flex items-start gap-4 animate-rise sm:items-center">
         <div className="min-w-0 flex-1">
@@ -169,7 +174,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
                 <p className="relative mb-1 max-w-[220px] rounded-2xl bg-primary-soft px-3 py-2 text-center text-xs font-semibold text-primary animate-pop-in after:absolute after:-bottom-1.5 after:left-1/2 after:size-3 after:-translate-x-1/2 after:rotate-45 after:bg-primary-soft">
                   <span className="sr-only">Afi: </span>{afi.text}
                 </p>
-                <LiveAfi size={96} mood={afi.mood} motion="float" />
+                <LiveAfi size={96} mood={afi.mood} motion="float" wear={wear} />
               </div>
               <Chip tone="muted" className="px-3 py-1 text-sm sm:hidden">{d.plan.totalMinutes} min</Chip>
             </div>

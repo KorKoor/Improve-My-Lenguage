@@ -73,6 +73,21 @@ Con `LiveAfi` (`components/afi/live-afi.tsx`, en inicio, bienvenida, login, pág
 - **Se duerme** tras 60 s sin actividad (25 s de noche) y cualquier gesto la despierta.
 - Es un botón («Saludar a Afi»): funciona con teclado y lo que dice se anuncia con `aria-live`. Con «reducir movimiento» no se mueve; sólo cambia la cara.
 
+### Evoluciona contigo (sin niveles absurdos)
+
+`lib/engine/afi-bond.ts`. Nada de «Afi nivel 372»: Afi estrena **pequeños accesorios** cuando consigues algo real, y nunca los pierde.
+
+| Accesorio | Cómo se consigue |
+|---|---|
+| Bufanda rosa | 7 días seguidos (mejor racha) |
+| Gafas de lectora | 100 palabras aprendidas |
+| Flor en la diadema | 30 días seguidos |
+| Tercera estrella | Llegar a B1 |
+
+- **Momentos importantes:** el día que llegas a 3, 7, 14, 30, 50, 100… días seguidos, la frase de Afi en el inicio lo celebra (`streakMoment`). Cuando estrena accesorio, te lo cuenta una vez con confeti (`AfiNewWear`).
+- **Se equivoca a veces:** al tocarla puede confundirse… y corregirse («Wolle es lana; nube es Wolke»). Lo que enseña sigue siendo verdad.
+- **Te conoce:** en Progreso, «Lo que Afi ha aprendido de ti» resume tus últimas 8 semanas (con al menos 30 respuestas): a qué hora aciertas más, si reconoces mejor de lo que recuerdas, si tus fallos son casi aciertos, si respondes más rápido y qué días estudias. Cada frase sale de tus datos y va con un consejo.
+
 ### Estados (`mood`)
 
 Sólo cambian ojos, boca, cejas y, a veces, un objeto pequeño que no tapa la cara:

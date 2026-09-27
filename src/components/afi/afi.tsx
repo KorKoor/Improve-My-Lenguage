@@ -1,4 +1,5 @@
 import { cn } from "@/lib/cn";
+import type { AfiWear } from "@/lib/engine/afi-bond";
 
 /**
  * Afi, la mascota y compañera de aprendizaje de Improve My Languages.
@@ -188,6 +189,29 @@ const Waves = () => (
 );
 const Dots = () => <g fill={C.band}><circle cx={128} cy={44} r={2.5} className="afi-bounce" /><circle cx={136} cy={36} r={3.2} className="afi-bounce afi-d2" /><circle cx={145} cy={26} r={4} className="afi-bounce afi-d3" /></g>;
 
+// Accesorios que Afi estrena con tus hitos (lib/engine/afi-bond.ts). Pequeños y sin tapar la cara.
+const Scarf = () => (
+  <g>
+    <path d="M40 116 Q80 132 120 116 L122 124 Q80 141 38 124 Z" fill="#f59ab2" stroke="#e57f9c" strokeWidth={1.2} strokeLinejoin="round" />
+    <path d="M54 121 l2 7 M68 125 l1 7 M92 125 l-1 7 M106 121 l-2 7" stroke="#fff" strokeWidth={2} strokeLinecap="round" opacity={0.7} />
+    <path d="M104 124 q4 10 1 18 l9 -2 q2 -9 -3 -17 z" fill="#f59ab2" stroke="#e57f9c" strokeWidth={1.2} strokeLinejoin="round" />
+  </g>
+);
+const Glasses = () => (
+  <g fill="none" stroke={C.ink} strokeWidth={1.8}>
+    <circle cx={68} cy={90} r={8.5} fill="#fff" fillOpacity={0.15} />
+    <circle cx={92} cy={90} r={8.5} fill="#fff" fillOpacity={0.15} />
+    <path d="M76.5 89 q3.5 -2.5 7 0" strokeLinecap="round" />
+  </g>
+);
+const Flower = () => (
+  <g transform="translate(44 30)">
+    {[0, 72, 144, 216, 288].map((r) => <ellipse key={r} cx={0} cy={-5.5} rx={3.6} ry={5} fill="#f8bccd" transform={`rotate(${r})`} />)}
+    <circle r={3.2} fill={C.star} />
+  </g>
+);
+const ThirdStar = () => <path d={star(80, 19, 6.5)} fill={C.star} stroke={C.starEdge} strokeWidth={1} strokeLinejoin="round" className="afi-star afi-d3" />;
+
 type Face = { eyes: Parameters<typeof Eyes>[0]["kind"]; mouth: Parameters<typeof Mouth>[0]["kind"]; look?: number; brows?: "worried" | "up"; extra?: React.ReactNode; wave?: boolean; blush?: number };
 
 const FACES: Record<AfiMood, Face> = {
@@ -224,6 +248,7 @@ export function Afi({
   motion = "none",
   label,
   still = false,
+  wear = [],
   className,
   style,
 }: {
@@ -234,6 +259,8 @@ export function Afi({
   label?: string;
   /** Sin vida propia (exportaciones, capturas): ni parpadeo ni respiración. */
   still?: boolean;
+  /** Accesorios ganados con hitos reales (bufanda, gafas, flor, tercera estrella). */
+  wear?: AfiWear[];
   className?: string;
   style?: React.CSSProperties;
 }) {
@@ -281,6 +308,7 @@ export function Afi({
               <ellipse cx={147} cy={98} rx={9} ry={13} fill={C.body} stroke={C.bodyEdge} strokeWidth={1.4} className="afi-wave" />
             </g>
           )}
+          {wear.includes("scarf") && !HIDES_PAWS.has(mood) && <Scarf />}
           {/* Cara: se desplaza un poco hacia donde mira (paralaje: ojos más, boca menos) */}
           <g className="afi-look-soft">
             <ellipse cx={57} cy={100} rx={6.5} ry={3.6} fill={C.cheek} opacity={cheek} className="afi-cheek" />
@@ -294,6 +322,7 @@ export function Afi({
             <g className={cn(OPEN_EYES.has(f.eyes) && "afi-blink")}>
               <Eyes kind={f.eyes} look={f.look} />
             </g>
+            {wear.includes("glasses") && <Glasses />}
           </g>
           {/* Audífonos: diadema, auriculares y la estrella dorada de cada lado */}
           <path d="M27 86 C19 -2 141 -2 133 86" fill="none" stroke={C.band} strokeWidth={7} strokeLinecap="round" />
@@ -304,6 +333,8 @@ export function Afi({
           <rect x={123} y={79} width={8} height={24} rx={4} fill={C.cushion} />
           <path d={star(26, 73, 7.5)} fill={C.star} stroke={C.starEdge} strokeWidth={1.1} strokeLinejoin="round" className={starCls} />
           <path d={star(134, 73, 7.5)} fill={C.star} stroke={C.starEdge} strokeWidth={1.1} strokeLinejoin="round" className={cn(starCls, "afi-d2")} />
+          {wear.includes("flower") && <Flower />}
+          {wear.includes("star") && mood !== "proud" && <ThirdStar />}
           {f.extra}
         </g>
       </g>

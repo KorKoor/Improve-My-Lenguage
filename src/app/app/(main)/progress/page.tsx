@@ -18,6 +18,8 @@ import { addDays } from "@/lib/engine/progress";
 import { getActivityByLanguage, listUserLanguages } from "@/lib/db/repositories";
 import { getLanguage } from "@/lib/content";
 import { peakLabel } from "@/lib/engine/focus";
+import { AfiBondCard } from "@/components/afi/bond-card";
+import { afiBond } from "@/lib/services/afi-bond";
 
 export const metadata: Metadata = { title: "Progreso" };
 
@@ -32,6 +34,7 @@ export default async function ProgressPage() {
   const today = localDay(new Date(), learner.profile.timezone);
   const unlocked = new Map(p.achievements.map((a) => [a.achievementId, a.unlockedAt]));
   const acc = p.totals.attempts ? p.totals.correct / p.totals.attempts : null;
+  const bond = await afiBond(learner, { bestStreak: p.bestStreak, wordsLearned: p.vocabulary.learned });
 
   return (
     <div className="space-y-6">
@@ -54,6 +57,8 @@ export default async function ProgressPage() {
           </div>
         ))}
       </section>
+
+      <AfiBondCard bond={bond} />
 
       <WeekCard week={p.week} />
 

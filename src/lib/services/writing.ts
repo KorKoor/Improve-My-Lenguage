@@ -40,7 +40,8 @@ export interface WritingResult {
   newAchievements: { id: string; title: string; icon: string }[];
 }
 
-export async function submitWriting(learner: Learner, promptId: string, text: string, useAi: boolean): Promise<WritingResult> {
+/** `customTask`: consigna propia (p. ej. la de una lección de «Aprende con el mundo»). */
+export async function submitWriting(learner: Learner, promptId: string, text: string, useAi: boolean, customTask?: string): Promise<WritingResult> {
   if (!(await rateLimit(`write:${learner.userId}`, 20, 3600))) throw new RateLimitedError();
   const prompt = getPrompt(promptId);
   const lang = learner.language.code;
@@ -60,7 +61,7 @@ export async function submitWriting(learner: Learner, promptId: string, text: st
         json: true,
         temperature: 0.2,
         maxTokens: 1400,
-        system: writingSystemPrompt(ctx, prompt?.task ?? "Free writing", categories),
+        system: writingSystemPrompt(ctx, prompt?.task ?? customTask ?? "Free writing", categories),
         messages: [{ role: "user", content: text }],
       });
       ai = sanitizeWritingFeedback(parseJson(raw), new Set(categories.map((c) => c.id)), text);
@@ -81,7 +82,7 @@ export async function submitWriting(learner: Learner, promptId: string, text: st
   await repo.upsertSkillEstimates(learner.ul.id, [est]);
 
   const feedbackToStore = { analysis: { ...analysis, issues: analysis.issues.slice(0, 30) }, ai };
-  await repo.saveWriting(learner.ul.id, { prompt: prompt?.title ?? "Escritura libre", text, feedback: feedbackToStore, score: Math.round(accuracy * 100) });
+  await repo.saveWriting(learner.ul.id, { prompt: prompt?.title ?? (customTask ? `Aprende con el mundo: ${customTask.slice(0, 60)}` : "Escritura libre"), text, feedback: feedbackToStore, score: Math.round(accuracy * 100) });
   const mistakes = [
     ...(ai?.mistakes ?? []).map((m) => ({ category: m.category, userText: m.original, correctedText: m.correction, explanation: m.explanation })),
     ...analysis.issues.filter((i) => i.kind === "spelling" || i.kind === "accent").slice(0, 6).map((i) => ({ category: "spelling", userText: text.slice(i.start, i.end), correctedText: i.suggestion ?? null, explanation: i.message })),

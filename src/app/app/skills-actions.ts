@@ -100,11 +100,11 @@ export async function finishListeningAction(correct: number, total: number): Pro
 }
 
 // ── Escritura ───────────────────────────────────────────────────────────────
-export async function submitWritingAction(promptId: string, text: string, useAi: boolean): Promise<SkillResult<WritingResult>> {
+export async function submitWritingAction(promptId: string, text: string, useAi: boolean, customTask?: string): Promise<SkillResult<WritingResult>> {
   return run("writing.submit", async () => {
     const clean = str(text, 4000);
     if (clean.length < 10) throw new UserFacingError("Escribe al menos una frase.");
-    return submitWriting(await requireLearner(), str(promptId, 40), clean, useAi === true);
+    return submitWriting(await requireLearner(), str(promptId, 40), clean, useAi === true, str(customTask, 400) || undefined);
   });
 }
 
